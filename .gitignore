@@ -16,6 +16,14 @@ ED/build/ed_2.1-opt
 */bin/*.c
 */bin/*.mod
 */bin/*.[fF]90
+*/cs6_build/bin/*.c
+*/cs6_build/bin/*.mod
+*/cs6_build/bin/*.[fF]90
+
+*/cs6_build/bin/slurm-*
+*/cs6_build/bin/qinst.out
+*/cs6_build/bin/qinst.err
+*/cs6_build/ed_2.1-*
 
 # specific rules
 BRAMS/build/bin/include.mk.opt

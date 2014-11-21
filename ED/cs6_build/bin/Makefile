@@ -16,8 +16,8 @@ FPP_COMMAND = $(F_COMP) -c -DUSE_INTERF=$(USE_INTERF) -DUSENC=$(USENC) -D$(CMACH
 CXX_COMMAND = $(C_COMP) -c $(C_OPTS) -D$(CMACH) $(HDF5_INCS) $(INCLUDES) $(PAR_DEFS)
 
 #----- Define archive and executable names. -----------------------------------------------#
-EXE=$(BASE)/ed_$(ED_VERSION)-$(OPT)
-LIBMODEL=$(BASE)/ed_$(ED_VERSION)-$(OPT).a
+EXE=$(BASE)/ed_$(ED_VERSION)-$(OPT)-E
+LIBMODEL=$(BASE)/ed_$(ED_VERSION)-$(OPT)-E.a
 
 include objects.mk
 

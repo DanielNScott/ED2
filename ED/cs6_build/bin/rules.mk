@@ -548,4 +548,14 @@ vegetation_dynamics.o : $(ED_DYNAMICS)/vegetation_dynamics.f90
 	$(F90_COMMAND) $(<F:.f90=.f90)
 	rm -f $(<F:.f90=.f90)
 
+isotopes.o : $(ED_MEMORY)/isotopes.f90
+	cp -f $< $(<F:.f90=.f90)
+	$(F90_COMMAND) $(<F:.f90=.f90)
+	rm -f $(<F:.f90=.f90)
+
+iso_alloc.o : $(ED_DYNAMICS)/iso_alloc.f90
+	cp -f $< $(<F:.f90=.f90)
+	$(F90_COMMAND) $(<F:.f90=.f90)
+	rm -f $(<F:.f90=.f90)
+
 include dependency.mk

@@ -79,6 +79,8 @@ OBJ_MODEL =                        \
 	hydrology_constants.o      \
 	init_hydro_sites.o         \
 	invmondays.o               \
+	iso_alloc.o					   \
+	isotopes.o						\
 	landuse_init.o             \
 	lapse.o                    \
 	leaf_database.o            \
