@@ -1094,7 +1094,7 @@ module fuse_fiss_utils
       !  - If the unit is X/m2_gnd, then we add, since they are "extensive".               !
       !------------------------------------------------------------------------------------!
       newni   = 1.0 / newn
-      if (cpatch%lai(recc) + cpatch%lai(donc) > 0.0) then
+      if (cpatch%lai(recc) + cpatch%lai(donc) > 1e-15) then
          rlai    = cpatch%lai(recc)
          dlai    = cpatch%lai(donc)
          newlaii = 1.0 / (rlai+dlai)
@@ -5365,9 +5365,6 @@ module fuse_fiss_utils
 
       end if
       !------------------------------------------------------------------------------------!
-
- 
-
 
       !------------------------------------------------------------------------------------! 
       !    Monthly means.                                                                  !

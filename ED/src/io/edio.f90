@@ -31,7 +31,8 @@ subroutine ed_output(analysis_time,new_day,dail_analy_time,mont_analy_time,dcyc_
                            , normalize_ed_mmean_vars & ! sub-routine
                            , normalize_ed_qmean_vars & ! sub-routine
                            , zero_ed_mmean_vars      & ! sub-routine
-                           , zero_ed_qmean_vars      ! ! sub-routine
+                           , zero_ed_qmean_vars      & ! sub-routine
+                           , aggregate_polygon_fmean
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    logical, intent(in)  :: the_end

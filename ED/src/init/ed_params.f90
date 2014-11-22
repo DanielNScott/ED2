@@ -154,6 +154,12 @@ subroutine load_ed_ecosystem_params()
    call init_rk4_params()
    !---------------------------------------------------------------------------------------!
 
+   !---------------------------------------------------------------------------------------!
+   ! These parameters are derived from other parameters.  This was for a short-time        !
+   ! after the xml call, but has been moved to just before that call to prevent over-writes!
+   !---------------------------------------------------------------------------------------!
+   call ed_params_dependents()
+
    return
 end subroutine load_ed_ecosystem_params
 !==========================================================================================!
@@ -1322,13 +1328,11 @@ subroutine init_can_lyr_params()
    ehgti8    = 1.d0 / ehgt8
    !---------------------------------------------------------------------------------------!
 
-
-
    !----- Allocate the variables. ---------------------------------------------------------!
    call alloc_canopy_layer()
+   !----- The canopy layer variables that are split between multiple thread buffers
+   !----- are initialized during subroutine initialize_rk4patches for simplicity
    !---------------------------------------------------------------------------------------!
-
-
 
    !----- Define the layer heights. -------------------------------------------------------!
    do ilyr =1,ncanlyr
@@ -1516,8 +1520,6 @@ subroutine init_pft_photo_params()
    vmfact_co = 1.0 ! Initial value, changed by XML if needed.
    vmfact_hw = 1.0 ! Initial value, changed by XML if needed.
    !---------------------------------------------------------------------------------------!
-
-
 
    !---------------------------------------------------------------------------------------!
    !      Vm_hor is the Arrhenius "activation energy" divided by the universal gas         !
