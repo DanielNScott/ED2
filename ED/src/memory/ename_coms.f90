@@ -12,6 +12,8 @@ module ename_coms
                          , maxgrds        & ! intent(in)
                          , nzgmax         & ! intent(in)
                          , maxpvars       ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use ed_misc_coms, only : simtime         ! ! structure
    implicit none
 
    !---------------------------------------------------------------------------------------!
@@ -241,6 +243,23 @@ module ename_coms
       character(len=str_len)                            :: phenpath
       character(len=str_len)                            :: event_file
 
+      !----- DS Additional Vars -----------------------------------------------------------!
+      integer                                           :: c13af        !!!DSC!!!
+      real                                              :: iso_p1       !!!DSC!!!
+      real                                              :: iso_p2       !!!DSC!!!
+      real                                              :: iso_lrf      !!!DSC!!!
+      real                                              :: iso_rrf      !!!DSC!!!
+      real                                              :: iso_grf      !!!DSC!!!
+      real                                              :: iso_strf     !!!DSC!!!
+      real                                              :: iso_vlrf     !!!DSC!!!
+      real                                              :: iso_hrf      !!!DSC!!!
+
+      integer                                           :: c_alloc_flg  !!!DSC!!!
+      real                                              :: larprop      !!!DSC!!!
+      real                                              :: rtrfact      !!!DSC!!!
+      type(simtime)                                     :: trench_date  !!!DSC!!!
+
+
       !----- Variables to control detailed output. ----------------------------------------!
       integer                                           :: dt_census
       integer                                           :: yr1st_census
@@ -290,6 +309,9 @@ module ename_coms
                             , undef_character & ! intent(in)
                             , undef_path      & ! intent(in)
                             , undef_logical   ! ! intent(in)
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms, only : simtime         ! ! structure
+      implicit none
 
       !----- Arguments. -------------------------------------------------------------------!
       type(ename_vars), intent(out) :: enl
@@ -520,6 +542,23 @@ module ename_coms
       enl%ioptinpt                  = undef_path
       enl%zrough                    = undef_real
       enl%edres                     = undef_real 
+
+      !---- DS Addnl. Vars ---------------------------------------------------------------!
+      enl%c13af                     = undef_integer
+      enl%c_alloc_flg               = undef_integer
+      enl%larprop                   = undef_real
+      enl%iso_P1                    = undef_real
+      enl%iso_P2                    = undef_real
+      enl%trench_date%year          = undef_integer
+      enl%trench_date%month         = undef_integer
+      enl%trench_date%date          = undef_integer
+      enl%rtrfact                   = undef_real
+      enl%iso_lrf                   = undef_real
+      enl%iso_rrf                   = undef_real
+      enl%iso_grf                   = undef_real
+      enl%iso_strf                  = undef_real
+      enl%iso_vlrf                  = undef_real
+      enl%iso_hrf                   = undef_real
 
       return
    end subroutine init_ename_vars

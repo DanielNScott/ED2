@@ -90,6 +90,7 @@ subroutine copy_nl(copy_type)
                                    , maxsite                   & ! intent(out)
                                    , maxpatch                  & ! intent(out)
                                    , maxcohort                 ! ! intent(out)
+
    use physiology_coms      , only : iphysiol                  & ! intent(out)
                                    , h2o_plant_lim             & ! intent(out)
                                    , iddmort_scheme            & ! intent(out)
@@ -264,7 +265,21 @@ subroutine copy_nl(copy_type)
                                    , day_sec                   & ! intent(in)
                                    , hr_sec                    & ! intent(in)
                                    , min_sec                   ! ! intent(in)
-
+   !----- DS Additional Uses -----------------------------------------------------------!
+    use isotopes            , only  : rtrfact                   & ! intent(out)      !!!DSC!!!
+                                    , larprop                   & ! intent(out)      !!!DSC!!!
+                                    , iso_lrf                   & ! intent(out)      !!!DSC!!!
+                                    , iso_rrf                   & ! intent(out)      !!!DSC!!!
+                                    , iso_grf                   & ! intent(out)      !!!DSC!!!
+                                    , iso_strf                  & ! intent(out)      !!!DSC!!!
+                                    , iso_vlrf                  & ! intent(out)      !!!DSC!!!
+                                    , iso_hrf                   & ! intent(out)      !!!DSC!!!
+                                    , c13af                     & ! intent(out)				!!!DSC!!!
+                                    , iso_P1                    & ! intent(out)				!!!DSC!!!
+                                    , iso_P2                    & ! intent(out)				!!!DSC!!!
+!                                    , trench_time               & ! intent(out)				!!!DSC!!!
+!                                    , trench_date               & ! intent(out)				!!!DSC!!!
+                                    , c_alloc_flg               ! ! intent(out)				!!!DSC!!!
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    character(len=*), intent(in) :: copy_type
@@ -499,6 +514,19 @@ subroutine copy_nl(copy_type)
       
       edres                     = nl%edres
 
+      c13af                     = nl%c13af         !!!DSC!!!
+      iso_P1                    = nl%iso_P1        !!!DSC!!!
+      iso_P2                    = nl%iso_P2        !!!DSC!!!
+      rtrfact                   = nl%rtrfact       !!!DSC!!!
+      iso_lrf                   = nl%iso_lrf       !!!DSC!!!
+      iso_rrf                   = nl%iso_rrf       !!!DSC!!!
+      iso_grf                   = nl%iso_grf       !!!DSC!!!
+      iso_strf                  = nl%iso_strf      !!!DSC!!!
+      iso_vlrf                  = nl%iso_vlrf      !!!DSC!!!
+      iso_hrf                   = nl%iso_hrf       !!!DSC!!!
+      c_alloc_flg               = nl%c_alloc_flg   !!!DSC!!!
+      larprop                   = nl%larprop       !!!DSC!!!
+      
       !------------------------------------------------------------------------------------!
       !     If the grid type is lat/lon, then we reset nnxp and nnyp to fit this new grid. !
       ! This is going to be useful to distribute the polygons across the nodes.            !
@@ -530,7 +558,6 @@ subroutine copy_nl(copy_type)
       end_time%time  = real(int(real(itimez) * 0.01)) * hr_sec                             &
                      + (real(itimez) * 0.01 - real(int(real(itimez)*0.01)))                &
                      * 100.0 * min_sec
-
    case ('NOT_HISTORY')
       !------------------------------------------------------------------------------------!
       !      The namelist variables in this section either must not be changed on a        !
@@ -621,6 +648,10 @@ subroutine copy_nl(copy_type)
    call date_2_seconds (iyearz,imonthz,idatez,itimez*100,iyeara,imontha,idatea,itimea*100  &
                        ,timmax)
 
+   !----- Set trenching time if applicable. -----------------------------------------------!
+   !call date_2_seconds (nl%trench_date%year,nl%trench_date%month,nl%trench_date%date,0,    &
+   !                     iyeara,imontha,idatea,itimea*100,trench_time)   !!!DSC!!!
+   !                    
    !---------------------------------------------------------------------------------------!
    !     For the following databases, we must check whether only the first grid was given. !
    ! In this case, we copy the values of the first grid to the other grids.                !

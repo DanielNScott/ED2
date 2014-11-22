@@ -492,6 +492,8 @@ subroutine update_polygon_derived_props(cgrid)
                                     , c2n_slow           & ! intent(in)
                                     , c2n_structural     ! ! intent(in)
    use decomp_coms           , only : cwd_frac           ! ! intent(in)
+   !----- DS Additional Uses --------------------------------------------------------------!
+   use isotopes              , only : c13af              ! ! intent(in)
 
    implicit none
    !----- Arguments.      -----------------------------------------------------------------!
@@ -580,6 +582,24 @@ subroutine update_polygon_derived_props(cgrid)
       cgrid%fast_soil_n             (ipy) = 0.0
       cgrid%mineral_soil_n          (ipy) = 0.0
       cgrid%cwd_n                   (ipy) = 0.0
+      !--- c13 Vars -----------------------------------------------------------------------!
+      if (c13af > 0) then
+         cgrid%bdead_c13               (:,:,ipy) = 0.0
+         cgrid%bleaf_c13               (:,:,ipy) = 0.0
+         cgrid%broot_c13               (:,:,ipy) = 0.0
+         cgrid%bsapwooda_c13           (:,:,ipy) = 0.0
+         cgrid%bsapwoodb_c13           (:,:,ipy) = 0.0
+         cgrid%bseeds_c13              (:,:,ipy) = 0.0
+         cgrid%bstorage_c13            (:,:,ipy) = 0.0
+         cgrid%leaf_maintenance_c13    (:,:,ipy) = 0.0
+         cgrid%root_maintenance_c13    (:,:,ipy) = 0.0
+         cgrid%leaf_drop_c13           (:,:,ipy) = 0.0
+         cgrid%fast_soil_c13               (ipy) = 0.0
+         cgrid%slow_soil_c13               (ipy) = 0.0
+         cgrid%struct_soil_c13             (ipy) = 0.0
+         cgrid%struct_soil_l_c13           (ipy) = 0.0
+         cgrid%cwd_c13                     (ipy) = 0.0
+      end if
       !------------------------------------------------------------------------------------!
       !     Some of these variables are redundant with variables above.  Perhaps we should !
       ! find a single way to report them.                                                  !
@@ -663,6 +683,28 @@ subroutine update_polygon_derived_props(cgrid)
                                       * cwd_frac * patch_wgt
             !------------------------------------------------------------------------------!
 
+
+            !--- c13 Vars -----------------------------------------------------------------!
+            if (c13af > 0) then
+               cgrid%fast_soil_c13     (ipy) = cgrid%fast_soil_c13         (ipy)           &
+                                             + csite%fast_soil_c13         (ipa)           & 
+                                             * patch_wgt
+               cgrid%slow_soil_c13     (ipy) = cgrid%slow_soil_c13         (ipy)           &
+                                             + csite%slow_soil_c13         (ipa)           &
+                                             * patch_wgt
+               cgrid%struct_soil_c13   (ipy) = cgrid%struct_soil_c13       (ipy)           &
+                                             + csite%structural_soil_c13   (ipa)           &
+                                             * patch_wgt
+               cgrid%struct_soil_l_c13 (ipy) = cgrid%struct_soil_l_c13     (ipy)           &
+                                             + csite%structural_soil_l_c13 (ipa)           &
+                                             * patch_wgt
+               cgrid%cwd_c13           (ipy) = cgrid%cwd_c13               (ipy)           &
+                                             + ( csite%slow_soil_c13       (ipa)           &
+                                             + csite%structural_soil_c13   (ipa) )         &
+                                             * cwd_frac * patch_wgt
+            end if
+            !------------------------------------------------------------------------------!
+            
 
 
             !----- Zero the root fraction (patch-level diagnostic). -----------------------!
@@ -805,6 +847,53 @@ subroutine update_polygon_derived_props(cgrid)
                                                * patch_wgt
                !---------------------------------------------------------------------------!
 
+               
+               !--- c13 Vars --------------------------------------------------------------!
+               if (c13af > 0) then
+                  cgrid%bdead_c13            (p,d,ipy) = cgrid%bdead_c13           (p,d,ipy) &
+                                                       + cpatch%bdead_c13              (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt
+                  cgrid%bleaf_c13            (p,d,ipy) = cgrid%bleaf_c13           (p,d,ipy) &
+                                                       + cpatch%bleaf_c13              (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt
+                  cgrid%broot_c13            (p,d,ipy) = cgrid%broot_c13           (p,d,ipy) &
+                                                       + cpatch%broot_c13              (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt
+                  cgrid%bsapwooda_c13        (p,d,ipy) = cgrid%bsapwooda_c13       (p,d,ipy) &
+                                                       + cpatch%bsapwooda_c13          (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt
+                  cgrid%bsapwoodb_c13        (p,d,ipy) = cgrid%bsapwoodb_c13       (p,d,ipy) &
+                                                       + cpatch%bsapwoodb_c13          (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt
+                  cgrid%bseeds_c13           (p,d,ipy) = cgrid%bseeds_c13          (p,d,ipy) &
+                                                       + cpatch%bseeds_c13             (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt   
+                  cgrid%bstorage_c13         (p,d,ipy) = cgrid%bstorage_c13        (p,d,ipy) &
+                                                       + cpatch%bstorage_c13           (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt      
+                  cgrid%leaf_maintenance_c13 (p,d,ipy) = cgrid%leaf_maintenance_c13(p,d,ipy) &
+                                                       + cpatch%leaf_maintenance_c13   (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt      
+                  cgrid%root_maintenance_c13 (p,d,ipy) = cgrid%root_maintenance_c13(p,d,ipy) &
+                                                       + cpatch%root_maintenance_c13   (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt             
+                  cgrid%leaf_drop_c13        (p,d,ipy) = cgrid%leaf_drop_c13       (p,d,ipy) &
+                                                       + cpatch%leaf_drop_c13          (ico) &
+                                                       * cpatch%nplant                 (ico) &
+                                                       * patch_wgt             
+               end if                                                          
+               !---------------------------------------------------------------------------!
+
+
 
                !---------------------------------------------------------------------------!
                !   CHECK! CHECK! CHECK! CHECK! CHECK! CHECK! CHECK! CHECK! CHECK! CHECK!   !
@@ -920,7 +1009,7 @@ subroutine read_soil_moist_temp(cgrid,igr)
    real              , parameter  :: dlat = 2.5
    !---------------------------------------------------------------------------------------!
 
-   !----- First thing, check whether the dataset exists and crash the run if it doesn´t. --!
+   !----- First thing, check whether the dataset exists and crash the run if it doesnÂ´t. --!
    inquire(file=trim(soilstate_db),exist=l1)
    if (.not.l1) then
       write (unit=*,fmt='(a)') ' Your namelist has ISOILSTATEINIT set to read the initial'
@@ -1211,6 +1300,9 @@ subroutine update_cohort_extensive_props(cpatch,aco,zco,mult)
    use ed_misc_coms , only : writing_long & ! intent(in)
                            , writing_eorq & ! intent(in)
                            , writing_dcyc ! ! intent(in)
+   !----- DS Additional Uses --------------------------------------------------------------!
+   use isotopes     , only : c13af        & ! intent(in)
+                           , c_alloc_flg  ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(patchtype), target     :: cpatch    ! Current patch
@@ -1382,6 +1474,23 @@ subroutine update_cohort_extensive_props(cpatch,aco,zco,mult)
          cpatch%qmsqu_transp        (:,ico) = cpatch%qmsqu_transp        (:,ico) * mult_2
          cpatch%qmsqu_sensible_wc   (:,ico) = cpatch%qmsqu_sensible_wc   (:,ico) * mult_2
          cpatch%qmsqu_vapor_wc      (:,ico) = cpatch%qmsqu_vapor_wc      (:,ico) * mult_2
+      end if
+      !------------------------------------------------------------------------------------!
+
+      !--- c13 Vars -----------------------------------------------------------------------!
+      if (c_alloc_flg > 0) then
+         cpatch%today_lassim_resp      (ico) = cpatch%today_lassim_resp      (ico) * mult
+      end if
+      if (c13af > 0) then
+         cpatch%today_gpp_c13          (ico) = cpatch%today_gpp_c13          (ico) * mult 
+         cpatch%today_leaf_resp_c13    (ico) = cpatch%today_leaf_resp_c13    (ico) * mult
+         cpatch%today_root_resp_c13    (ico) = cpatch%today_root_resp_c13    (ico) * mult 
+         cpatch%gpp_c13                (ico) = cpatch%gpp_c13                (ico) * mult 
+         cpatch%leaf_respiration_c13   (ico) = cpatch%leaf_respiration_c13   (ico) * mult 
+         cpatch%root_respiration_c13   (ico) = cpatch%root_respiration_c13   (ico) * mult
+         if (c_alloc_flg > 0) then
+            cpatch%today_lassim_resp_c13 (ico) = cpatch%today_lassim_resp_c13(ico) * mult
+         end if
       end if
       !------------------------------------------------------------------------------------!
 

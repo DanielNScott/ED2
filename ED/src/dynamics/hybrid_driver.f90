@@ -85,13 +85,13 @@ subroutine hybrid_timestep(cgrid)
 
   !- Assigning some constants which will remain the same throughout      !
   !      the run.                                                    ----!
-  if (first_time) then
-     first_time = .false.
+  !if (first_time) then
+  !   first_time = .false.
      tbeg   = 0.d0
      tend   = dble(dtlsm)
      dtrk4  = tend - tbeg
      dtrk4i = 1.d0/dtrk4
-  end if
+  !end if
             
   polyloop: do ipy = 1,cgrid%npolygons
      cpoly => cgrid%polygon(ipy)

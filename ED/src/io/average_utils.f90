@@ -43,6 +43,9 @@ module average_utils
                                        , soil               & ! intent(in)
                                        , dslz               ! ! intent(in)
       use ed_max_dims           , only : n_pft              ! ! intent(in)
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
 
 
       implicit none
@@ -309,6 +312,53 @@ module average_utils
                   cgrid%fmean_wshed_wg      (ipy) = cgrid%fmean_wshed_wg       (ipy)       &
                                                   + cpatch%fmean_wshed_wg      (ico)       &
                                                   * patch_wgt
+                                                  
+                  if (c13af > 0) then
+                     cgrid%fmean_gpp_c13           (ipy) = cgrid%fmean_gpp_c13            (ipy)       &
+                                                         + cpatch%fmean_gpp_c13           (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                     cgrid%fmean_npp_c13           (ipy) = cgrid%fmean_npp_c13            (ipy)       &
+                                                         + cpatch%fmean_npp_c13           (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                     cgrid%fmean_leaf_resp_c13     (ipy) = cgrid%fmean_leaf_resp_c13      (ipy)       &
+                                                         + cpatch%fmean_leaf_resp_c13     (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                     cgrid%fmean_root_resp_c13     (ipy) = cgrid%fmean_root_resp_c13      (ipy)       &
+                                                         + cpatch%fmean_root_resp_c13     (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                     cgrid%fmean_growth_resp_c13   (ipy) = cgrid%fmean_growth_resp_c13    (ipy)       &
+                                                         + cpatch%fmean_growth_resp_c13   (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                     cgrid%fmean_storage_resp_c13  (ipy) = cgrid%fmean_storage_resp_c13   (ipy)       &
+                                                         + cpatch%fmean_storage_resp_c13  (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                     cgrid%fmean_vleaf_resp_c13    (ipy) = cgrid%fmean_vleaf_resp_c13     (ipy)       &
+                                                         + cpatch%fmean_vleaf_resp_c13    (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                     cgrid%fmean_plresp_c13        (ipy) = cgrid%fmean_plresp_c13         (ipy)       &
+                                                         + cpatch%fmean_plresp_c13        (ico)       &
+                                                         * cpatch%nplant                  (ico)       &
+                                                         * patch_wgt
+                  end if
+                  if (c_alloc_flg > 0) then
+                     cgrid%fmean_lassim_resp       (ipy) = cgrid%fmean_lassim_resp     (ipy)          &
+                                                         + cpatch%fmean_lassim_resp    (ico)          &
+                                                         * cpatch%nplant               (ico)          &
+                                                         * patch_wgt
+                     if (c13af > 0) then
+                        cgrid%fmean_lassim_resp_c13   (ipy) = cgrid%fmean_lassim_resp_c13    (ipy)    &
+                                                            + cpatch%fmean_lassim_resp_c13   (ico)    &
+                                                            * cpatch%nplant                  (ico)    &
+                                                            * patch_wgt
+                     end if
+                  end if
                end do cohortloop
                !---------------------------------------------------------------------------!
 
@@ -457,6 +507,21 @@ module average_utils
                                                 + csite%fmean_qdrainage      (ipa)         &
                                                 * patch_wgt
 
+               if (c13af > 0) then
+                  cgrid%fmean_rh_c13      (ipy) = cgrid%fmean_rh_c13             (ipy)         &
+                                                + csite%fmean_rh_c13             (ipa)         &
+                                                * patch_wgt
+                  cgrid%fmean_cwd_rh_c13  (ipy) = cgrid%fmean_cwd_rh_c13         (ipy)         &
+                                                + csite%fmean_cwd_rh_c13         (ipa)         &
+                                                * patch_wgt
+                  cgrid%fmean_nep_c13     (ipy) = cgrid%fmean_nep_c13            (ipy)         &
+                                                + csite%fmean_nep_c13            (ipa)         &
+                                                * patch_wgt
+               !   cgrid%fmean_can_co2_c13 (ipy) = cgrid%fmean_can_co2_c13        (ipy)         &
+               !                                 + csite%fmean_can_co2_c13        (ipa)         &
+               !                                 * patch_wgt
+               end if
+                                                
                !----- Soil (extensive) properties. ----------------------------------------!
                do k=1,nzg
                   nsoil = cpoly%ntext_soil(k,isi)
@@ -552,6 +617,11 @@ module average_utils
             cgrid%fmean_dpcpg          (ipy) = cgrid%fmean_dpcpg          (ipy)            &
                                              + cpoly%fmean_dpcpg          (isi)            &
                                              * site_wgt
+            if (c13af > 0) then
+            !   cgrid%fmean_atm_co2_c13 (ipy) = cgrid%fmean_atm_co2_c13        (ipy)            &
+            !                                 + cpoly%fmean_atm_co2_c13        (isi)            &
+            !                                 * site_wgt
+            end if
          end do siteloop
          !---------------------------------------------------------------------------------!
 
@@ -729,6 +799,8 @@ module average_utils
       use met_driver_coms, only : met_driv_state  ! ! structure
       use ed_misc_coms   , only : dtlsm           & ! intent(in)
                                 , frqsum          ! ! intent(in)
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)      , target  :: cgrid
@@ -746,10 +818,10 @@ module average_utils
 
 
       !----- Assign the constant scaling factor. ------------------------------------------!
-      if (first_time) then
-         first_time     = .false.
+      !if (first_time) then
+      !   first_time     = .false.
          dtlsm_o_frqsum = dtlsm / frqsum
-      end if
+      !end if
       !------------------------------------------------------------------------------------!
 
       polyloop: do ipy = 1,cgrid%npolygons
@@ -804,6 +876,12 @@ module average_utils
             cpoly%fmean_dpcpg          (isi) = cpoly%fmean_dpcpg          (isi)            &
                                              + cmet%dpcpg                                  &
                                              * dtlsm_o_frqsum
+                                             
+            if (c13af > 0) then
+            !   cpoly%fmean_atm_co2_c13 (isi) = cpoly%fmean_atm_co2_c13    (isi)            &
+            !                                 + cmet%atm_co2_c13                            &
+            !                                 * dtlsm_o_frqsum
+            end if
             !------------------------------------------------------------------------------!
          end do siteloop
       end do polyloop
@@ -844,6 +922,10 @@ module average_utils
                               , soil               & ! intent(in)
                               , dslz               & ! intent(in)
                               , matric_potential   ! ! function
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
+
       implicit none
       !----- Arguments.  ------------------------------------------------------------------!
       type(edtype)      , target     :: cgrid
@@ -864,6 +946,8 @@ module average_utils
       real                           :: atm_exner
       real                           :: can_exner
       integer                        :: k
+      !----- DS Additional Local Vars -----------------------------------------------------!
+      real                           :: pss_npp_c13
       !------------------------------------------------------------------------------------!
 
 
@@ -918,6 +1002,9 @@ module average_utils
                !---------------------------------------------------------------------------!
                pss_npp    = 0.0
                pss_lai    = 0.0
+               if (c13af > 0) then
+                  pss_npp_c13 = 0.0
+               end if
                !---------------------------------------------------------------------------!
 
 
@@ -1032,7 +1119,7 @@ module average_utils
                   !------------------------------------------------------------------------!
                   !    Energy and water fluxes were integrated over the past frqsum        !
                   ! interval.   Use frqsumi to normalise them.  Energy fluxes will become  !
-                  ! W/m², and water fluxes will become kg/m²/s.                            !
+                  ! W/mÂ², and water fluxes will become kg/mÂ²/s.                            !
                   !------------------------------------------------------------------------!
                   cpatch%fmean_sensible_lc   (ico) = cpatch%fmean_sensible_lc   (ico)      &
                                                    * frqsumi
@@ -1110,6 +1197,16 @@ module average_utils
                                            + cpatch%fmean_vleaf_resp  (ico)
                   cpatch%fmean_npp   (ico) = cpatch%fmean_gpp         (ico)                &
                                            - cpatch%fmean_plresp      (ico)
+
+                  if (c13af > 0) then
+                     cpatch%fmean_plresp_c13 (ico) = cpatch%fmean_leaf_resp_c13   (ico)    &
+                                                   + cpatch%fmean_root_resp_c13   (ico)    &
+                                                   + cpatch%fmean_storage_resp_c13(ico)    &
+                                                   + cpatch%fmean_growth_resp_c13 (ico)    &
+                                                   + cpatch%fmean_vleaf_resp_c13  (ico)
+                     cpatch%fmean_npp_c13    (ico) = cpatch%fmean_gpp_c13         (ico)    &
+                                                   - cpatch%fmean_plresp_c13      (ico)
+                  end if
                   !------------------------------------------------------------------------!
 
 
@@ -1117,6 +1214,9 @@ module average_utils
                   !----- Add LAI and extensive NPP to compute NEP. ------------------------!
                   pss_lai    = pss_lai    + cpatch%lai       (ico)
                   pss_npp    = pss_npp    + cpatch%fmean_npp (ico) * cpatch%nplant(ico)
+                  if (c13af > 0) then
+                     pss_npp_c13 = pss_npp_c13 + cpatch%fmean_npp_c13 (ico) * cpatch%nplant(ico)
+                  end if
                   !------------------------------------------------------------------------!
                end do cohortloop
                !---------------------------------------------------------------------------!
@@ -1129,6 +1229,9 @@ module average_utils
                ! trophic respiration, a patch-level variable.                              !
                !---------------------------------------------------------------------------!
                csite%fmean_nep(ipa) = pss_npp - csite%fmean_rh(ipa)
+               if (c13af > 0) then
+                  csite%fmean_nep_c13(ipa) = pss_npp_c13 - csite%fmean_rh_c13(ipa)
+               end if
                !---------------------------------------------------------------------------!
 
 
@@ -1158,6 +1261,11 @@ module average_utils
                csite%wbudget_loss2runoff  (ipa) = csite%wbudget_loss2runoff  (ipa) * frqsumi
                csite%wbudget_denseffect   (ipa) = csite%wbudget_denseffect   (ipa) * frqsumi
                csite%wbudget_residual     (ipa) = csite%wbudget_residual     (ipa) * frqsumi
+               if (c13af > 0) then
+               !   csite%co2budget_gpp_c13     (ipa) = csite%co2budget_gpp_c13     (ipa) * frqsumi
+               !   csite%co2budget_plresp_c13  (ipa) = csite%co2budget_plresp_c13  (ipa) * frqsumi
+               !   csite%co2budget_rh_c13      (ipa) = csite%co2budget_rh_c13      (ipa) * frqsumi
+               end if
                !---------------------------------------------------------------------------!
             end do patchloop
             !------------------------------------------------------------------------------!
@@ -1184,6 +1292,9 @@ module average_utils
                               , sitetype    & ! structure
                               , patchtype   ! ! structure
       
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target  :: cgrid
@@ -1321,6 +1432,30 @@ module average_utils
          cgrid%fmean_soil_wetness    (  ipy) = 0.0
          cgrid%fmean_skin_temp       (  ipy) = 0.0
 
+         if (c_alloc_flg > 0) then
+            cgrid%fmean_lassim_resp          (  ipy) = 0.0
+         end if
+         if (c13af > 0) then !!!DSC!!!
+            cgrid%fmean_gpp_c13              (  ipy) = 0.0
+            cgrid%fmean_npp_c13              (  ipy) = 0.0
+            cgrid%fmean_leaf_resp_c13        (  ipy) = 0.0
+            cgrid%fmean_root_resp_c13        (  ipy) = 0.0
+            cgrid%fmean_growth_resp_c13      (  ipy) = 0.0
+            cgrid%fmean_storage_resp_c13     (  ipy) = 0.0
+            cgrid%fmean_vleaf_resp_c13       (  ipy) = 0.0
+            cgrid%fmean_plresp_c13           (  ipy) = 0.0
+
+            cgrid%fmean_rh_c13               (  ipy) = 0.0
+            cgrid%fmean_cwd_rh_c13           (  ipy) = 0.0
+            cgrid%fmean_nep_c13              (  ipy) = 0.0
+            
+            !cgrid%fmean_can_co2_c13         (  ipy) = 0.0
+            !cgrid%fmean_atm_co2_c13         (  ipy) = 0.0
+            if (c_alloc_flg > 0) then
+               cgrid%fmean_lassim_resp_c13   (  ipy) = 0.0
+            end if
+         end if         
+         
          siteloop: do isi = 1,cpoly%nsites
             csite => cpoly%site(isi)
 
@@ -1341,6 +1476,9 @@ module average_utils
             cpoly%fmean_pcpg           (isi) = 0.0
             cpoly%fmean_qpcpg          (isi) = 0.0
             cpoly%fmean_dpcpg          (isi) = 0.0
+            if (c13af > 0) then
+            !   cpoly%fmean_atm_co2_c13    (isi) = 0.0
+            end if
 
             patchloop: do ipa = 1,csite%npatches
                cpatch => csite%patch(ipa)
@@ -1366,6 +1504,11 @@ module average_utils
                csite%ebudget_denseffect            (ipa) = 0.0
                csite%ebudget_prsseffect            (ipa) = 0.0
                csite%ebudget_residual              (ipa) = 0.0
+               if (c13af > 0) then
+               !   csite%co2budget_gpp_c13                 (ipa) = 0.0
+               !   csite%co2budget_rh_c13                  (ipa) = 0.0
+               !   csite%co2budget_plresp_c13              (ipa) = 0.0
+               end if
                !---------------------------------------------------------------------------!
 
 
@@ -1429,6 +1572,12 @@ module average_utils
                csite%fmean_qthroughfall   (  ipa) = 0.0
                csite%fmean_qrunoff        (  ipa) = 0.0
                csite%fmean_qdrainage      (  ipa) = 0.0
+               if (c13af > 0) then
+                  csite%fmean_rh_c13             (  ipa) = 0.0
+                  csite%fmean_cwd_rh_c13         (  ipa) = 0.0
+                  csite%fmean_nep_c13            (  ipa) = 0.0
+               !   csite%fmean_can_co2        (  ipa) = 0.0
+               end if
                !---------------------------------------------------------------------------!
 
 
@@ -1484,6 +1633,22 @@ module average_utils
                   cpatch%fmean_vapor_wc          (ico) = 0.0
                   cpatch%fmean_intercepted_aw    (ico) = 0.0
                   cpatch%fmean_wshed_wg          (ico) = 0.0
+                  if (c_alloc_flg > 0) then
+                     cpatch%fmean_lassim_resp           (ico) = 0.0
+                  end if
+                  if (c13af > 0) then
+                     cpatch%fmean_gpp_c13               (ico) = 0.0
+                     cpatch%fmean_npp_c13               (ico) = 0.0
+                     cpatch%fmean_leaf_resp_c13         (ico) = 0.0
+                     cpatch%fmean_root_resp_c13         (ico) = 0.0
+                     cpatch%fmean_growth_resp_c13       (ico) = 0.0
+                     cpatch%fmean_storage_resp_c13      (ico) = 0.0
+                     cpatch%fmean_vleaf_resp_c13        (ico) = 0.0
+                     cpatch%fmean_plresp_c13            (ico) = 0.0
+                     if (c_alloc_flg > 0) then
+                        cpatch%fmean_lassim_resp_c13    (ico) = 0.0
+                     end if
+                  end if
                end do cohortloop
                !---------------------------------------------------------------------------!
             end do patchloop
@@ -1551,6 +1716,9 @@ module average_utils
                                       , patchtype           ! ! structure
       use ed_misc_coms         , only : frqsum              ! ! intent(in)
       use consts_coms          , only : day_sec             ! ! intent(in)
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
       implicit none
 
       !----- Argument ---------------------------------------------------------------------!
@@ -1894,6 +2062,57 @@ module average_utils
          cgrid%dmean_sensible_gg  (:,ipy) = cgrid%dmean_sensible_gg  (:,ipy)               &
                                           + cgrid%fmean_sensible_gg  (:,ipy)               &
                                           * frqsum_o_daysec
+         if (c_alloc_flg > 0) then
+            cgrid%dmean_lassim_resp     (ipy) = cgrid%dmean_lassim_resp   (ipy)               &
+                                              + cgrid%fmean_lassim_resp   (ipy)               &
+                                              * frqsum_o_daysec
+         end if
+         if (c13af > 0) then
+            cgrid%dmean_gpp_c13         (ipy) = cgrid%dmean_gpp_c13            (ipy)               &
+                                              + cgrid%fmean_gpp_c13            (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_npp_c13         (ipy) = cgrid%dmean_npp_c13            (ipy)               &
+                                              + cgrid%fmean_npp_c13            (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_leaf_resp_c13   (ipy) = cgrid%dmean_leaf_resp_c13      (ipy)               &
+                                              + cgrid%fmean_leaf_resp_c13      (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_root_resp_c13   (ipy) = cgrid%dmean_root_resp_c13      (ipy)               &
+                                              + cgrid%fmean_root_resp_c13      (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_growth_resp_c13 (ipy) = cgrid%dmean_growth_resp_c13    (ipy)               &
+                                              + cgrid%fmean_growth_resp_c13    (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_storage_resp_c13(ipy) = cgrid%dmean_storage_resp_c13   (ipy)               &
+                                              + cgrid%fmean_storage_resp_c13   (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_vleaf_resp_c13  (ipy) = cgrid%dmean_vleaf_resp_c13     (ipy)               &
+                                              + cgrid%fmean_vleaf_resp_c13     (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_plresp_c13      (ipy) = cgrid%dmean_plresp_c13         (ipy)               &
+                                              + cgrid%fmean_plresp_c13         (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_rh_c13          (ipy) = cgrid%dmean_rh_c13             (ipy)               &
+                                              + cgrid%fmean_rh_c13             (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_cwd_rh_c13      (ipy) = cgrid%dmean_cwd_rh_c13         (ipy)               &
+                                              + cgrid%fmean_cwd_rh_c13         (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_nep_c13         (ipy) = cgrid%dmean_nep_c13            (ipy)               &
+                                              + cgrid%fmean_nep_c13            (ipy)               &
+                                              * frqsum_o_daysec
+         !   cgrid%dmean_can_co2_c13     (ipy) = cgrid%dmean_can_co2_c13        (ipy)               &
+         !                                     + cgrid%fmean_can_co2_c13        (ipy)               &
+         !                                     * frqsum_o_daysec
+         !   cgrid%dmean_atm_co2_c13     (ipy) = cgrid%dmean_atm_co2_c13        (ipy)               &
+         !                                     + cgrid%fmean_atm_co2_c13        (ipy)               &
+         !                                     * frqsum_o_daysec
+            if (c_alloc_flg > 0) then
+               cgrid%dmean_lassim_resp_c13 (ipy) = cgrid%dmean_lassim_resp_c13 (ipy)               &
+                                                 + cgrid%fmean_lassim_resp_c13 (ipy)               &
+                                                 * frqsum_o_daysec
+            end if
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -1960,6 +2179,11 @@ module average_utils
             cpoly%dmean_dpcpg          (isi) = cpoly%dmean_dpcpg          (isi)            &
                                              + cpoly%fmean_dpcpg          (isi)            &
                                              * frqsum_o_daysec
+            if (c13af > 0) then
+            !   cpoly%dmean_atm_co2_c13    (isi) = cpoly%dmean_atm_co2_c13    (isi)            &
+            !                                    + cpoly%fmean_atm_co2_c13    (isi)            &
+            !                                    * frqsum_o_daysec
+            end if
             !------------------------------------------------------------------------------!
 
 
@@ -2129,6 +2353,20 @@ module average_utils
                csite%dmean_transloss       (:,ipa) = csite%dmean_transloss       (:,ipa)   &
                                                    + csite%fmean_transloss       (:,ipa)   &
                                                    * frqsum_o_daysec
+               if (c13af > 0) then
+                  csite%dmean_rh_c13         (ipa) = csite%dmean_rh_c13                (ipa)   &
+                                                   + csite%fmean_rh_c13                (ipa)   &
+                                                   * frqsum_o_daysec
+                  csite%dmean_cwd_rh_c13     (ipa) = csite%dmean_cwd_rh_c13            (ipa)   &
+                                                   + csite%fmean_cwd_rh_c13            (ipa)   &
+                                                   * frqsum_o_daysec
+                  csite%dmean_nep_c13        (ipa) = csite%dmean_nep_c13               (ipa)   &
+                                                   + csite%fmean_nep_c13               (ipa)   &
+                                                   * frqsum_o_daysec
+               !   csite%dmean_can_co2_c13    (ipa) = csite%dmean_can_co2_c13           (ipa)   &
+               !                                    + csite%fmean_can_co2_c13           (ipa)   &
+               !                                    * frqsum_o_daysec
+               end if
                !---------------------------------------------------------------------------!
 
 
@@ -2254,6 +2492,42 @@ module average_utils
                   cpatch%dmean_wshed_wg      (ico) = cpatch%dmean_wshed_wg      (ico)      &
                                                    + cpatch%fmean_wshed_wg      (ico)      &
                                                    * frqsum_o_daysec
+                  if (c_alloc_flg > 0) then
+                     cpatch%dmean_lassim_resp_c13  (ico) = cpatch%dmean_lassim_resp_c13    (ico)      &
+                                                         + cpatch%fmean_lassim_resp_c13    (ico)      &
+                                                         * frqsum_o_daysec
+                  end if
+                  if (c13af > 0) then
+                     cpatch%dmean_gpp_c13          (ico) = cpatch%dmean_gpp_c13           (ico)      &
+                                                         + cpatch%fmean_gpp_c13           (ico)      &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_npp_c13          (ico) = cpatch%dmean_npp_c13           (ico)      &
+                                                         + cpatch%fmean_npp_c13           (ico)      &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_leaf_resp_c13    (ico) = cpatch%dmean_leaf_resp_c13     (ico)      &
+                                                         + cpatch%fmean_leaf_resp_c13     (ico)      &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_root_resp_c13    (ico) = cpatch%dmean_root_resp_c13     (ico)      &
+                                                         + cpatch%fmean_root_resp_c13     (ico)      &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_growth_resp_c13  (ico) = cpatch%dmean_growth_resp_c13   (ico)      &
+                                                         + cpatch%fmean_growth_resp_c13   (ico)      &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_storage_resp_c13 (ico) = cpatch%dmean_storage_resp_c13  (ico)      &
+                                                         + cpatch%fmean_storage_resp_c13  (ico)      &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_vleaf_resp_c13   (ico) = cpatch%dmean_vleaf_resp_c13    (ico)      &
+                                                         + cpatch%fmean_vleaf_resp_c13    (ico)      &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_plresp_c13       (ico) = cpatch%dmean_plresp_c13        (ico)      &
+                                                         + cpatch%fmean_plresp_c13        (ico)      &
+                                                         * frqsum_o_daysec
+                     if (c_alloc_flg > 0) then
+                        cpatch%dmean_lassim_resp_c13  (ico) = cpatch%dmean_lassim_resp_c13 (ico)     &
+                                                            + cpatch%fmean_lassim_resp_c13 (ico)     &
+                                                            * frqsum_o_daysec
+                     end if
+                  end if
                   !------------------------------------------------------------------------!
                end do cohortloop
                !---------------------------------------------------------------------------!
@@ -2300,6 +2574,9 @@ module average_utils
                                , dtlsm         ! ! intent(in)
       use consts_coms   , only : umols_2_kgCyr & ! intent(in)
                                , day_sec       ! ! intent(in)
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target     :: cgrid
@@ -2360,6 +2637,22 @@ module average_utils
                                                   * dtlsm_o_daysec
                   cpatch%today_root_resp    (ico) = cpatch%today_root_resp    (ico)        &
                                                   * dtlsm_o_daysec
+                     if (c_alloc_flg > 0) then
+                        cpatch%today_lassim_resp(ico) = cpatch%today_lassim_resp    (ico)  &
+                                                      * dtlsm_o_daysec
+                     end if
+                     if (c13af > 0) then
+                     cpatch%today_gpp_c13       (ico) = cpatch%today_gpp_c13        (ico)  &
+                                                      * dtlsm_o_daysec
+                     cpatch%today_leaf_resp_c13 (ico) = cpatch%today_leaf_resp_c13  (ico)  &
+                                                      * dtlsm_o_daysec
+                     cpatch%today_root_resp_c13 (ico) = cpatch%today_root_resp_c13  (ico)  &
+                                                      * dtlsm_o_daysec
+                     if (c_alloc_flg > 0) then
+                        cpatch%today_lassim_resp_c13  (ico) = cpatch%today_lassim_resp_c13 (ico)  &
+                                                            * dtlsm_o_daysec
+                     end if
+                  end if
                   !------------------------------------------------------------------------!
                end do cohortloop
                !---------------------------------------------------------------------------!
@@ -2946,6 +3239,9 @@ module average_utils
                               , polygontype  & ! structure
                               , sitetype     & ! structure
                               , patchtype    ! ! structure
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target  :: cgrid
@@ -2988,6 +3284,17 @@ module average_utils
                   cpatch%today_gpp_moistmax (ico) = 0.0
                   cpatch%today_leaf_resp    (ico) = 0.0
                   cpatch%today_root_resp    (ico) = 0.0
+                  if (c_alloc_flg > 0) then
+                     cpatch%today_lassim_resp   (ico) = 0.0
+                  end if
+                  if (c13af > 0) then
+                     cpatch%today_gpp_c13       (ico) = 0.0
+                     cpatch%today_leaf_resp_c13 (ico) = 0.0
+                     cpatch%today_root_resp_c13 (ico) = 0.0
+                     if (c_alloc_flg > 0) then
+                        cpatch%today_lassim_resp_c13  (ico) = 0.0
+                     end if
+                  end if
                end do
                !---------------------------------------------------------------------------!
             end do
@@ -3016,6 +3323,9 @@ module average_utils
                               , polygontype   & ! structure
                               , sitetype      & ! structure
                               , patchtype     ! ! structure
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target  :: cgrid
@@ -3167,6 +3477,33 @@ module average_utils
          cgrid%dmean_pcpg               (ipy) = 0.0
          cgrid%dmean_qpcpg              (ipy) = 0.0
          cgrid%dmean_dpcpg              (ipy) = 0.0
+         
+         if (c_alloc_flg > 0) then
+            cgrid%dmean_lassim_resp            (ipy) = 0.0
+            if (c13af > 0) then
+               cgrid%dmean_lassim_resp_c13     (ipy) = 0.0
+            end if
+         end if
+         if (c13af > 0) then
+            cgrid%dmean_gpp_c13                (ipy) = 0.0
+            cgrid%dmean_npp_c13                (ipy) = 0.0
+            cgrid%dmean_leaf_resp_c13          (ipy) = 0.0
+            cgrid%dmean_root_resp_c13          (ipy) = 0.0
+            cgrid%dmean_growth_resp_c13        (ipy) = 0.0
+            cgrid%dmean_storage_resp_c13       (ipy) = 0.0
+            cgrid%dmean_vleaf_resp_c13         (ipy) = 0.0
+            cgrid%dmean_plresp_c13             (ipy) = 0.0
+            
+            cgrid%dmean_rh_c13                 (ipy) = 0.0
+            cgrid%dmean_cwd_rh_c13             (ipy) = 0.0
+            cgrid%dmean_nep_c13                (ipy) = 0.0
+            
+         !   cgrid%dmean_can_co2_c13            (ipy) = 0.0
+         !   cgrid%dmean_atm_co2_c13            (ipy) = 0.0
+            if (c_alloc_flg > 0) then
+               cgrid%dmean_lassim_resp_c13         (ipy) = 0.0
+            end if
+         end if
 
          !---------------------------------------------------------------------------------!
          !       Loop over sites.                                                          !
@@ -3192,6 +3529,9 @@ module average_utils
             cpoly%dmean_pcpg           (isi) = 0.0
             cpoly%dmean_qpcpg          (isi) = 0.0
             cpoly%dmean_dpcpg          (isi) = 0.0
+            if (c13af > 0) then
+            !   cpoly%dmean_atm_co2_c13        (isi) = 0.0
+            end if
 
             !------------------------------------------------------------------------------!
             !       Loop over sites.                                                       !
@@ -3261,6 +3601,12 @@ module average_utils
                csite%dmean_qthroughfall     (ipa) = 0.0
                csite%dmean_qrunoff          (ipa) = 0.0
                csite%dmean_qdrainage        (ipa) = 0.0
+               if (c13af > 0) then
+                  csite%dmean_rh_c13               (ipa) = 0.0
+                  csite%dmean_cwd_rh_c13           (ipa) = 0.0
+                  csite%dmean_nep_c13              (ipa) = 0.0
+               !   csite%dmean_can_co2_c13          (ipa) = 0.0
+               end if
 
 
 
@@ -3323,6 +3669,22 @@ module average_utils
                   cpatch%dmean_vapor_wc          (ico) = 0.0
                   cpatch%dmean_intercepted_aw    (ico) = 0.0
                   cpatch%dmean_wshed_wg          (ico) = 0.0
+                  if (c_alloc_flg > 0) then
+                     cpatch%dmean_lassim_resp         (ico) = 0.0
+                  end if
+                  if (c13af > 0) then
+                     cpatch%dmean_gpp_c13               (ico) = 0.0
+                     cpatch%dmean_npp_c13               (ico) = 0.0
+                     cpatch%dmean_leaf_resp_c13         (ico) = 0.0
+                     cpatch%dmean_root_resp_c13         (ico) = 0.0
+                     cpatch%dmean_growth_resp_c13       (ico) = 0.0
+                     cpatch%dmean_storage_resp_c13      (ico) = 0.0
+                     cpatch%dmean_vleaf_resp_c13        (ico) = 0.0
+                     cpatch%dmean_plresp_c13            (ico) = 0.0
+                     if (c_alloc_flg > 0) then
+                        cpatch%dmean_lassim_resp_c13         (ico) = 0.0
+                     end if
+                  end if                    
                end do cohortloop
                !---------------------------------------------------------------------------!
             end do patchloop
@@ -3332,7 +3694,7 @@ module average_utils
       end do polyloop
       !------------------------------------------------------------------------------------!
 
-      return
+      return                                
    end subroutine zero_ed_dmean_vars
    !=======================================================================================!
    !=======================================================================================!
@@ -3391,6 +3753,9 @@ module average_utils
       use consts_coms  , only : yr_day        ! ! intent(in)
       use ed_misc_coms , only : current_time  & ! intent(in)
                               , simtime       ! ! structure
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Argument. --------------------------------------------------------------------!
       type(edtype)      , target  :: cgrid
@@ -3480,6 +3845,41 @@ module average_utils
          cgrid%mmean_cwd_n               (ipy) = cgrid%mmean_cwd_n                (ipy)    &
                                                + cgrid%cwd_n                      (ipy)    &
                                                * ndaysi
+         if (c13af > 0) then
+            cgrid%mmean_bleaf_c13           (:,:,ipy) = cgrid%mmean_bleaf_c13            (:,:,ipy)    &
+                                                      + cgrid%bleaf_c13                  (:,:,ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_broot_c13           (:,:,ipy) = cgrid%mmean_broot_c13            (:,:,ipy)    &
+                                                      + cgrid%broot_c13                  (:,:,ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_bstorage_c13        (:,:,ipy) = cgrid%mmean_bstorage_c13         (:,:,ipy)    &
+                                                      + cgrid%bstorage_c13               (:,:,ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_leaf_maintenance_c13(:,:,ipy) = cgrid%mmean_leaf_maintenance_c13 (:,:,ipy)    &
+                                                      + cgrid%leaf_maintenance_c13       (:,:,ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_root_maintenance_c13(:,:,ipy) = cgrid%mmean_root_maintenance_c13 (:,:,ipy)    &
+                                                      + cgrid%root_maintenance_c13       (:,:,ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_leaf_drop_c13       (:,:,ipy) = cgrid%mmean_leaf_drop_c13        (:,:,ipy)    &
+                                                      + cgrid%leaf_drop_c13              (:,:,ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_fast_soil_c13           (ipy) = cgrid%mmean_fast_soil_c13            (ipy)    &
+                                                      + cgrid%fast_soil_c13                  (ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_slow_soil_c13           (ipy) = cgrid%mmean_slow_soil_c13            (ipy)    &
+                                                      + cgrid%slow_soil_c13                  (ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_struct_soil_c13         (ipy) = cgrid%mmean_struct_soil_c13          (ipy)    &
+                                                      + cgrid%struct_soil_c13                (ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_struct_soil_l_c13       (ipy) = cgrid%mmean_struct_soil_l_c13        (ipy)    &
+                                                      + cgrid%struct_soil_l_c13              (ipy)    &
+                                                      * ndaysi
+            cgrid%mmean_cwd_c13                 (ipy) = cgrid%mmean_cwd_c13                  (ipy)    &
+                                                      + cgrid%cwd_c13                        (ipy)    &
+                                                      * ndaysi
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -3960,6 +4360,58 @@ module average_utils
                                             + cgrid%dmean_sensible_ac      (ipy)           &
                                             * cgrid%dmean_sensible_ac      (ipy)           &
                                             * ndaysi
+         !----- Now c13 and c_alloc_flg > 0 vars. --------------------------------------------!
+         if (c_alloc_flg > 0) then
+            cgrid%mmean_lassim_resp      (ipy) = cgrid%mmean_lassim_resp      (ipy)           &
+                                               + cgrid%dmean_lassim_resp      (ipy)           &
+                                               * ndaysi
+         end if
+         if (c13af > 0) then
+            cgrid%mmean_gpp_c13          (ipy) = cgrid%mmean_gpp_c13              (ipy)           &
+                                               + cgrid%dmean_gpp_c13              (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_npp_c13          (ipy) = cgrid%mmean_npp_c13              (ipy)           &
+                                               + cgrid%dmean_npp_c13              (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_leaf_resp_c13    (ipy) = cgrid%mmean_leaf_resp_c13        (ipy)           &
+                                               + cgrid%dmean_leaf_resp_c13        (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_root_resp_c13    (ipy) = cgrid%mmean_root_resp_c13        (ipy)           &
+                                               + cgrid%dmean_root_resp_c13        (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_growth_resp_c13  (ipy) = cgrid%mmean_growth_resp_c13      (ipy)           &
+                                               + cgrid%dmean_growth_resp_c13      (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_storage_resp_c13 (ipy) = cgrid%mmean_storage_resp_c13     (ipy)           &
+                                               + cgrid%dmean_storage_resp_c13     (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_vleaf_resp_c13   (ipy) = cgrid%mmean_vleaf_resp_c13       (ipy)           &
+                                               + cgrid%dmean_vleaf_resp_c13       (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_plresp_c13       (ipy) = cgrid%mmean_plresp_c13           (ipy)           &
+                                               + cgrid%dmean_plresp_c13           (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_rh_c13           (ipy) = cgrid%mmean_rh_c13               (ipy)           &
+                                               + cgrid%dmean_rh_c13               (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_cwd_rh_c13       (ipy) = cgrid%mmean_cwd_rh_c13           (ipy)           &
+                                               + cgrid%dmean_cwd_rh_c13           (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_nep_c13          (ipy) = cgrid%mmean_nep_c13              (ipy)           &
+                                               + cgrid%dmean_nep_c13              (ipy)           &
+                                               * ndaysi
+         !   cgrid%mmean_can_co2_c13      (ipy) = cgrid%mmean_can_co2_c13          (ipy)           &
+         !                                      + cgrid%dmean_can_co2_c13          (ipy)           &
+         !                                      * ndaysi
+         !   cgrid%mmean_atm_co2_c13      (ipy) = cgrid%mmean_atm_co2_c13          (ipy)           &
+         !                                      + cgrid%dmean_atm_co2_c13          (ipy)           &
+         !                                      * ndaysi
+            if (c_alloc_flg > 0) then
+               cgrid%mmean_lassim_resp_c13(ipy) = cgrid%mmean_lassim_resp_c13      (ipy)          &
+                                                + cgrid%dmean_lassim_resp_c13      (ipy)          &
+                                                * ndaysi
+            end if
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -4018,6 +4470,11 @@ module average_utils
             cpoly%mmean_dpcpg          (isi) = cpoly%mmean_dpcpg          (isi)            &
                                              + cpoly%dmean_dpcpg          (isi)            &
                                              * ndaysi
+            if (c13af > 0) then
+            !   cpoly%mmean_atm_co2_c13 (isi) = cpoly%mmean_atm_co2_c13        (isi)         &
+            !                                 + cpoly%dmean_atm_co2_c13        (isi)         &
+            !                                 * ndaysi
+            end if
             !------------------------------------------------------------------------------!
 
 
@@ -4050,6 +4507,20 @@ module average_utils
                csite%mmean_mineral_soil_n   (ipa) = csite%mmean_mineral_soil_n   (ipa)     &
                                                   + csite%mineralized_soil_n     (ipa)     &
                                                   * ndaysi
+               if (c13af > 0) then
+                  csite%mmean_fast_soil_c13    (ipa) = csite%mmean_fast_soil_c13      (ipa)     &
+                                                     + csite%fast_soil_c13            (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_slow_soil_c13    (ipa) = csite%mmean_slow_soil_c13      (ipa)     &
+                                                     + csite%slow_soil_c13            (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_struct_soil_c13  (ipa) = csite%mmean_struct_soil_c13    (ipa)     &
+                                                     + csite%structural_soil_c13      (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_struct_soil_l_c13(ipa) = csite%mmean_struct_soil_l_c13  (ipa)     &
+                                                     + csite%structural_soil_l_c13    (ipa)     &
+                                                     * ndaysi
+               end if
                !---------------------------------------------------------------------------!
 
 
@@ -4118,6 +4589,20 @@ module average_utils
                csite%mmean_sfcw_depth       (ipa) = csite%mmean_sfcw_depth       (ipa)     &
                                                   + csite%dmean_sfcw_depth       (ipa)     &
                                                   * ndaysi
+               if (c13af > 0) then
+                  csite%mmean_rh_c13           (ipa) = csite%mmean_rh_c13               (ipa)     &
+                                                     + csite%dmean_rh_c13               (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_cwd_rh_c13       (ipa) = csite%mmean_cwd_rh_c13           (ipa)     &
+                                                     + csite%dmean_cwd_rh_c13           (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_nep_c13          (ipa) = csite%mmean_nep_c13              (ipa)     &
+                                                     + csite%dmean_nep_c13              (ipa)     &
+                                                     * ndaysi
+               !   csite%mmean_can_co2_c13      (ipa) = csite%mmean_can_co2_c13          (ipa)     &
+               !                                      + csite%dmean_can_co2_c13          (ipa)     &
+               !                                      * ndaysi
+               end if               
                !----- Temporarily make pounding energy extensive [J/m2]. ------------------!
                csite%mmean_sfcw_energy      (ipa) = csite%mmean_sfcw_energy      (ipa)     &
                                                   + csite%dmean_sfcw_energy      (ipa)     &
@@ -4309,9 +4794,9 @@ module average_utils
                                                   * csite%dmean_sensible_ac      (ipa)     &
                                                   * ndaysi
                !---------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !      Patch loop.                                                          !
                !---------------------------------------------------------------------------!
@@ -4353,6 +4838,26 @@ module average_utils
                                                        + cpatch%bstorage            (ico)  &
                                                        / yr_day )                          &
                                                      * ndaysi
+                  if (c13af > 0) then
+                     cpatch%mmean_bleaf_c13           (ico) = cpatch%mmean_bleaf_c13           (ico)  &
+                                                            + cpatch%bleaf_c13                 (ico)  &
+                                                            * ndaysi
+                     cpatch%mmean_broot_c13           (ico) = cpatch%mmean_broot_c13           (ico)  &
+                                                            + cpatch%broot_c13                 (ico)  &
+                                                            * ndaysi
+                     cpatch%mmean_bstorage_c13        (ico) = cpatch%mmean_bstorage_c13        (ico)  &
+                                                            + cpatch%bstorage_c13              (ico)  &
+                                                            * ndaysi
+                     cpatch%mmean_leaf_maintenance_c13(ico) = cpatch%mmean_leaf_maintenance_c13(ico)  &
+                                                            + cpatch%leaf_maintenance_c13      (ico)  &
+                                                            * ndaysi
+                     cpatch%mmean_root_maintenance_c13(ico) = cpatch%mmean_root_maintenance_c13(ico)  &
+                                                            + cpatch%root_maintenance_c13      (ico)  &
+                                                            * ndaysi
+                     cpatch%mmean_leaf_drop_c13       (ico) = cpatch%mmean_leaf_drop_c13       (ico)  &
+                                                            + cpatch%leaf_drop_c13             (ico)  &
+                                                            * ndaysi
+                  end if
                   !------------------------------------------------------------------------!
 
 
@@ -4557,26 +5062,62 @@ module average_utils
                                                      + cpatch%dmean_vapor_wc        (ico)  &
                                                      * cpatch%dmean_vapor_wc        (ico)  &
                                                      * ndaysi
+                  if (c_alloc_flg > 0) then
+                     cpatch%mmean_lassim_resp     (ico) = cpatch%mmean_lassim_resp       (ico)  &
+                                                        + cpatch%dmean_lassim_resp       (ico)  &
+                                                        * ndaysi
+                  end if
+                  if (c13af > 0) then
+                     cpatch%mmean_gpp_c13         (ico) = cpatch%mmean_gpp_c13             (ico)  &
+                                                        + cpatch%dmean_gpp_c13             (ico)  &
+                                                        * ndaysi
+                     cpatch%mmean_npp_c13         (ico) = cpatch%mmean_npp_c13             (ico)  &
+                                                        + cpatch%dmean_npp_c13             (ico)  &
+                                                        * ndaysi
+                     cpatch%mmean_leaf_resp_c13   (ico) = cpatch%mmean_leaf_resp_c13       (ico)  &
+                                                        + cpatch%dmean_leaf_resp_c13       (ico)  &
+                                                        * ndaysi
+                     cpatch%mmean_root_resp_c13   (ico) = cpatch%mmean_root_resp_c13       (ico)  &
+                                                        + cpatch%dmean_root_resp_c13       (ico)  &
+                                                        * ndaysi
+                     cpatch%mmean_growth_resp_c13 (ico) = cpatch%mmean_growth_resp_c13     (ico)  &
+                                                        + cpatch%dmean_growth_resp_c13     (ico)  &
+                                                        * ndaysi
+                     cpatch%mmean_storage_resp_c13(ico) = cpatch%mmean_storage_resp_c13    (ico)  &
+                                                        + cpatch%dmean_storage_resp_c13    (ico)  &
+                                                        * ndaysi
+                     cpatch%mmean_vleaf_resp_c13  (ico) = cpatch%mmean_vleaf_resp_c13      (ico)  &
+                                                        + cpatch%dmean_vleaf_resp_c13      (ico)  &
+                                                        * ndaysi
+                     cpatch%mmean_plresp_c13      (ico) = cpatch%mmean_plresp_c13          (ico)  &
+                                                        + cpatch%dmean_plresp_c13          (ico)  &
+                                                        * ndaysi
+                     if (c_alloc_flg > 0) then
+                        cpatch%mmean_lassim_resp_c13 (ico) = cpatch%mmean_lassim_resp_c13       (ico)  &
+                                                           + cpatch%dmean_lassim_resp_c13       (ico)  &
+                                                           * ndaysi
+                     end if
+                  end if
                   !------------------------------------------------------------------------!
-               end do cohortloop
+               end do cohortloop            
                !---------------------------------------------------------------------------!
-            end do patchloop
+            end do patchloop                
             !------------------------------------------------------------------------------!
-         end do siteloop
+         end do siteloop                    
          !---------------------------------------------------------------------------------!
-      end do polyloop
+      end do polyloop                       
       !------------------------------------------------------------------------------------!
-
-      return
-   end subroutine integrate_ed_mmean_vars
+                                            
+      return                                
+   end subroutine integrate_ed_mmean_vars   
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !    This subroutine normalises the daily mean variables of those variables that could  !
@@ -4599,7 +5140,7 @@ module average_utils
                                       , soil               ! ! intent(in)
       use consts_coms          , only : t00                & ! intent(in)
                                       , wdns               ! ! intent(in)
-      implicit none
+      implicit none                         
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)                          , target  :: cgrid
       !----- Local variables. -------------------------------------------------------------!
@@ -4620,43 +5161,43 @@ module average_utils
       real                                            :: site_wgt
       real                                            :: patch_wgt
       !------------------------------------------------------------------------------------!
-
-
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !     Loop over polygons.                                                            !
       !------------------------------------------------------------------------------------!
-      polyloop: do ipy=1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-
-
+      polyloop: do ipy=1,cgrid%npolygons    
+         cpoly => cgrid%polygon(ipy)        
+                                            
+                                            
          !----- Inverse of this polygon area (it should be always 1.) ---------------------!
-         poly_area_i = 1./sum(cpoly%area)
+         poly_area_i = 1./sum(cpoly%area)   
          !---------------------------------------------------------------------------------!
-
-
+                                            
+                                            
          !----- Re-set some support variables. --------------------------------------------!
-         cgrid_mmean_soil_hcap(:) = 0.0
+         cgrid_mmean_soil_hcap(:) = 0.0     
          !---------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !     Loop over sites.                                                            !
          !---------------------------------------------------------------------------------!
-         siteloop: do isi=1,cpoly%nsites
-            csite => cpoly%site(isi)
-
+         siteloop: do isi=1,cpoly%nsites    
+            csite => cpoly%site(isi)        
+                                            
             !----- Inverse of this site area (it should be always 1.) ---------------------!
             site_area_i = 1./sum(csite%area)
             !------------------------------------------------------------------------------!
-
-
+                                            
+                                            
             !----- Site weight. -----------------------------------------------------------!
             site_wgt = cpoly%area(isi) * poly_area_i
             !------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !      Find the derived properties for the air above canopy.                   !
             !------------------------------------------------------------------------------!
@@ -4666,22 +5207,22 @@ module average_utils
                                                     , cpoly%mmean_atm_temp  (isi)          &
                                                     , cpoly%mmean_atm_shv   (isi) )
             !------------------------------------------------------------------------------!
-
-
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !     Loop over patches.                                                       !
             !------------------------------------------------------------------------------!
             patchloop: do ipa=1,csite%npatches
-               cpatch => csite%patch(ipa)
-
-
+               cpatch => csite%patch(ipa)   
+                                            
+                                            
                !----- Site weight. --------------------------------------------------------!
                patch_wgt = csite%area(ipa) * site_area_i * site_wgt
                !---------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !      Now we find the derived properties for the canopy air space.         !
                !---------------------------------------------------------------------------!
@@ -4692,31 +5233,31 @@ module average_utils
                                                        , csite%mmean_can_temp  (ipa)       &
                                                        , csite%mmean_can_shv   (ipa)       )
                !---------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !     Soil matric potential, temperature, and liquid water.                 !
                !---------------------------------------------------------------------------!
-               do k=1,nzg
+               do k=1,nzg                   
                   nsoil = cpoly%ntext_soil(k,isi)
                   call uextcm2tl( csite%mmean_soil_energy(k,ipa)                           &
                                 , csite%mmean_soil_water (k,ipa) * wdns                    &
                                 , soil(nsoil)%slcpd                                        &
                                 , csite%mmean_soil_temp  (k,ipa)                           &
                                 , csite%mmean_soil_fliq  (k,ipa))
-
+                                            
                   cgrid_mmean_soil_hcap   (k)     = cgrid_mmean_soil_hcap(k)               &
                                                   + soil(nsoil)%slcpd * patch_wgt
                   !------------------------------------------------------------------------!
-
-               end do
+                                            
+               end do                       
                !---------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !   If the patch had some temporary snow/pounding layer, convert the mean   !
                ! energy to J/kg, then find the mean temperature and liquid fraction.       !
@@ -4727,24 +5268,24 @@ module average_utils
                                                / csite%mmean_sfcw_mass  (ipa)
                   call uint2tl( csite%mmean_sfcw_energy(ipa), csite%mmean_sfcw_temp(ipa)   &
                               , csite%mmean_sfcw_fliq  (ipa))
-               else
+               else                         
                   csite%mmean_sfcw_mass  (ipa)  = 0.
                   csite%mmean_sfcw_depth (ipa)  = 0.
                   csite%mmean_sfcw_energy(ipa)  = 0.
                   csite%mmean_sfcw_temp  (ipa)  = csite%mmean_soil_temp(nzg,ipa)
                   csite%mmean_sfcw_fliq  (ipa)  = csite%mmean_soil_fliq(nzg,ipa)
-               end if
+               end if                       
                !---------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !      Loop over the cohorts.                                               !
                !---------------------------------------------------------------------------!
                cohortloop: do ico=1,cpatch%ncohorts
-
-
-
+                                            
+                                            
+                                            
                   !------------------------------------------------------------------------!
                   !     Find the vegetation temperature and liquid fraction.               !
                   !------------------------------------------------------------------------!
@@ -4755,17 +5296,17 @@ module average_utils
                                    , cpatch%mmean_leaf_hcap  (ico)                         &
                                    , cpatch%mmean_leaf_temp  (ico)                         &
                                    , cpatch%mmean_leaf_fliq  (ico) )
-                  else
+                  else                      
                      cpatch%mmean_leaf_vpdef(ico) = csite%mmean_can_vpdef(ipa)
                      cpatch%mmean_leaf_temp (ico) = csite%mmean_can_temp (ipa)
                      if (csite%mmean_can_temp(ipa) > t00) then
                         cpatch%mmean_leaf_fliq(ico) = 1.0
                      elseif (csite%mmean_can_temp(ipa) == t00) then
                         cpatch%mmean_leaf_fliq(ico) = 0.5
-                     else
+                     else                   
                         cpatch%mmean_leaf_fliq(ico) = 0.0
-                     end if
-                  end if
+                     end if                 
+                  end if                    
                   !----- Wood. ------------------------------------------------------------!
                   if (cpatch%mmean_wood_hcap(ico) > 0.) then
                      call uextcm2tl( cpatch%mmean_wood_energy(ico)                         &
@@ -4773,29 +5314,29 @@ module average_utils
                                    , cpatch%mmean_wood_hcap  (ico)                         &
                                    , cpatch%mmean_wood_temp  (ico)                         &
                                    , cpatch%mmean_wood_fliq  (ico) )
-                  else
+                  else                      
                      cpatch%mmean_wood_temp(ico) = csite%mmean_can_temp(ipa)
                      if (csite%mmean_can_temp(ipa) > t00) then
                         cpatch%mmean_wood_fliq(ico) = 1.0
                      elseif (csite%mmean_can_temp(ipa) == t00) then
                         cpatch%mmean_wood_fliq(ico) = 0.5
-                     else
+                     else                   
                         cpatch%mmean_wood_fliq(ico) = 0.0
-                     end if
-                  end if
+                     end if                 
+                  end if                    
                   !------------------------------------------------------------------------!
-               end do cohortloop
+               end do cohortloop            
                !---------------------------------------------------------------------------!
-            end do patchloop
+            end do patchloop                
             !------------------------------------------------------------------------------!
-         end do siteloop
+         end do siteloop                    
          !---------------------------------------------------------------------------------!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !      Find the derived properties for the air above canopy.                      !
          !---------------------------------------------------------------------------------!
@@ -4805,10 +5346,10 @@ module average_utils
                                                  , cgrid%mmean_atm_temp  (ipy)             &
                                                  , cgrid%mmean_atm_shv   (ipy) )
          !---------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !      Find the derived properties for the canopy air space.                      !
          !---------------------------------------------------------------------------------!
@@ -4818,10 +5359,10 @@ module average_utils
                                                  , cgrid%mmean_can_temp  (ipy)             &
                                                  , cgrid%mmean_can_shv   (ipy) )
          !---------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !   If the patch had some temporary snow/pounding layer, convert the mean energy  !
          ! to J/kg, then find the mean temperature and liquid fraction.  Otherwise, set    !
@@ -4832,32 +5373,32 @@ module average_utils
                                          / cgrid%mmean_sfcw_mass(ipy)
             call uint2tl(cgrid%mmean_sfcw_energy(ipy),cgrid%mmean_sfcw_temp(ipy)           &
                         ,cgrid%mmean_sfcw_fliq(ipy))
-         else
+         else                               
             cgrid%mmean_sfcw_mass  (ipy)  = 0.
             cgrid%mmean_sfcw_depth (ipy)  = 0.
             cgrid%mmean_sfcw_energy(ipy)  = 0.
             cgrid%mmean_sfcw_temp  (ipy)  = cgrid%mmean_soil_temp(nzg,ipy)
             cgrid%mmean_sfcw_fliq  (ipy)  = cgrid%mmean_soil_fliq(nzg,ipy)
-         end if
+         end if                             
          !---------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !     Find the temperature and the fraction of liquid water.                      !
          !---------------------------------------------------------------------------------!
-         do k=1,nzg
+         do k=1,nzg                         
             call uextcm2tl( cgrid%mmean_soil_energy(k,ipy)                                 &
                           , cgrid%mmean_soil_water (k,ipy) * wdns                          &
                           , cgrid_mmean_soil_hcap  (k)                                     &
                           , cgrid%mmean_soil_temp  (k,ipy)                                 &
                           , cgrid%mmean_soil_fliq  (k,ipy) )
-         end do
+         end do                             
          !---------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !     Find the vegetation temperature and liquid fraction.                        !
          !---------------------------------------------------------------------------------!
@@ -4866,16 +5407,16 @@ module average_utils
             call uextcm2tl( cgrid%mmean_leaf_energy(ipy), cgrid%mmean_leaf_water (ipy)     &
                           , cgrid%mmean_leaf_hcap  (ipy), cgrid%mmean_leaf_temp  (ipy)     &
                           , cgrid%mmean_leaf_fliq  (ipy) )
-         else
+         else                               
             cgrid%mmean_leaf_temp (ipy) = cgrid%mmean_can_temp (ipy)
             if (cgrid%mmean_can_temp(ipy) > t00) then
                cgrid%mmean_leaf_fliq(ipy) = 1.0
             elseif (cgrid%mmean_can_temp(ipy) == t00) then
                cgrid%mmean_leaf_fliq(ipy) = 0.5
-            else
+            else                            
                cgrid%mmean_leaf_fliq(ipy) = 0.0
-            end if
-         end if
+            end if                          
+         end if                             
          !----- Wood. ---------------------------------------------------------------------!
          if (cgrid%mmean_wood_hcap(ipy) > 0.) then
             call uextcm2tl( cgrid%mmean_wood_energy(ipy)                                   &
@@ -4883,60 +5424,63 @@ module average_utils
                           , cgrid%mmean_wood_hcap  (ipy)                                   &
                           , cgrid%mmean_wood_temp  (ipy)                                   &
                           , cgrid%mmean_wood_fliq  (ipy) )
-         else
+         else                               
             cgrid%mmean_wood_temp(ipy) = cgrid%mmean_can_temp(ipy)
             if (cgrid%mmean_can_temp(ipy) > t00) then
                cgrid%mmean_wood_fliq(ipy) = 1.0
             elseif (cgrid%mmean_can_temp(ipy) == t00) then
                cgrid%mmean_wood_fliq(ipy) = 0.5
-            else
+            else                            
                cgrid%mmean_wood_fliq(ipy) = 0.0
-            end if
-         end if
+            end if                          
+         end if                             
          !---------------------------------------------------------------------------------!
-      end do polyloop
+      end do polyloop                       
       !------------------------------------------------------------------------------------!
-
-      return
-   end subroutine normalize_ed_mmean_vars
+                                            
+      return                                
+   end subroutine normalize_ed_mmean_vars   
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !    This subroutine resets the monthly averages for variables actually used in the     !
    ! integration.                                                                          !
    !---------------------------------------------------------------------------------------!
-   subroutine zero_ed_mmean_vars(cgrid)
+   subroutine zero_ed_mmean_vars(cgrid)     
       use ed_state_vars , only : edtype        & ! structure
                                , polygontype   & ! structure
                                , sitetype      & ! structure
                                , patchtype     ! ! structure
-      implicit none
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use ed_misc_coms , only : c13af         & ! intent(in)
+                              , c_alloc_flg   ! ! intent(in)
+      implicit none                         
       !----- Arguments. -------------------------------------------------------------------!
-      type(edtype)     , target  :: cgrid
+      type(edtype)     , target  :: cgrid   
       !----- Local variables. -------------------------------------------------------------!
-      type(polygontype), pointer :: cpoly
-      type(sitetype)   , pointer :: csite
-      type(patchtype)  , pointer :: cpatch
-      integer                    :: ipy
-      integer                    :: isi
-      integer                    :: ipa
-      integer                    :: ico
+      type(polygontype), pointer :: cpoly   
+      type(sitetype)   , pointer :: csite   
+      type(patchtype)  , pointer :: cpatch  
+      integer                    :: ipy     
+      integer                    :: isi     
+      integer                    :: ipa     
+      integer                    :: ico     
       !------------------------------------------------------------------------------------!
-
-
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !       Loop over polygons.                                                          !
       !------------------------------------------------------------------------------------!
-      polyloop: do ipy=1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-
+      polyloop: do ipy=1,cgrid%npolygons    
+         cpoly => cgrid%polygon(ipy)        
+                                            
          cgrid%mmean_lai             (:,:,ipy) = 0.0
          cgrid%mmean_bleaf           (:,:,ipy) = 0.0
          cgrid%mmean_broot           (:,:,ipy) = 0.0
@@ -5116,14 +5660,45 @@ module average_utils
          cgrid%mmsqu_vapor_ac            (ipy) = 0.0 
          cgrid%mmsqu_sensible_gc         (ipy) = 0.0 
          cgrid%mmsqu_sensible_ac         (ipy) = 0.0 
-
-
+         if (c_alloc_flg > 0) then
+            cgrid%mmean_lassim_resp           (ipy) = 0.0 
+         end if
+         if (c13af > 0) then
+            cgrid%mmean_bleaf_c13           (:,:,ipy) = 0.0
+            cgrid%mmean_broot_c13           (:,:,ipy) = 0.0
+            cgrid%mmean_bstorage_c13        (:,:,ipy) = 0.0
+            cgrid%mmean_leaf_maintenance_c13(:,:,ipy) = 0.0
+            cgrid%mmean_root_maintenance_c13(:,:,ipy) = 0.0
+            cgrid%mmean_leaf_drop_c13       (:,:,ipy) = 0.0
+            cgrid%mmean_fast_soil_c13           (ipy) = 0.0 
+            cgrid%mmean_slow_soil_c13           (ipy) = 0.0 
+            cgrid%mmean_struct_soil_c13         (ipy) = 0.0 
+            cgrid%mmean_struct_soil_l_c13       (ipy) = 0.0 
+            cgrid%mmean_cwd_c13                 (ipy) = 0.0 
+            cgrid%mmean_gpp_c13                 (ipy) = 0.0 
+            cgrid%mmean_npp_c13                 (ipy) = 0.0 
+            cgrid%mmean_leaf_resp_c13           (ipy) = 0.0 
+            cgrid%mmean_root_resp_c13           (ipy) = 0.0 
+            cgrid%mmean_growth_resp_c13         (ipy) = 0.0 
+            cgrid%mmean_storage_resp_c13        (ipy) = 0.0 
+            cgrid%mmean_vleaf_resp_c13          (ipy) = 0.0 
+            cgrid%mmean_plresp_c13              (ipy) = 0.0 
+            cgrid%mmean_rh_c13                  (ipy) = 0.0 
+            cgrid%mmean_cwd_rh_c13              (ipy) = 0.0 
+            cgrid%mmean_nep_c13                 (ipy) = 0.0
+         !   cgrid%mmean_can_co2_c13             (ipy) = 0.0 
+         !   cgrid%mmean_atm_co2_c13             (ipy) = 0.0 
+            if (c_alloc_flg > 0) then
+               cgrid%mmean_lassim_resp_c13           (ipy) = 0.0 
+            end if
+         end if
+                                            
          !---------------------------------------------------------------------------------!
          !       Loop over sites.                                                          !
          !---------------------------------------------------------------------------------!
-         siteloop: do isi=1,cpoly%nsites
-            csite => cpoly%site(isi)
-
+         siteloop: do isi=1,cpoly%nsites    
+            csite => cpoly%site(isi)        
+                                            
             cpoly%mmean_atm_theiv      (isi) = 0.0
             cpoly%mmean_atm_theta      (isi) = 0.0
             cpoly%mmean_atm_temp       (isi) = 0.0
@@ -5141,14 +5716,16 @@ module average_utils
             cpoly%mmean_pcpg           (isi) = 0.0
             cpoly%mmean_qpcpg          (isi) = 0.0
             cpoly%mmean_dpcpg          (isi) = 0.0
-
-
+            if (c13af > 0) then
+               cpoly%mmean_atm_co2_c13        (isi) = 0.0
+            end if                                            
+                                            
             !------------------------------------------------------------------------------!
             !       Loop over sites.                                                       !
             !------------------------------------------------------------------------------!
             patchloop: do ipa=1,csite%npatches
-               cpatch=> csite%patch(ipa)
-
+               cpatch=> csite%patch(ipa)    
+                                            
                csite%mmean_fast_soil_c      (ipa) = 0.0
                csite%mmean_slow_soil_c      (ipa) = 0.0
                csite%mmean_struct_soil_c    (ipa) = 0.0
@@ -5238,8 +5815,18 @@ module average_utils
                csite%mmsqu_vapor_ac         (ipa) = 0.0
                csite%mmsqu_sensible_gc      (ipa) = 0.0
                csite%mmsqu_sensible_ac      (ipa) = 0.0
-
-
+               if (c13af > 0) then
+                  csite%mmean_fast_soil_c13        (ipa) = 0.0
+                  csite%mmean_slow_soil_c13        (ipa) = 0.0
+                  csite%mmean_struct_soil_c13      (ipa) = 0.0
+                  csite%mmean_struct_soil_l_c13    (ipa) = 0.0
+                  csite%mmean_rh_c13               (ipa) = 0.0
+                  csite%mmean_cwd_rh_c13           (ipa) = 0.0
+                  csite%mmean_nep_c13              (ipa) = 0.0
+               !   csite%mmean_can_co2_c13          (ipa) = 0.0
+               end if
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !       Loop over cohorts.                                                  !
                !---------------------------------------------------------------------------!
@@ -5316,29 +5903,51 @@ module average_utils
                   cpatch%mmsqu_transp            (ico) = 0.0
                   cpatch%mmsqu_sensible_wc       (ico) = 0.0
                   cpatch%mmsqu_vapor_wc          (ico) = 0.0
-               end do cohortloop
+                  if (c_alloc_flg > 0) then
+                     cpatch%mmean_lassim_resp         (ico) = 0.0
+                  end if
+                  if (c13af > 0) then
+                     cpatch%mmean_bleaf_c13             (ico) = 0.0
+                     cpatch%mmean_broot_c13             (ico) = 0.0
+                     cpatch%mmean_bstorage_c13          (ico) = 0.0
+                     cpatch%mmean_leaf_maintenance_c13  (ico) = 0.0
+                     cpatch%mmean_root_maintenance_c13  (ico) = 0.0
+                     cpatch%mmean_leaf_drop_c13         (ico) = 0.0
+                     cpatch%mmean_gpp_c13               (ico) = 0.0
+                     cpatch%mmean_npp_c13               (ico) = 0.0
+                     cpatch%mmean_leaf_resp_c13         (ico) = 0.0
+                     cpatch%mmean_root_resp_c13         (ico) = 0.0
+                     cpatch%mmean_growth_resp_c13       (ico) = 0.0
+                     cpatch%mmean_storage_resp_c13      (ico) = 0.0
+                     cpatch%mmean_vleaf_resp_c13        (ico) = 0.0
+                     cpatch%mmean_plresp_c13            (ico) = 0.0
+                     if (c_alloc_flg > 0) then
+                     cpatch%mmean_lassim_resp_c13         (ico) = 0.0
+                     end if
+                  end if                
+               end do cohortloop            
                !---------------------------------------------------------------------------!
-            end do patchloop
+            end do patchloop                
             !------------------------------------------------------------------------------!
-         end do siteloop
+         end do siteloop                    
          !---------------------------------------------------------------------------------!
-      end do polyloop
+      end do polyloop                       
       !------------------------------------------------------------------------------------!
-
-      return
-   end subroutine zero_ed_mmean_vars
+                                            
+      return                                
+   end subroutine zero_ed_mmean_vars        
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !=======================================================================================!
@@ -5354,12 +5963,12 @@ module average_utils
    !=======================================================================================!
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !    This subroutine integrates most of the mean diel variables.  This subroutine is    !
@@ -5380,49 +5989,49 @@ module average_utils
                               , current_time        & ! intent(in)
                               , simtime             ! ! structure
       use consts_coms  , only : day_sec             ! ! intent(in)
-      implicit none
+      implicit none                         
       !----- Argument ---------------------------------------------------------------------!
-      type(edtype)      , target  :: cgrid
+      type(edtype)      , target  :: cgrid  
       !----- Local variables --------------------------------------------------------------!
-      type(polygontype) , pointer :: cpoly
-      type(sitetype)    , pointer :: csite
-      type(patchtype)   , pointer :: cpatch
+      type(polygontype) , pointer :: cpoly  
+      type(sitetype)    , pointer :: csite  
+      type(patchtype)   , pointer :: cpatch 
       type(simtime)               :: daybefore
-      integer                     :: ipy
-      integer                     :: isi
-      integer                     :: ipa
-      integer                     :: ico
-      integer                     :: t
-      real                        :: ndaysi
+      integer                     :: ipy    
+      integer                     :: isi    
+      integer                     :: ipa    
+      integer                     :: ico    
+      integer                     :: t      
+      real                        :: ndaysi 
       !------------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !     Find the index corresponding to this time of the day for the mean diurnal      !
       ! cycle averages.                                                                    !
       !------------------------------------------------------------------------------------!
       t = ceiling(mod(current_time%time,day_sec)/frqfast)
-      if (t == 0) t = nint(day_sec/frqfast)
+      if (t == 0) t = nint(day_sec/frqfast) 
       !------------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !     Find which day we have just integrated, we will use it to determine the right  !
       ! scaling factor.                                                                    !
       !------------------------------------------------------------------------------------!
       call yesterday_info(current_time,daybefore,ndaysi)
       !------------------------------------------------------------------------------------!
-
-
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !      Use the variables that have been already aggregated.                          !
       !------------------------------------------------------------------------------------!
-      polyloop: do ipy=1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-
-
+      polyloop: do ipy=1,cgrid%npolygons    
+         cpoly => cgrid%polygon(ipy)        
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !    Integrate polygon-level variables.                                           !
          !---------------------------------------------------------------------------------!
@@ -5844,15 +6453,15 @@ module average_utils
                                               * cgrid%fmean_sensible_ac        (ipy)       &
                                               * ndaysi
          !---------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !      Site loop.                                                                 !
          !---------------------------------------------------------------------------------!
-         siteloop: do isi=1,cpoly%nsites
-            csite => cpoly%site(isi)
-
+         siteloop: do isi=1,cpoly%nsites    
+            csite => cpoly%site(isi)        
+                                            
             !------------------------------------------------------------------------------!
             !    Integrate site-level variables.                                           !
             !------------------------------------------------------------------------------!
@@ -5902,15 +6511,15 @@ module average_utils
                                                + cpoly%fmean_dpcpg            (isi)        &
                                                * ndaysi
             !------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !      Patch loop.                                                             !
             !------------------------------------------------------------------------------!
             patchloop: do ipa=1,csite%npatches
-               cpatch => csite%patch(ipa)
-
+               cpatch => csite%patch(ipa)   
+                                            
                !---------------------------------------------------------------------------!
                !      Integrate patch-level variables.                                     !
                !---------------------------------------------------------------------------!
@@ -6135,9 +6744,9 @@ module average_utils
                                                     * csite%fmean_sensible_ac        (ipa) &
                                                     * ndaysi
                !---------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !      Patch loop.                                                          !
                !---------------------------------------------------------------------------!
@@ -6313,24 +6922,24 @@ module average_utils
                                                      * cpatch%fmean_vapor_wc        (ico)  &
                                                      * ndaysi
                   !------------------------------------------------------------------------!
-               end do cohortloop
+               end do cohortloop            
                !---------------------------------------------------------------------------!
-            end do patchloop
+            end do patchloop                
             !------------------------------------------------------------------------------!
-         end do siteloop
+         end do siteloop                    
          !---------------------------------------------------------------------------------!
-      end do polyloop
+      end do polyloop                       
       !------------------------------------------------------------------------------------!
-      return
-   end subroutine integrate_ed_qmean_vars
+      return                                
+   end subroutine integrate_ed_qmean_vars   
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !    This subroutine normalises the daily mean variables of those variables that could  !
@@ -6355,7 +6964,7 @@ module average_utils
       use consts_coms          , only : t00                & ! intent(in)
                                       , wdns               ! ! intent(in)
       use grid_coms            , only : nzg                ! ! intent(in)
-      implicit none
+      implicit none                         
       !----- Argument ---------------------------------------------------------------------!
       type(edtype)                     , target  :: cgrid
       !----- Local variables --------------------------------------------------------------!
@@ -6377,138 +6986,138 @@ module average_utils
       real                                       :: site_wgt
       real                                       :: patch_wgt
       !------------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !      Use the variables that have been already aggregated.                          !
       !------------------------------------------------------------------------------------!
-      polyloop: do ipy=1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-
-
+      polyloop: do ipy=1,cgrid%npolygons    
+         cpoly => cgrid%polygon(ipy)        
+                                            
+                                            
          !----- Inverse of this polygon area (it should be always 1.) ---------------------!
-         poly_area_i = 1./sum(cpoly%area)
+         poly_area_i = 1./sum(cpoly%area)   
          !---------------------------------------------------------------------------------!
-
+                                            
          !----- Re-set some support variables. --------------------------------------------!
-         cgrid_qmean_soil_hcap(:) = 0.0
+         cgrid_qmean_soil_hcap(:) = 0.0     
          !---------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !      Site loop.                                                                 !
          !---------------------------------------------------------------------------------!
-         siteloop: do isi=1,cpoly%nsites
-            csite => cpoly%site(isi)
-
+         siteloop: do isi=1,cpoly%nsites    
+            csite => cpoly%site(isi)        
+                                            
             !----- Inverse of this site area (it should be always 1.) ---------------------!
             site_area_i = 1./sum(csite%area)
             !------------------------------------------------------------------------------!
-
-
+                                            
+                                            
             !----- Site weight. -----------------------------------------------------------!
             site_wgt = cpoly%area(isi) * poly_area_i
             !------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !      Find the derived properties for the air above canopy.                   !
             !------------------------------------------------------------------------------!
-            do t=1,ndcycle
+            do t=1,ndcycle                  
                atm_exner                   = press2exner ( cpoly%qmean_atm_prss  (t,isi) )
                cpoly%qmean_atm_temp(t,isi) = extheta2temp( atm_exner                       &
                                                          , cpoly%qmean_atm_theta (t,isi) )
                cpoly%qmean_atm_rhos(t,isi) = idealdenssh ( cpoly%qmean_atm_prss  (t,isi)   &
                                                          , cpoly%qmean_atm_temp  (t,isi)   &
                                                          , cpoly%qmean_atm_shv   (t,isi) )
-            end do
+            end do                          
             !------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !      Patch loop.                                                             !
             !------------------------------------------------------------------------------!
             patchloop: do ipa=1,csite%npatches
-               cpatch => csite%patch(ipa)
-
-
+               cpatch => csite%patch(ipa)   
+                                            
+                                            
                !----- Site weight. --------------------------------------------------------!
                patch_wgt = csite%area(ipa) * site_area_i * site_wgt
                !---------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !     Soil matric potential, temperature, and liquid water.                 !
                !---------------------------------------------------------------------------!
-               do k=1,nzg
+               do k=1,nzg                   
                   nsoil = cpoly%ntext_soil(k,isi)
-
+                                            
                   !----- Heat capacity stays outside the time loop. -----------------------!
                   cgrid_qmean_soil_hcap(k) = cgrid_qmean_soil_hcap(k)                      &
                                            + soil(nsoil)%slcpd * patch_wgt
                   !------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
                   !------------------------------------------------------------------------!
                   !     Find the soil properties, and integrate polygon-level soil matric  !
                   ! potential.                                                             !
                   !------------------------------------------------------------------------!
-                  do t=1,ndcycle
+                  do t=1,ndcycle            
                      call uextcm2tl( csite%qmean_soil_energy(k,t,ipa)                      &
                                    , csite%qmean_soil_water (k,t,ipa) * wdns               &
                                    , soil(nsoil)%slcpd                                     &
                                    , csite%qmean_soil_temp  (k,t,ipa)                      &
                                    , csite%qmean_soil_fliq  (k,t,ipa))
-                  end do
+                  end do                    
                   !------------------------------------------------------------------------!
-               end do
+               end do                       
                !---------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !   If the patch had some temporary snow/pounding layer, convert the mean   !
                ! energy to J/kg, then find the mean temperature and liquid fraction.       !
                ! Otherwise, set them to either zero or default values.                     !
                !---------------------------------------------------------------------------!
-               do t=1,ndcycle
+               do t=1,ndcycle               
                   if (csite%qmean_sfcw_mass(t,ipa) > tiny_sfcwater_mass) then
                      csite%qmean_sfcw_energy(t,ipa) = csite%qmean_sfcw_energy(t,ipa)       &
                                                     / csite%qmean_sfcw_mass  (t,ipa)
                      call uint2tl( csite%qmean_sfcw_energy(t,ipa)                          &
                                  , csite%qmean_sfcw_temp  (t,ipa)                          &
                                  , csite%qmean_sfcw_fliq  (t,ipa))
-                  else
+                  else                      
                      csite%qmean_sfcw_mass  (t,ipa)  = 0.
                      csite%qmean_sfcw_depth (t,ipa)  = 0.
                      csite%qmean_sfcw_energy(t,ipa)  = 0.
                      csite%qmean_sfcw_temp  (t,ipa)  = csite%qmean_soil_temp(nzg,t,ipa)
                      csite%qmean_sfcw_fliq  (t,ipa)  = csite%qmean_soil_fliq(nzg,t,ipa)
-                  end if
-               end do
+                  end if                    
+               end do                       
                !---------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !      Cohort loop.                                                         !
                !---------------------------------------------------------------------------!
                cohortloop: do ico=1,cpatch%ncohorts
-
-
-
+                                            
+                                            
+                                            
                   !------------------------------------------------------------------------!
                   !     Find the vegetation temperature and liquid fraction.               !
                   !------------------------------------------------------------------------!
-                  do t=1,ndcycle
+                  do t=1,ndcycle            
                      !----- Leaf. ---------------------------------------------------------!
                      if (cpatch%qmean_leaf_hcap(t,ico) > 0.) then
                         call uextcm2tl( cpatch%qmean_leaf_energy(t,ico)                    &
@@ -6516,17 +7125,17 @@ module average_utils
                                       , cpatch%qmean_leaf_hcap  (t,ico)                    &
                                       , cpatch%qmean_leaf_temp  (t,ico)                    &
                                       , cpatch%qmean_leaf_fliq  (t,ico) )
-                     else
+                     else                   
                         cpatch%qmean_leaf_vpdef(t,ico) = csite%qmean_can_vpdef(t,ipa)
                         cpatch%qmean_leaf_temp (t,ico) = csite%qmean_can_temp (t,ipa)
                         if (csite%qmean_can_temp(t,ipa) > t00) then
                            cpatch%qmean_leaf_fliq(t,ico) = 1.0
                         elseif (csite%qmean_can_temp(t,ipa) == t00) then
                            cpatch%qmean_leaf_fliq(t,ico) = 0.5
-                        else
+                        else                
                            cpatch%qmean_leaf_fliq(t,ico) = 0.0
-                        end if
-                     end if
+                        end if              
+                     end if                 
                      !----- Wood. ---------------------------------------------------------!
                      if (cpatch%qmean_wood_hcap(t,ico) > 0.) then
                         call uextcm2tl( cpatch%qmean_wood_energy(t,ico)                    &
@@ -6534,36 +7143,36 @@ module average_utils
                                       , cpatch%qmean_wood_hcap  (t,ico)                    &
                                       , cpatch%qmean_wood_temp  (t,ico)                    &
                                       , cpatch%qmean_wood_fliq  (t,ico) )
-                     else
+                     else                   
                         cpatch%qmean_wood_temp(t,ico) = csite%qmean_can_temp(t,ipa)
                         if (csite%qmean_can_temp(t,ipa) > t00) then
                            cpatch%qmean_wood_fliq(t,ico) = 1.0
                         elseif (csite%qmean_can_temp(t,ipa) == t00) then
                            cpatch%qmean_wood_fliq(t,ico) = 0.5
-                        else
+                        else                
                            cpatch%qmean_wood_fliq(t,ico) = 0.0
-                        end if
+                        end if              
                         !------------------------------------------------------------------!
-                     end if
+                     end if                 
                      !---------------------------------------------------------------------!
-                  end do
+                  end do                    
                   !------------------------------------------------------------------------!
-               end do cohortloop
+               end do cohortloop            
                !---------------------------------------------------------------------------!
-            end do patchloop
+            end do patchloop                
             !------------------------------------------------------------------------------!
-         end do siteloop
+         end do siteloop                    
          !---------------------------------------------------------------------------------!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !      Find the derived properties for the air above canopy.                      !
          !---------------------------------------------------------------------------------!
-         do t=1,ndcycle
+         do t=1,ndcycle                     
             !------------------------------------------------------------------------------!
             !      Find the derived properties for the air above canopy.                   !
             !------------------------------------------------------------------------------!
@@ -6574,10 +7183,10 @@ module average_utils
                                                       , cgrid%qmean_atm_temp     (t,ipy)   &
                                                       , cgrid%qmean_atm_shv      (t,ipy) )
             !------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !      Find the derived properties for the canopy air space.                   !
             !------------------------------------------------------------------------------!
@@ -6588,10 +7197,10 @@ module average_utils
                                                       , cgrid%qmean_can_temp (t,ipy)       &
                                                       , cgrid%qmean_can_shv  (t,ipy) )
             !------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !   If the patch had some temporary snow/pounding layer, convert the mean      !
             ! energy to J/kg, then find the mean temperature and liquid fraction.  Other-  !
@@ -6602,32 +7211,32 @@ module average_utils
                                               / cgrid%qmean_sfcw_mass  (t,ipy)
                call uint2tl(cgrid%qmean_sfcw_energy(t,ipy),cgrid%qmean_sfcw_temp(t,ipy)    &
                            ,cgrid%qmean_sfcw_fliq(t,ipy))
-            else
+            else                            
                cgrid%qmean_sfcw_mass  (t,ipy)  = 0.
                cgrid%qmean_sfcw_depth (t,ipy)  = 0.
                cgrid%qmean_sfcw_energy(t,ipy)  = 0.
                cgrid%qmean_sfcw_temp  (t,ipy)  = cgrid%qmean_soil_temp(nzg,t,ipy)
                cgrid%qmean_sfcw_fliq  (t,ipy)  = cgrid%qmean_soil_fliq(nzg,t,ipy)
-            end if
+            end if                          
             !------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !     Find the temperature and the fraction of liquid water.                   !
             !------------------------------------------------------------------------------!
-            do k=1,nzg
+            do k=1,nzg                      
                call uextcm2tl( cgrid%qmean_soil_energy(k,t,ipy)                            &
                              , cgrid%qmean_soil_water (k,t,ipy) * wdns                     &
                              , cgrid_qmean_soil_hcap  (k)                                  &
                              , cgrid%qmean_soil_temp  (k,t,ipy)                            &
                              , cgrid%qmean_soil_fliq  (k,t,ipy) )
-            end do
+            end do                          
             !------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !     Find the vegetation temperature and liquid fraction.                     !
             !------------------------------------------------------------------------------!
@@ -6638,16 +7247,16 @@ module average_utils
                              , cgrid%qmean_leaf_hcap  (t,ipy)                              &
                              , cgrid%qmean_leaf_temp  (t,ipy)                              &
                              , cgrid%qmean_leaf_fliq  (t,ipy) )
-            else
+            else                            
                cgrid%qmean_leaf_temp (t,ipy) = cgrid%qmean_can_temp (t,ipy)
                if (cgrid%qmean_can_temp(t,ipy) > t00) then
                   cgrid%qmean_leaf_fliq(t,ipy) = 1.0
                elseif (cgrid%qmean_can_temp(t,ipy) == t00) then
                   cgrid%qmean_leaf_fliq(t,ipy) = 0.5
-               else
+               else                         
                   cgrid%qmean_leaf_fliq(t,ipy) = 0.0
-               end if
-            end if
+               end if                       
+            end if                          
             !----- Wood. ------------------------------------------------------------------!
             if (cgrid%qmean_wood_hcap(t,ipy) > 0.) then
                call uextcm2tl( cgrid%qmean_wood_energy(t,ipy)                              &
@@ -6655,59 +7264,59 @@ module average_utils
                              , cgrid%qmean_wood_hcap  (t,ipy)                              &
                              , cgrid%qmean_wood_temp  (t,ipy)                              &
                              , cgrid%qmean_wood_fliq  (t,ipy) )
-            else
+            else                            
                cgrid%qmean_wood_temp(t,ipy) = cgrid%qmean_can_temp(t,ipy)
                if (cgrid%qmean_can_temp(t,ipy) > t00) then
                   cgrid%qmean_wood_fliq(t,ipy) = 1.0
                elseif (cgrid%qmean_can_temp(t,ipy) == t00) then
                   cgrid%qmean_wood_fliq(t,ipy) = 0.5
-               else
+               else                         
                   cgrid%qmean_wood_fliq(t,ipy) = 0.0
-               end if
-            end if
-         end do
+               end if                       
+            end if                          
+         end do                             
          !---------------------------------------------------------------------------------!
-      end do polyloop
+      end do polyloop                       
       !------------------------------------------------------------------------------------!
-      return
-   end subroutine normalize_ed_qmean_vars
+      return                                
+   end subroutine normalize_ed_qmean_vars   
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !    This subroutine resets the mean diel once the "Q" file has been written.           !
    !---------------------------------------------------------------------------------------!
-   subroutine zero_ed_qmean_vars(cgrid)
+   subroutine zero_ed_qmean_vars(cgrid)     
       use ed_state_vars, only : edtype        & ! structure
                               , polygontype   & ! structure
                               , sitetype      & ! structure
                               , patchtype     ! ! structure
-      implicit none
+      implicit none                         
       !----- Arguments. -------------------------------------------------------------------!
-      type(edtype)     , target  :: cgrid
+      type(edtype)     , target  :: cgrid   
       !----- Local variables. -------------------------------------------------------------!
-      type(polygontype), pointer :: cpoly
-      type(sitetype)   , pointer :: csite
-      type(patchtype)  , pointer :: cpatch
-      integer                    :: ipy
-      integer                    :: isi
-      integer                    :: ipa
-      integer                    :: ico
+      type(polygontype), pointer :: cpoly   
+      type(sitetype)   , pointer :: csite   
+      type(patchtype)  , pointer :: cpatch  
+      integer                    :: ipy     
+      integer                    :: isi     
+      integer                    :: ipa     
+      integer                    :: ico     
       !------------------------------------------------------------------------------------!
-
-
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !       Loop over polygons.                                                          !
       !------------------------------------------------------------------------------------!
-      polyloop: do ipy = 1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-
+      polyloop: do ipy = 1,cgrid%npolygons  
+         cpoly => cgrid%polygon(ipy)        
+                                            
          cgrid%qmean_gpp                (:,ipy) = 0.0
          cgrid%qmean_npp                (:,ipy) = 0.0
          cgrid%qmean_leaf_resp          (:,ipy) = 0.0
@@ -6850,14 +7459,14 @@ module average_utils
          cgrid%qmsqu_vapor_ac           (:,ipy) = 0.0
          cgrid%qmsqu_sensible_gc        (:,ipy) = 0.0
          cgrid%qmsqu_sensible_ac        (:,ipy) = 0.0
-
-
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !       Loop over sites.                                                          !
          !---------------------------------------------------------------------------------!
-         siteloop: do isi=1,cpoly%nsites
-            csite => cpoly%site(isi)
-
+         siteloop: do isi=1,cpoly%nsites    
+            csite => cpoly%site(isi)        
+                                            
             cpoly%qmean_atm_theiv      (:,isi) = 0.0
             cpoly%qmean_atm_theta      (:,isi) = 0.0
             cpoly%qmean_atm_temp       (:,isi) = 0.0
@@ -6875,12 +7484,12 @@ module average_utils
             cpoly%qmean_pcpg           (:,isi) = 0.0
             cpoly%qmean_qpcpg          (:,isi) = 0.0
             cpoly%qmean_dpcpg          (:,isi) = 0.0
-
+                                            
             !------------------------------------------------------------------------------!
             !       Loop over sites.                                                       !
             !------------------------------------------------------------------------------!
             patchloop: do ipa=1,csite%npatches
-               cpatch => csite%patch(ipa)
+               cpatch => csite%patch(ipa)   
                csite%qmean_rh                     (:,ipa) = 0.0
                csite%qmean_cwd_rh                 (:,ipa) = 0.0
                csite%qmean_nep                    (:,ipa) = 0.0
@@ -6954,9 +7563,9 @@ module average_utils
                csite%qmsqu_vapor_ac               (:,ipa) = 0.0
                csite%qmsqu_sensible_gc            (:,ipa) = 0.0
                csite%qmsqu_sensible_ac            (:,ipa) = 0.0
-
-
-
+                                            
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !       Loop over cohorts.                                                  !
                !---------------------------------------------------------------------------!
@@ -7017,17 +7626,17 @@ module average_utils
                   cpatch%qmsqu_transp              (:,ico) = 0.0
                   cpatch%qmsqu_sensible_wc         (:,ico) = 0.0
                   cpatch%qmsqu_vapor_wc            (:,ico) = 0.0
-               end do cohortloop
+               end do cohortloop            
                !---------------------------------------------------------------------------!
-            end do patchloop
+            end do patchloop                
             !------------------------------------------------------------------------------!
-         end do siteloop
+         end do siteloop                    
          !---------------------------------------------------------------------------------!
-      end do polyloop
+      end do polyloop                       
       !------------------------------------------------------------------------------------!
-
-      return
-   end subroutine zero_ed_qmean_vars
+                                            
+      return                                
+   end subroutine zero_ed_qmean_vars        
    !=======================================================================================!
    !=======================================================================================!
    !=======================================================================================!
@@ -7036,16 +7645,16 @@ module average_utils
    !=======================================================================================!
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !=======================================================================================!
@@ -7061,18 +7670,18 @@ module average_utils
    !=======================================================================================!
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !      This sub-routine updates the yearly variables.                                   !
    !---------------------------------------------------------------------------------------!
-   subroutine update_ed_yearly_vars(cgrid)
-
+   subroutine update_ed_yearly_vars(cgrid)  
+                                            
       use ed_state_vars, only : edtype      & ! structure
                               , polygontype & ! structure
                               , sitetype    & ! structure
@@ -7080,38 +7689,38 @@ module average_utils
       use ed_max_dims  , only : n_pft       & ! intent(in)
                               , n_dbh       ! ! intent(in)
       use consts_coms  , only : pi1         ! ! intent(in)
-     
-      implicit none
+                                            
+      implicit none                         
       !------ Arguments. ------------------------------------------------------------------!
-      type(edtype)     , target  :: cgrid
+      type(edtype)     , target  :: cgrid   
       !------ Local variables. ------------------------------------------------------------!
-      type(polygontype), pointer :: cpoly
-      type(sitetype)   , pointer :: csite
-      type(patchtype)  , pointer :: cpatch
-      integer                    :: ipy
-      integer                    :: isi
-      integer                    :: ipa
-      integer                    :: ico
+      type(polygontype), pointer :: cpoly   
+      type(sitetype)   , pointer :: csite   
+      type(patchtype)  , pointer :: cpatch  
+      integer                    :: ipy     
+      integer                    :: isi     
+      integer                    :: ipa     
+      integer                    :: ico     
       real                       :: poly_area_i
       real                       :: site_area_i
       real                       :: site_wgt
       real                       :: patch_wgt
       !------------------------------------------------------------------------------------!
-
-
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !      All above-ground biomass variables are in kgC/m2 or kgC/m2/yr; and all basal  !
       ! areas are in cm2/m2 or cm2/m2/yr.                                                  !
       !------------------------------------------------------------------------------------!
-
-
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !      Loop over polygons.                                                           !
       !------------------------------------------------------------------------------------!
-      polyloop: do ipy = 1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-
-
+      polyloop: do ipy = 1,cgrid%npolygons  
+         cpoly => cgrid%polygon(ipy)        
+                                            
+                                            
          !----- Re-set the variables. -----------------------------------------------------!
          cgrid%total_basal_area        (ipy) = 0.0
          cgrid%total_basal_area_growth (ipy) = 0.0
@@ -7122,31 +7731,31 @@ module average_utils
          cgrid%total_agb_mort          (ipy) = 0.0
          cgrid%total_agb_recruit       (ipy) = 0.0
          !---------------------------------------------------------------------------------!
-
-
+                                            
+                                            
          !----- Inverse of this polygon area (it should be always 1.) ---------------------!
-         poly_area_i = 1./sum(cpoly%area)
+         poly_area_i = 1./sum(cpoly%area)   
          !---------------------------------------------------------------------------------!
-
-
+                                            
+                                            
          !---------------------------------------------------------------------------------!
          !      Loop over polygons.                                                        !
          !---------------------------------------------------------------------------------!
-         siteloop: do isi = 1,cpoly%nsites
-            csite => cpoly%site(isi)
-
+         siteloop: do isi = 1,cpoly%nsites  
+            csite => cpoly%site(isi)        
+                                            
             !----- Inverse of this site area (it should be always 1.) ---------------------!
-            site_area_i=1./sum(csite%area)
+            site_area_i=1./sum(csite%area)  
             !------------------------------------------------------------------------------!
-
-
+                                            
+                                            
             !----- Site weight. -----------------------------------------------------------!
             site_wgt = cpoly%area(isi) * poly_area_i
             !------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !      Do growth, mortality, harvesting.                                       !
             !------------------------------------------------------------------------------!
@@ -7163,112 +7772,116 @@ module average_utils
                                                + sum(cpoly%agb_mort(1:n_pft,1:n_dbh,isi))  &
                                                * site_wgt
             cgrid%total_basal_area_growth(ipy) = cgrid%total_basal_area_growth(ipy)        &
-                                       + sum(cpoly%basal_area_growth(1:n_pft,2:n_dbh,isi)) &
+                                       + sum(cpoly%basal_area_growth     (:,:,isi))        &
                                        * site_wgt
             cgrid%total_basal_area_mort  (ipy) = cgrid%total_basal_area_mort  (ipy)        &
-                                       + sum(cpoly%basal_area_mort  (1:n_pft,2:n_dbh,isi)) &
+                                       + sum(cpoly%basal_area_mort       (:,:,isi))        &
                                        * site_wgt
             !------------------------------------------------------------------------------!
-
-
-
-
+                                            
+                                            
+                                            
+                                            
             !------------------------------------------------------------------------------!
             !      Loop over patches and cohorts to get recruitment.                       !
             !------------------------------------------------------------------------------!
             patchloop: do ipa = 1,csite%npatches
-               cpatch => csite%patch(ipa)
-
-
+               cpatch => csite%patch(ipa)   
+                                            
+                                            
                !----- Site weight. --------------------------------------------------------!
                patch_wgt = csite%area(ipa) * site_area_i * site_wgt
                !---------------------------------------------------------------------------!
-
-
+                                            
+                                            
                !---------------------------------------------------------------------------!
                !      Loop over patches and cohorts to get recruitment.                    !
                !---------------------------------------------------------------------------!
                cohortloop: do ico = 1,cpatch%ncohorts
-
+                                            
                   if (cpatch%new_recruit_flag(ico) == 1) then
                      cgrid%total_agb_recruit       (ipy) =                                 &
                             cgrid%total_agb_recruit      (ipy)                             &
                           + cpatch%agb                   (ico)                             &
                           * cpatch%nplant                (ico)                             &
-                          * patch_wgt
+                          * patch_wgt       
                      cgrid%total_basal_area_recruit(ipy) =                                 &
                             cgrid%total_basal_area_recruit(ipy)                            &
                           + cpatch%basarea(ico)                                            &
                           * cpatch%nplant (ico)                                            &
-                          * patch_wgt
+                          * patch_wgt       
                      cpatch%new_recruit_flag       (ico) = 0
-                  end if
+                  end if                    
                   cpatch%first_census (ico) = 1
-               end do cohortloop
+               end do cohortloop            
                !---------------------------------------------------------------------------!
-            end do patchloop
+            end do patchloop                
             !------------------------------------------------------------------------------!
-         end do siteloop
+         end do siteloop                    
          !---------------------------------------------------------------------------------!
-      end do polyloop
+         !write (*,*) 'Total Basal Area        (average_utils): ', cgrid%total_basal_area(ipy)
+         !write (*,*) 'Total Basal Area Growth (average_utils): ', cgrid%total_basal_area_growth(ipy)
+         !write (*,*) 'Total Basal Area Mort   (average_utils): ', cgrid%total_basal_area_mort(ipy)
+         !write (*,*) 'Total Basal Area Recruit(average_utils): ', cgrid%total_basal_area_recruit(ipy)
+      end do polyloop                       
       !------------------------------------------------------------------------------------!
-      return
-   end subroutine update_ed_yearly_vars
+      return                                
+   end subroutine update_ed_yearly_vars     
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
-
-
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
    !=======================================================================================!
    !=======================================================================================!
    !      This sub-routine re-sets the yearly variables.                                   !
    !---------------------------------------------------------------------------------------!
-   subroutine zero_ed_yearly_vars(cgrid)
-
+   subroutine zero_ed_yearly_vars(cgrid)    
+                                            
       use ed_max_dims  , only : n_pft       & ! intent(in)
                               , n_dbh       ! ! intent(in)
       use ed_state_vars, only : edtype      & ! structure
                               , polygontype ! ! structure
-
-      implicit none
+                                            
+      implicit none                         
       !------ Arguments. ------------------------------------------------------------------!
-      type(edtype)     , target  :: cgrid
+      type(edtype)     , target  :: cgrid   
       !------ Local variables. ------------------------------------------------------------!
-      integer                    :: ipy
-      integer                    :: isi
-      type(polygontype), pointer :: cpoly
+      integer                    :: ipy     
+      integer                    :: isi     
+      type(polygontype), pointer :: cpoly   
       !------------------------------------------------------------------------------------!
-
-
-
+                                            
+                                            
+                                            
       !------------------------------------------------------------------------------------!
       !     Loop over polygons.                                                            !
       !------------------------------------------------------------------------------------!
-      do ipy = 1,cgrid%npolygons
-         
-         cpoly => cgrid%polygon(ipy)
+      do ipy = 1,cgrid%npolygons            
+                                            
+         cpoly => cgrid%polygon(ipy)        
          !---------------------------------------------------------------------------------!
          !     Loop over sites.                                                            !
          !---------------------------------------------------------------------------------!
-         do isi = 1,cpoly%nsites
+         do isi = 1,cpoly%nsites            
             cpoly%agb_growth        (:,:,isi) = 0.0
             cpoly%agb_mort          (:,:,isi) = 0.0
             cpoly%agb_cut           (:,:,isi) = 0.0
             cpoly%basal_area_growth (:,:,isi) = 0.0
             cpoly%basal_area_mort   (:,:,isi) = 0.0
             cpoly%basal_area_cut    (:,:,isi) = 0.0
-         end do
+         end do                             
          !---------------------------------------------------------------------------------!
-      end do
+      end do                                
       !------------------------------------------------------------------------------------!
-
-      return
-   end subroutine zero_ed_yearly_vars
+                                            
+      return                                
+   end subroutine zero_ed_yearly_vars       
    !=======================================================================================!
    !=======================================================================================!
-end module average_utils
+end module average_utils                    
 !==========================================================================================!
 !==========================================================================================!

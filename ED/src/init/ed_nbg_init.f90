@@ -10,6 +10,8 @@ subroutine near_bare_ground_init(cgrid)
    use ed_misc_coms   , only : ied_init_mode     ! ! intent(in)
    use physiology_coms, only : n_plant_lim       ! ! intent(in)
    use grid_coms      , only : nzg               ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes       , only : c13af             ! ! intent(in)
 
    implicit none
 
@@ -50,6 +52,13 @@ subroutine near_bare_ground_init(cgrid)
             csite%structural_soil_L  (1) = 0.0
             csite%mineralized_soil_N (1) = 0.0
             csite%fast_soil_N        (1) = 0.0
+            
+            if (c13af > 0) then !!!DSC!!!
+               csite%fast_soil_c13          (1) = 0.0
+               csite%slow_soil_c13          (1) = 0.0
+               csite%structural_soil_c13    (1) = 0.0
+               csite%structural_soil_L_c13  (1) = 0.0
+            end if
 
          case (1)
             csite%fast_soil_C        (1) = 0.2
@@ -58,6 +67,14 @@ subroutine near_bare_ground_init(cgrid)
             csite%structural_soil_L  (1) = csite%structural_soil_C (1)
             csite%mineralized_soil_N (1) = 1.0
             csite%fast_soil_N        (1) = 1.0
+            
+            if (c13af > 0) then !!!DSC!!!
+            ! 0.0112372 is 0.0 permil on PDB scale, this is arbitrary. (and unrealistic!)
+               csite%fast_soil_c13          (1) = 0.02 * 0.0109226/(1.0 + 0.0109226)
+               csite%slow_soil_c13          (1) = 0.01 * 0.0109226/(1.0 + 0.0109226)
+               csite%structural_soil_c13    (1) = 10.0 * 0.0109226/(1.0 + 0.0109226)
+               csite%structural_soil_L_c13  (1) = csite%structural_soil_C(1) * 0.0109226/(1.0 + 0.0109226)
+            end if
 
          end select
          !---------------------------------------------------------------------------------!
@@ -127,6 +144,14 @@ subroutine init_nbg_cohorts(csite,lsl,ipa_a,ipa_z)
                                  , ed_biomass         & ! function
                                  , area_indices       ! ! subroutine
    use fuse_fiss_utils    , only : sort_cohorts    ! ! subroutine
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes           , only : c13af              & ! intent(in)
+                                 , cri_bleaf          & ! intent(in)	!!!DSC!!
+                                 , cri_bdead          & ! intent(in)	!!!DSC!!
+                                 , cri_broot          & ! intent(in)	!!!DSC!!
+                                 , cri_bsapwooda      & ! intent(in)	!!!DSC!!
+                                 , cri_bsapwoodb      & ! intent(in)	!!!DSC!!
+                                 , cri_bstorage       ! ! intent(in)	!!!DSC!!
 
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
@@ -226,6 +251,47 @@ subroutine init_nbg_cohorts(csite,lsl,ipa_a,ipa_z)
                                               + cpatch%bsapwooda(ico)                      &
                                               + cpatch%bsapwoodb(ico))
 
+         if (c13af > 0) then	!!!DSC!!!
+            cpatch%bdead_c13	  (ico) = cri_bdead(ipft) * cpatch%bdead(ico)
+            cpatch%bleaf_c13	  (ico) = cri_bleaf(ipft) * cpatch%bleaf(ico)
+            cpatch%broot_c13    (ico) = cri_broot(ipft) * cpatch%broot(ico)
+
+            cpatch%bsapwooda_c13(ico) = cri_bsapwooda(ipft) * cpatch%bsapwooda(ico)
+            cpatch%bsapwoodb_c13(ico) = cri_bsapwoodb(ipft) * cpatch%bsapwoodb(ico)
+            
+            cpatch%bstorage_c13 (ico) = cri_bstorage (ipft) * cpatch%bstorage(ico)
+            
+            cpatch%balive_c13   (ico) = cpatch%bleaf_c13(ico) + cpatch%broot_c13(ico)       &
+                                    + cpatch%bsapwooda_c13(ico) + cpatch%bsapwoodb_c13(ico)
+                                    
+            ! write (*,*) " ---------------- NBG Initializations ------------------"
+            ! write (*,*) " Cohort :", ico
+            ! write (*,*) " "
+            ! write (*,*) " bdead_c13       : ", cpatch%bdead_c13	   (ico)
+            ! write (*,*) " bleaf_c13       : ", cpatch%bleaf_c13	   (ico)
+            ! write (*,*) " broot_c13       : ", cpatch%broot_c13	   (ico)
+            ! write (*,*) " bsapwooda_c13   : ", cpatch%bsapwoodb_c13	(ico)
+            ! write (*,*) " bsapwoodb_c13   : ", cpatch%bsapwooda_c13	(ico)
+            ! write (*,*) " bstorage_c13    : ", cpatch%bstorage_c13	(ico)
+            ! write (*,*) " "
+            ! write (*,*) " balive_c13      : ", cpatch%balive_c13     (ico) 
+            ! write (*,*) " "
+            ! write (*,*) " bdead           : ", cpatch%bdead	   (ico)
+            ! write (*,*) " bleaf           : ", cpatch%bleaf	   (ico)
+            ! write (*,*) " broot           : ", cpatch%broot	   (ico)
+            ! write (*,*) " bsapwooda       : ", cpatch%bsapwoodb(ico)
+            ! write (*,*) " bsapwoodb       : ", cpatch%bsapwooda(ico)
+            ! write (*,*) " bstorage        : ", cpatch%bstorage	(ico)
+            ! write (*,*) " "
+            ! write (*,*) " balive_c13      : ", cpatch%balive   (ico)
+            ! write (*,*) " "
+            ! write (*,*) " c13 / Total C of everything but bdead "
+            ! write (*,*) (cpatch%balive_c13(ico) + cpatch%bstorage_c13(ico))                &
+                        ! /(cpatch%balive(ico) + cpatch%bstorage(ico))
+            ! write (*,*) "--------------------------------------------------------"
+         
+         end if
+
          !----- Find the initial area indices (LAI, WAI, CAI). ----------------------------!
          call area_indices(cpatch%nplant(ico),cpatch%bleaf(ico),cpatch%bdead(ico)          &
                           ,cpatch%balive(ico),cpatch%dbh(ico), cpatch%hite(ico)            &
@@ -292,6 +358,14 @@ subroutine init_cohorts_by_layers(csite,lsl,ipa_a,ipa_z)
                                  , ed_biomass         & ! function
                                  , area_indices       ! ! subroutine
    use fuse_fiss_utils    , only : sort_cohorts       ! ! subroutine
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes    		  , only : c13af      		   & ! intent(in)	!!!DSC!!!
+                                 , cri_bleaf          & ! intent(in)	!!!DSC!!
+                                 , cri_bdead          & ! intent(in)	!!!DSC!!
+                                 , cri_broot          & ! intent(in)	!!!DSC!!
+                                 , cri_bsapwooda      & ! intent(in)	!!!DSC!!
+                                 , cri_bsapwoodb      & ! intent(in)	!!!DSC!!
+                                 , cri_bstorage       ! ! intent(in)	!!!DSC!!
 
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
@@ -363,6 +437,20 @@ subroutine init_cohorts_by_layers(csite,lsl,ipa_a,ipa_z)
          cpatch%bsapwoodb(ico)        = qsw(ipft) * cpatch%hite(ico) * cpatch%balive(ico)  &
                                       * salloci * (1.-agf_bs(ipft))
 
+         if (c13af > 0) then	!!!DSC!!!
+            cpatch%bdead_c13	  (ico) = cri_bdead(ipft) * cpatch%bdead(ico)
+            cpatch%bleaf_c13	  (ico) = cri_bleaf(ipft) * cpatch%bleaf(ico)
+            cpatch%broot_c13    (ico) = cri_broot(ipft) * cpatch%broot(ico)
+
+            cpatch%bsapwooda_c13(ico) = cri_bsapwooda(ipft) * cpatch%bsapwooda(ico)
+            cpatch%bsapwoodb_c13(ico) = cri_bsapwoodb(ipft) * cpatch%bsapwoodb(ico)
+            
+            cpatch%bstorage_c13 (ico) = cri_bstorage (ipft) * cpatch%bstorage(ico)
+            
+            cpatch%balive_c13   (ico) = cpatch%bleaf_c13(ico) + cpatch%broot_c13(ico)       &
+                                    + cpatch%bsapwooda_c13(ico) + cpatch%bsapwoodb_c13(ico)
+         end if
+		 
          !----- NPlant is defined such that the cohort LAI is equal to LAI0
          cpatch%nplant(ico)           = lai0 / (cpatch%bleaf(ico) * cpatch%sla(ico))
 
@@ -434,6 +522,8 @@ subroutine near_bare_ground_big_leaf_init(cgrid)
                                  , size2bl            & ! function
                                  , ed_biomass         & ! function
                                  , area_indices       ! ! subroutine
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes           , only : c13af              ! ! intent(in)    !!!DSC!!!
    implicit none
 
    !----- Arguments. ----------------------------------------------------------------------!
@@ -488,6 +578,12 @@ subroutine near_bare_ground_big_leaf_init(cgrid)
                csite%structural_soil_L  (ipa) = 0.0
                csite%mineralized_soil_N (ipa) = 0.0
                csite%fast_soil_N        (ipa) = 0.0
+               if (c13af > 0) then !!!DSC!!!
+                  csite%fast_soil_c13         (ipa) = 0.0
+                  csite%slow_soil_c13         (ipa) = 0.0
+                  csite%structural_soil_c13   (ipa) = 0.0
+                  csite%structural_soil_L_c13 (ipa) = 0.0
+               end if
 
             case (1)
                csite%fast_soil_C        (ipa) = 0.2
@@ -496,6 +592,14 @@ subroutine near_bare_ground_big_leaf_init(cgrid)
                csite%structural_soil_L  (ipa) = csite%structural_soil_C (1)
                csite%mineralized_soil_N (ipa) = 1.0
                csite%fast_soil_N        (ipa) = 1.0
+               if (c13af > 0) then !!!DSC!!!
+               ! 0.0112372 is 0.0 permil on PDB scale, this is arbitrary. (and unrealistic!)
+                  csite%fast_soil_c13          (ipa) = 0.02 * 0.0109226/(1.0 + 0.0109226)
+                  csite%slow_soil_c13          (ipa) = 0.01 * 0.0109226/(1.0 + 0.0109226)
+                  csite%structural_soil_c13    (ipa) = 10.0 * 0.0109226/(1.0 + 0.0109226)
+                  csite%structural_soil_L_c13  (ipa) = csite%structural_soil_C(1)* 0.0109226 &
+                                                     /(1.0 + 0.0109226)
+               end if
 
             end select
             !------------------------------------------------------------------------------!

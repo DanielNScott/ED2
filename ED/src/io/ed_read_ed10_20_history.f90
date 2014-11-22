@@ -50,6 +50,14 @@ subroutine read_ed10_ed20_history_file
                              , area_indices        ! ! subroutine
    use fuse_fiss_utils, only : sort_cohorts        & ! subroutine
                              , sort_patches        ! ! subroutine
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes       , only : c13af               & ! intent(in)    !!!DSC!!!
+                             , cri_bleaf           & ! intent(in)    !!!DSC!!!
+                             , cri_broot           & ! intent(in)    !!!DSC!!!
+                             , cri_bsapwooda       & ! intent(in)    !!!DSC!!!
+                             , cri_bsapwoodb       & ! intent(in)    !!!DSC!!!
+                             , cri_bdead           & ! intent(in)    !!!DSC!!!
+                             , close_nonfatalmessage ! intent(in)
    implicit none
 
    !----- Local constants. ----------------------------------------------------------------!
@@ -432,6 +440,13 @@ subroutine read_ed10_ed20_history_file
                      csite%sum_chd           (ip2) = 0.0
                      csite%plantation        (ip2) = 0
                      csite%cohort_count      (ip2) = 0
+                     if (c13af > 0) then !!!DSC!!!
+                     ! 0.010942 => -26.30 permil and 0.010931 => -27.29
+                        csite%fast_soil_c13        (ip2) = fsc (ip) * 0.010942/(1.0 + 0.010942)
+                        csite%slow_soil_c13        (ip2) = ssc (ip) * 0.010931/(1.0 + 0.010931)
+                        csite%structural_soil_c13  (ip2) = stsc(ip) * 0.010931/(1.0 + 0.010931)
+                        csite%structural_soil_L_c13(ip2) = stsl(ip) * 0.010931/(1.0 + 0.010931)
+                     end if
                   end if
                end do
                !---- Initialize the cohort counts per patch. ------------------------------!
@@ -463,6 +478,13 @@ subroutine read_ed10_ed20_history_file
                   csite%sum_chd           (ip) = 0.0+tiny(1.)
                   csite%plantation        (ip) = 0
                   csite%cohort_count      (ip) = 0
+                     if (c13af > 0) then    !!!DSC!!! 
+                     ! 0.010942 equiv. -26.30 permil and 0.010931 equiv. -27.29
+                        csite%fast_soil_c13        (ip) = fsc (ip) * 0.010942/(1.0 + 0.010942)
+                        csite%slow_soil_c13        (ip) = ssc (ip) * 0.010931/(1.0 + 0.010931)
+                        csite%structural_soil_c13  (ip) = stsc(ip) * 0.010931/(1.0 + 0.010931)
+                        csite%structural_soil_L_c13(ip) = stsl(ip) * 0.010931/(1.0 + 0.010931)
+                     end if
                end do
 
                !---- Initialize the cohort counts per patch. ------------------------------!
@@ -714,6 +736,28 @@ subroutine read_ed10_ed20_history_file
                         cpatch%bstorage        (ic2) = 0.0
                         !------------------------------------------------------------------!
 
+                        !------------------------------------------------------------------!
+                        !     Take care of 13C vars as necessary. Just do them all here,   !
+                        ! there's no reason not to.
+                        !------------------------------------------------------------------!
+                        if (c13af > 0) then
+                           cpatch%bleaf_c13    (ic2)  = cpatch%bleaf(ic2)                  &
+                                                      * cri_bleaf(ipft(ic))
+                           cpatch%broot_c13    (ic2)  = cpatch%broot(ic2)                  &
+                                                      * cri_broot(ipft(ic))
+                           cpatch%bsapwooda_c13(ic2)  = cpatch%bsapwooda(ic2)              &
+                                                      * cri_bsapwooda(ipft(ic))
+                           cpatch%bsapwoodb_c13(ic2)  = cpatch%bsapwoodb(ic2)              &
+                                                      * cri_bsapwoodb(ipft(ic))
+                           cpatch%balive_c13   (ic2)  = cpatch%bleaf_c13(ic2)              &
+                                                      + cpatch%broot_c13(ic2)              &
+                                                      + cpatch%bsapwooda_c13(ic2)          &
+                                                      + cpatch%bsapwoodb_c13(ic2)
+                           cpatch%bdead_c13    (ic2)  = cpatch%bdead(ic2)                  &
+                                                      * cri_bdead(ipft(ic))
+                           cpatch%bstorage_c13 (ic2)  = 0.0
+                        end if
+                        !------------------------------------------------------------------!
 
 
                         !----- Assign LAI, WAI, and CAI -----------------------------------!

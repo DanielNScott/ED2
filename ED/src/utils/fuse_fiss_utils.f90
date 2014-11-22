@@ -119,6 +119,8 @@ module fuse_fiss_utils
 
       use ed_state_vars      , only : patchtype        & ! structure
                                     , sitetype         ! ! structure
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use isotopes           , only : c13af            ! ! intent(in)
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       type(sitetype)       , target      :: csite        ! Current site
@@ -176,6 +178,19 @@ module fuse_fiss_utils
                               * ( (1.0 - f_labile(ipft)) * cpatch%balive(ico)              &
                                 + cpatch%bdead(ico) ) * l2n_stem/c2n_stem(ipft)
 
+            if (c13af > 0) then !!!DSC!!!
+               csite%fsc13_in  (ipa) = csite%fsc13_in(ipa) + cpatch%nplant(ico)            &
+                                     * (f_labile(ipft)*cpatch%balive_c13(ico)              &
+                                       + cpatch%bstorage_c13(ico))
+
+               csite%ssc13_in  (ipa) = csite%ssc13_in(ipa) + cpatch%nplant(ico)            &
+                                     * ( (1.0 - f_labile(ipft)) * cpatch%balive_c13(ico)   &
+                                     + cpatch%bdead_c13(ico))
+               
+               csite%ssl_c13_in(ipa) = csite%ssl_c13_in(ipa) + cpatch%nplant(ico)          &
+                                     * ( (1.0 - f_labile(ipft)) * cpatch%balive_c13(ico)   &
+                                     + cpatch%bdead_c13(ico) ) * l2n_stem/c2n_stem(ipft)
+            end if
          end if
       end do
 
@@ -1041,6 +1056,9 @@ module fuse_fiss_utils
       use consts_coms        , only : lnexp_min              & ! intent(in)
                                     , lnexp_max              ! ! intent(in)
       use fusion_fission_coms, only : corr_cohort
+      !----- DS Additional Uses -----------------------------------------------------------!
+      use isotopes           , only : c13af            & ! intent(in)
+                                    , c_alloc_flg      ! ! intent(in)
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       type(patchtype) , target     :: cpatch            ! Current patch
@@ -1062,6 +1080,8 @@ module fuse_fiss_utils
       real                         :: veg_fliq          ! Liquid fraction
       real                         :: exp_mort_donc     ! Exp(mortality) donor
       real                         :: exp_mort_recc     ! Exp(mortality) receptor
+      real                         :: rlai              ! LAI of receiver
+      real                         :: dlai              ! LAI of donor
       !------------------------------------------------------------------------------------!
 
 
@@ -1075,8 +1095,18 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------!
       newni   = 1.0 / newn
       if (cpatch%lai(recc) + cpatch%lai(donc) > 0.0) then
-         newlaii = 1.0 / (cpatch%lai(recc) + cpatch%lai(donc))
+         rlai    = cpatch%lai(recc)
+         dlai    = cpatch%lai(donc)
+         newlaii = 1.0 / (rlai+dlai)
+!!!      elseif  (cpatch%lai(recc) + cpatch%lai(donc) > 0 ) then
+         ! This is a fix for when two cohorts with very very low LAI are fused
+         ! it prevents numerical errors (RGK 8-18-2014)
+!!!         rlai = 1.0e15*cpatch%lai(recc)
+!!!         dlai = 1.0e15*cpatch%lai(donc)
+!!!         newlaii = 1.0 / (rlai+dlai)
       else
+         rlai    = 0.0
+         dlai    = 0.0
          newlaii = 0.0
       end if
       if (cpatch%wai(recc) + cpatch%wai(donc) > 0.0) then
@@ -1132,6 +1162,27 @@ module fuse_fiss_utils
       cpatch%leaf_drop(recc) = newni                                                       &
                              * ( cpatch%nplant(recc) * cpatch%leaf_drop(recc)              &
                                + cpatch%nplant(donc) * cpatch%leaf_drop(donc) )  
+      if (c13af > 0) then
+         cpatch%broot_c13(recc)     = ( cpatch%nplant(recc) * cpatch%broot_c13(recc)              &
+                                      + cpatch%nplant(donc) * cpatch%broot_c13(donc) ) *newni
+         cpatch%bsapwooda_c13(recc) = ( cpatch%nplant(recc) * cpatch%bsapwooda_c13(recc)          &
+                                      + cpatch%nplant(donc) * cpatch%bsapwooda_c13(donc) ) *newni
+         cpatch%bsapwoodb_c13(recc) = ( cpatch%nplant(recc) * cpatch%bsapwoodb_c13(recc)          &
+                                      + cpatch%nplant(donc) * cpatch%bsapwoodb_c13(donc) ) *newni
+         cpatch%bstorage_c13(recc)  = ( cpatch%nplant(recc) * cpatch%bstorage_c13(recc)           &
+                                      + cpatch%nplant(donc) * cpatch%bstorage_c13(donc) ) * newni
+         cpatch%bseeds_c13(recc)    = ( cpatch%nplant(recc) * cpatch%bseeds_c13(recc)             &
+                                      + cpatch%nplant(donc) * cpatch%bseeds_c13(donc) ) * newni
+         cpatch%leaf_maintenance_c13(recc) = newni                                                &
+                                   * ( cpatch%nplant(recc) * cpatch%leaf_maintenance_c13(recc)    &
+                                     + cpatch%nplant(donc) * cpatch%leaf_maintenance_c13(donc) )
+         cpatch%root_maintenance_c13(recc) = newni                                                &
+                                   * ( cpatch%nplant(recc) * cpatch%root_maintenance_c13(recc)    &
+                                     + cpatch%nplant(donc) * cpatch%root_maintenance_c13(donc) )
+         cpatch%leaf_drop_c13(recc) = newni                                                       &
+                                    * ( cpatch%nplant(recc) * cpatch%leaf_drop_c13(recc)          &
+                                      + cpatch%nplant(donc) * cpatch%leaf_drop_c13(donc) )  
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -1143,8 +1194,15 @@ module fuse_fiss_utils
       if (cpatch%phenology_status(recc) /= -2) then
          cpatch%bleaf(recc)  = ( cpatch%nplant(recc) * cpatch%bleaf(recc)                  &
                                + cpatch%nplant(donc) * cpatch%bleaf(donc) ) *newni
+         if (c13af > 0) then
+            cpatch%bleaf_c13(recc)  = ( cpatch%nplant(recc) * cpatch%bleaf_c13(recc)       &
+                                      + cpatch%nplant(donc) * cpatch%bleaf_c13(donc) )*newni
+         end if
       else
          cpatch%bleaf(recc)      = 0.
+         if (c13af > 0) then
+            cpatch%bleaf_c13(recc) = 0.
+         end if
       end if
       !------------------------------------------------------------------------------------!
 
@@ -1282,6 +1340,24 @@ module fuse_fiss_utils
 
       cpatch%today_root_resp    (recc) = cpatch%today_root_resp    (recc)                  &
                                        + cpatch%today_root_resp    (donc)
+      if (c_alloc_flg > 0) then
+         cpatch%today_lassim_resp  (recc) = cpatch%today_lassim_resp      (recc)           &
+                                          + cpatch%today_lassim_resp      (donc)
+      end if
+      if (c13af > 0) then
+         cpatch%today_gpp_c13      (recc) = cpatch%today_gpp_c13          (recc)           &
+                                          + cpatch%today_gpp_c13          (donc)
+                                          
+         cpatch%today_leaf_resp_c13(recc) = cpatch%today_leaf_resp_c13    (recc)           &
+                                          + cpatch%today_leaf_resp_c13    (donc)
+
+         cpatch%today_root_resp_c13(recc) = cpatch%today_root_resp_c13    (recc)           &
+                                          + cpatch%today_root_resp_c13    (donc)
+         if (c_alloc_flg > 0) then
+            cpatch%today_lassim_resp_c13(recc) = cpatch%today_lassim_resp_c13    (recc)    &
+                                               + cpatch%today_lassim_resp_c13    (donc)
+         end if
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -1290,23 +1366,23 @@ module fuse_fiss_utils
       ! properties, they are scaled by the number of plants.  These numbers are diagnostic !
       ! and this should be used for the output only.                                       !
       !------------------------------------------------------------------------------------!
-      cpatch%lsfc_shv_open  (recc) = ( cpatch%lsfc_shv_open  (recc)  * cpatch%lai(recc)    &
-                                     + cpatch%lsfc_shv_open  (donc)  * cpatch%lai(donc) )  &
+      cpatch%lsfc_shv_open  (recc) = ( cpatch%lsfc_shv_open  (recc)  * rlai    &
+                                     + cpatch%lsfc_shv_open  (donc)  * dlai )  &
                                    * newlaii
-      cpatch%lsfc_shv_closed(recc) = ( cpatch%lsfc_shv_closed(recc)  * cpatch%lai(recc)    &
-                                     + cpatch%lsfc_shv_closed(donc)  * cpatch%lai(donc))   &
+      cpatch%lsfc_shv_closed(recc) = ( cpatch%lsfc_shv_closed(recc)  * rlai    &
+                                     + cpatch%lsfc_shv_closed(donc)  * dlai)   &
                                    * newlaii
-      cpatch%lsfc_co2_open  (recc) = ( cpatch%lsfc_co2_open  (recc)  * cpatch%lai(recc)    &
-                                     + cpatch%lsfc_co2_open  (donc)  * cpatch%lai(donc) )  &
+      cpatch%lsfc_co2_open  (recc) = ( cpatch%lsfc_co2_open  (recc)  * rlai    &
+                                     + cpatch%lsfc_co2_open  (donc)  * dlai )  &
                                    * newlaii
-      cpatch%lsfc_co2_closed(recc) = ( cpatch%lsfc_co2_closed(recc)  * cpatch%lai(recc)    &
-                                     + cpatch%lsfc_co2_closed(donc)  * cpatch%lai(donc) )  &
+      cpatch%lsfc_co2_closed(recc) = ( cpatch%lsfc_co2_closed(recc)  * rlai    &
+                                     + cpatch%lsfc_co2_closed(donc)  * dlai )  &
                                    * newlaii
-      cpatch%lint_co2_open  (recc) = ( cpatch%lint_co2_open  (recc)  * cpatch%lai(recc)    &
-                                     + cpatch%lint_co2_open  (donc)  * cpatch%lai(donc) )  &
+      cpatch%lint_co2_open  (recc) = ( cpatch%lint_co2_open  (recc)  * rlai    &
+                                     + cpatch%lint_co2_open  (donc)  * dlai )  &
                                    * newlaii
-      cpatch%lint_co2_closed(recc) = ( cpatch%lint_co2_closed(recc)  * cpatch%lai(recc)    &
-                                     + cpatch%lint_co2_closed(donc)  * cpatch%lai(donc) )  &
+      cpatch%lint_co2_closed(recc) = ( cpatch%lint_co2_closed(recc)  * rlai    &
+                                     + cpatch%lint_co2_closed(donc)  * dlai )  &
                                    * newlaii
       !------------------------------------------------------------------------------------!
 
@@ -1380,6 +1456,19 @@ module fuse_fiss_utils
       cpatch%vleaf_respiration(recc)   = newni *                                           &
                                 ( cpatch%vleaf_respiration(recc)   * cpatch%nplant(recc)   &
                                 + cpatch%vleaf_respiration(donc)   * cpatch%nplant(donc) )
+      if (c13af > 0) then
+         cpatch%growth_respiration_c13(recc)  = newni *                                         &
+                                   ( cpatch%growth_respiration_c13(recc) *cpatch%nplant(recc)   &
+                                   + cpatch%growth_respiration_c13(donc) *cpatch%nplant(donc) )
+        
+         cpatch%storage_respiration_c13(recc) = newni *                                         &
+                                   ( cpatch%storage_respiration_c13(recc)*cpatch%nplant(recc)   &
+                                   + cpatch%storage_respiration_c13(donc)*cpatch%nplant(donc) )
+        
+         cpatch%vleaf_respiration_c13(recc)   = newni *                                         &
+                                   ( cpatch%vleaf_respiration_c13(recc)  *cpatch%nplant(recc)   &
+                                   + cpatch%vleaf_respiration_c13(donc)  *cpatch%nplant(donc) )
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -1389,10 +1478,10 @@ module fuse_fiss_utils
       !    Water demand is in kg/m2_leaf/s, so we scale them by LAI.  Water supply is in   !
       ! kg/m2_ground/s, so we just add them.                                               !
       !------------------------------------------------------------------------------------!
-      cpatch%psi_open    (recc) = ( cpatch%psi_open  (recc) * cpatch%lai(recc)             &
-                                  + cpatch%psi_open  (donc) * cpatch%lai(donc) ) * newlaii
-      cpatch%psi_closed  (recc) = ( cpatch%psi_closed(recc) * cpatch%lai(recc)             & 
-                                  + cpatch%psi_closed(donc) * cpatch%lai(donc) ) * newlaii
+      cpatch%psi_open    (recc) = ( cpatch%psi_open  (recc) * rlai             &
+                                  + cpatch%psi_open  (donc) * dlai ) * newlaii
+      cpatch%psi_closed  (recc) = ( cpatch%psi_closed(recc) * rlai             & 
+                                  + cpatch%psi_closed(donc) * dlai ) * newlaii
       cpatch%water_supply(recc) = cpatch%water_supply(recc) + cpatch%water_supply(donc)
       !------------------------------------------------------------------------------------!
 
@@ -1401,14 +1490,14 @@ module fuse_fiss_utils
       !    Carbon demand is in kg_C/m2_leaf/s, so we scale them by LAI.  FSW and FSN are   !
       ! really related to leaves, so we scale them by LAI.                                 !
       !------------------------------------------------------------------------------------!
-      cpatch%A_open  (recc)     = ( cpatch%A_open  (recc) * cpatch%lai(recc)               &
-                                  + cpatch%A_open  (donc) * cpatch%lai(donc) ) * newlaii
-      cpatch%A_closed(recc)     = ( cpatch%A_closed(recc) * cpatch%lai(recc)               &
-                                  + cpatch%A_closed(donc) * cpatch%lai(donc) ) * newlaii
-      cpatch%fsw     (recc)     = ( cpatch%fsw     (recc) * cpatch%lai(recc)               &
-                                  + cpatch%fsw     (donc) * cpatch%lai(donc) ) * newlaii
-      cpatch%fsn     (recc)     = ( cpatch%fsn     (recc) * cpatch%lai(recc)               &
-                                  + cpatch%fsn     (donc) * cpatch%lai(donc) ) * newlaii
+      cpatch%A_open  (recc)     = ( cpatch%A_open  (recc) * rlai               &
+                                  + cpatch%A_open  (donc) * dlai ) * newlaii
+      cpatch%A_closed(recc)     = ( cpatch%A_closed(recc) * rlai               &
+                                  + cpatch%A_closed(donc) * dlai ) * newlaii
+      cpatch%fsw     (recc)     = ( cpatch%fsw     (recc) * rlai               &
+                                  + cpatch%fsw     (donc) * dlai ) * newlaii
+      cpatch%fsn     (recc)     = ( cpatch%fsn     (recc) * rlai               &
+                                  + cpatch%fsn     (donc) * dlai ) * newlaii
       cpatch%fs_open (recc)     = cpatch%fsw(recc) * cpatch%fsn(recc)
       !------------------------------------------------------------------------------------!
 
@@ -1462,6 +1551,23 @@ module fuse_fiss_utils
                                     + cpatch%leaf_respiration(donc)
       cpatch%root_respiration(recc) = cpatch%root_respiration(recc)                        &
                                     + cpatch%root_respiration(donc)
+
+      if (c_alloc_flg > 0) then
+         cpatch%lassim_resp         (recc) = cpatch%lassim_resp(recc)               &
+                                           + cpatch%lassim_resp(donc)
+      end if
+      if (c13af > 0) then
+         cpatch%gpp_c13             (recc) = cpatch%gpp_c13(recc) + cpatch%gpp_c13(donc)
+
+         cpatch%leaf_respiration_c13(recc) = cpatch%leaf_respiration_c13(recc)             &
+                                           + cpatch%leaf_respiration_c13(donc)
+         cpatch%root_respiration_c13(recc) = cpatch%root_respiration_c13(recc)             &
+                                           + cpatch%root_respiration_c13(donc)
+         if (c_alloc_flg > 0) then
+            cpatch%lassim_resp_c13(recc)   = cpatch%lassim_resp_c13(recc)                  &
+                                           + cpatch%lassim_resp_c13(donc)
+         end if
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -1567,6 +1673,62 @@ module fuse_fiss_utils
                                                + cpatch%fmean_light_level_diff(donc)       &
                                                * cpatch%nplant                (donc) )     &
                                              * newni
+         if (c_alloc_flg > 0) then
+            cpatch%fmean_lassim_resp     (recc) = ( cpatch%fmean_lassim_resp     (recc)    &
+                                                  * cpatch%nplant                (recc)    &
+                                                  + cpatch%fmean_lassim_resp     (donc)    &
+                                                  * cpatch%nplant                (donc) )  &
+                                                 * newni
+         end if
+         if (c13af > 0) then
+            cpatch%fmean_gpp_c13         (recc) = ( cpatch%fmean_gpp_c13         (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_gpp_c13         (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%fmean_npp_c13         (recc) = ( cpatch%fmean_npp_c13         (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_npp_c13         (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%fmean_leaf_resp_c13   (recc) = ( cpatch%fmean_leaf_resp_c13   (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_leaf_resp_c13   (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%fmean_root_resp_c13   (recc) = ( cpatch%fmean_root_resp_c13   (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_root_resp_c13   (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%fmean_growth_resp_c13 (recc) = ( cpatch%fmean_growth_resp_c13 (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_growth_resp_c13 (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%fmean_storage_resp_c13(recc) = ( cpatch%fmean_storage_resp_c13(recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_storage_resp_c13(donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%fmean_vleaf_resp_c13  (recc) = ( cpatch%fmean_vleaf_resp_c13  (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_vleaf_resp_c13  (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%fmean_plresp_c13      (recc) = ( cpatch%fmean_plresp_c13      (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%fmean_plresp_c13      (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            if (c_alloc_flg > 0) then
+               cpatch%fmean_lassim_resp_c13  (recc) = ( cpatch%fmean_lassim_resp_c13(recc)    &
+                                                     * cpatch%nplant                (recc)    &
+                                                     + cpatch%fmean_lassim_resp_c13 (donc)    &
+                                                     * cpatch%nplant                (donc) )  &
+                                                    * newni
+            end if
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -1842,6 +2004,62 @@ module fuse_fiss_utils
                                                + cpatch%dmean_light_level_diff(donc)       &
                                                * cpatch%nplant                (donc) )     &
                                              * newni
+         if (c_alloc_flg > 0) then
+            cpatch%dmean_lassim_resp     (recc) = ( cpatch%dmean_lassim_resp     (recc)    &
+                                                  * cpatch%nplant                (recc)    &
+                                                  + cpatch%dmean_lassim_resp     (donc)    &
+                                                  * cpatch%nplant                (donc) )  &
+                                                 * newni
+         end if
+         if (c13af > 0) then
+            cpatch%dmean_gpp_c13         (recc) = ( cpatch%dmean_gpp_c13         (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_gpp_c13         (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%dmean_npp_c13         (recc) = ( cpatch%dmean_npp_c13         (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_npp_c13         (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%dmean_leaf_resp_c13   (recc) = ( cpatch%dmean_leaf_resp_c13   (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_leaf_resp_c13   (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%dmean_root_resp_c13   (recc) = ( cpatch%dmean_root_resp_c13   (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_root_resp_c13   (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%dmean_growth_resp_c13 (recc) = ( cpatch%dmean_growth_resp_c13 (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_growth_resp_c13 (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%dmean_storage_resp_c13(recc) = ( cpatch%dmean_storage_resp_c13(recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_storage_resp_c13(donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%dmean_vleaf_resp_c13  (recc) = ( cpatch%dmean_vleaf_resp_c13  (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_vleaf_resp_c13  (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%dmean_plresp_c13      (recc) = ( cpatch%dmean_plresp_c13      (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%dmean_plresp_c13      (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            if (c_alloc_flg > 0) then
+               cpatch%dmean_lassim_resp_c13  (recc) = ( cpatch%dmean_lassim_resp_c13(recc)    &
+                                                     * cpatch%nplant                (recc)    &
+                                                     + cpatch%dmean_lassim_resp_c13 (donc)    &
+                                                     * cpatch%nplant                (donc) )  &
+                                                    * newni
+            end if
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -2216,6 +2434,92 @@ module fuse_fiss_utils
                                                * cpatch%mmean_cb              (donc)       &
                                                * cpatch%nplant                (donc) )     &
                                              * newni
+         if (c_alloc_flg > 0) then
+            cpatch%mmean_lassim_resp     (recc) = ( cpatch%mmean_lassim_resp     (recc)    &
+                                                  * cpatch%nplant                (recc)    &
+                                                  + cpatch%mmean_lassim_resp     (donc)    &
+                                                  * cpatch%nplant                (donc) )  &
+                                                 * newni
+         end if
+         if (c13af > 0) then
+            cpatch%mmean_gpp_c13         (recc) = ( cpatch%mmean_gpp_c13         (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_gpp_c13         (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_npp_c13         (recc) = ( cpatch%mmean_npp_c13         (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_npp_c13         (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_leaf_resp_c13   (recc) = ( cpatch%mmean_leaf_resp_c13   (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_leaf_resp_c13   (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_root_resp_c13   (recc) = ( cpatch%mmean_root_resp_c13   (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_root_resp_c13   (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_growth_resp_c13 (recc) = ( cpatch%mmean_growth_resp_c13 (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_growth_resp_c13 (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_storage_resp_c13(recc) = ( cpatch%mmean_storage_resp_c13(recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_storage_resp_c13(donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_vleaf_resp_c13  (recc) = ( cpatch%mmean_vleaf_resp_c13  (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_vleaf_resp_c13  (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_plresp_c13      (recc) = ( cpatch%mmean_plresp_c13      (recc)       &
+                                                  * cpatch%nplant                (recc)       &
+                                                  + cpatch%mmean_plresp_c13      (donc)       &
+                                                  * cpatch%nplant                (donc) )     &
+                                                * newni
+            cpatch%mmean_bleaf_c13           (recc) = ( cpatch%mmean_bleaf_c13           (recc)       &
+                                                      * cpatch%nplant                    (recc)       &
+                                                      * cpatch%mmean_bleaf_c13           (donc)       &
+                                                      * cpatch%nplant                    (donc) )     &
+                                                     * newni
+            cpatch%mmean_broot_c13           (recc) = ( cpatch%mmean_broot_c13           (recc)       &
+                                                      * cpatch%nplant                    (recc)       &
+                                                      * cpatch%mmean_broot_c13           (donc)       &
+                                                      * cpatch%nplant                    (donc) )     &
+                                                     * newni
+            cpatch%mmean_bstorage_c13        (recc) = ( cpatch%mmean_bstorage_c13        (recc)       &
+                                                      * cpatch%nplant                    (recc)       &
+                                                      * cpatch%mmean_bstorage_c13        (donc)       &
+                                                      * cpatch%nplant                    (donc) )     &
+                                                     * newni
+            cpatch%mmean_leaf_maintenance_c13(recc) = ( cpatch%mmean_leaf_maintenance_c13(recc)       &
+                                                      * cpatch%nplant                    (recc)       &
+                                                      * cpatch%mmean_leaf_maintenance_c13(donc)       &
+                                                      * cpatch%nplant                    (donc) )     &
+                                                     * newni
+            cpatch%mmean_root_maintenance_c13(recc) = ( cpatch%mmean_root_maintenance_c13(recc)       &
+                                                      * cpatch%nplant                    (recc)       &
+                                                      * cpatch%mmean_root_maintenance_c13(donc)       &
+                                                      * cpatch%nplant                    (donc) )     &
+                                                     * newni
+            cpatch%mmean_leaf_drop_c13       (recc) = ( cpatch%mmean_leaf_drop_c13       (recc)       &
+                                                      * cpatch%nplant                    (recc)       &
+                                                      * cpatch%mmean_leaf_drop_c13       (donc)       &
+                                                      * cpatch%nplant                    (donc) )     &
+                                                     * newni
+            if (c_alloc_flg > 0) then
+               cpatch%mmean_lassim_resp_c13  (recc) = ( cpatch%mmean_lassim_resp_c13(recc)    &
+                                                      * cpatch%nplant                (recc)    &
+                                                      + cpatch%mmean_lassim_resp_c13 (donc)    &
+                                                      * cpatch%nplant                (donc) )  &
+                                                     * newni
+            end if
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -3974,6 +4278,9 @@ module fuse_fiss_utils
       use budget_utils       , only : update_budget         ! ! intent(in)
       use consts_coms        , only : wdns                  ! ! intent(in)
       use fusion_fission_coms, only : corr_patch            ! ! intent(in)
+      !----- DS Addnlt Uses ---------------------------------------------------------------!
+      use isotopes           , only : c13af                 & ! intent(in)
+                                    , c_alloc_flg           ! ! intent(in)
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       type(sitetype)         , target      :: csite             ! Current site
@@ -4101,6 +4408,28 @@ module fuse_fiss_utils
                                      + csite%ggsoil(recp)             * csite%area(recp) )
 
       
+      if (c13af > 0) then
+         csite%fast_soil_c13(recp)        = newareai *                                           &
+                                           ( csite%fast_soil_c13(donp)        * csite%area(donp) &
+                                           + csite%fast_soil_c13(recp)        * csite%area(recp) )
+
+         csite%slow_soil_c13(recp)        = newareai *                                           &
+                                           ( csite%slow_soil_c13(donp)        * csite%area(donp) &
+                                           + csite%slow_soil_c13(recp)        * csite%area(recp) )
+
+         csite%structural_soil_c13(recp)  = newareai *                                           &
+                                           ( csite%structural_soil_c13(donp)  * csite%area(donp) &
+                                           + csite%structural_soil_c13(recp)  * csite%area(recp) )
+                                        
+
+         csite%structural_soil_L_c13(recp)= newareai *                                           &
+                                           ( csite%structural_soil_L_c13(donp)* csite%area(donp) &
+                                           + csite%structural_soil_L_c13(recp)* csite%area(recp) )
+                                        
+         !csite%can_co2_c13(recp)        = newareai *                                            &
+         !                               ( csite%can_co2_c13(donp)            * csite%area(donp) &
+         !                               + csite%can_co2_c13(recp)            * csite%area(recp) )
+      end if
       !------------------------------------------------------------------------------------!
       !    There is no guarantee that there will be a minimum amount of mass in the tempo- !
       ! rary layer, nor is there any reason for both patches to have the same number of    !
@@ -4587,6 +4916,28 @@ module fuse_fiss_utils
                                                    + csite%fmean_sensible_gg     (:,donp)  &
                                                    * csite%area                    (donp)) &
                                                  *   newareai
+         if (c13af > 0) then
+            csite%fmean_rh_c13               (recp) = ( csite%fmean_rh_c13         (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%fmean_rh_c13         (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            csite%fmean_cwd_rh_c13           (recp) = ( csite%fmean_cwd_rh_c13     (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%fmean_cwd_rh_c13     (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            csite%fmean_nep_c13              (recp) = ( csite%fmean_nep_c13        (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%fmean_nep_c13        (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            !csite%fmean_can_co2              (recp) = ( csite%fmean_can_co2           (recp)  &
+            !                                          * csite%area                    (recp)  &
+            !                                          + csite%fmean_can_co2           (donp)  &
+            !                                          * csite%area                    (donp)) &
+            !                                        *   newareai
+         end if
          !---------------------------------------------------------------------------------!
 
         
@@ -4666,7 +5017,7 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------! 
       !    Daily means.                                                                    !
       !------------------------------------------------------------------------------------! 
-      if (writing_long .and. (.not. fuse_initial)) then
+      if (writing_long .and. all(csite%dmean_can_prss > 10.0) ) then
 
          csite%dmean_A_decomp           (recp) = ( csite%dmean_A_decomp           (recp)   &
                                                  * csite%area                     (recp)   &
@@ -4918,6 +5269,28 @@ module fuse_fiss_utils
                                                  + csite%dmean_sensible_gg      (:,donp)   &
                                                  * csite%area                     (donp) ) &
                                                *   newareai
+         if (c13af > 0) then
+            csite%dmean_rh_c13               (recp) = ( csite%dmean_rh_c13         (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%dmean_rh_c13         (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            csite%dmean_cwd_rh_c13           (recp) = ( csite%dmean_cwd_rh_c13     (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%dmean_cwd_rh_c13     (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            csite%dmean_nep_c13              (recp) = ( csite%dmean_nep_c13        (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%dmean_nep_c13        (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            !csite%dmean_can_co2              (recp) = ( csite%dmean_can_co2           (recp)  &
+            !                                          * csite%area                    (recp)  &
+            !                                          + csite%dmean_can_co2           (donp)  &
+            !                                          * csite%area                    (donp)) &
+            !                                        *   newareai
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -4999,7 +5372,7 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------! 
       !    Monthly means.                                                                  !
       !------------------------------------------------------------------------------------! 
-      if (writing_eorq .and. (.not. fuse_initial)) then
+      if (writing_eorq .and. all(csite%mmean_can_prss > 10.0) ) then
 
          !---------------------------------------------------------------------------------!
          !    First we find the mean sum of squares, because they depend on the means too, !
@@ -5402,6 +5775,48 @@ module fuse_fiss_utils
                                                  + csite%mmean_sensible_gg      (:,donp)   &
                                                  * csite%area                     (donp) ) &
                                                *   newareai
+         if (c13af > 0) then
+            csite%mmean_rh_c13               (recp) = ( csite%mmean_rh_c13         (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%mmean_rh_c13         (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            csite%mmean_cwd_rh_c13           (recp) = ( csite%mmean_cwd_rh_c13     (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%mmean_cwd_rh_c13     (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            csite%mmean_nep_c13              (recp) = ( csite%mmean_nep_c13        (recp)  &
+                                                      * csite%area                 (recp)  &
+                                                      + csite%mmean_nep_c13        (donp)  &
+                                                      * csite%area                 (donp)) &
+                                                    *   newareai
+            !csite%mmean_can_co2_c13         (recp) = ( csite%mmean_can_co2_c13    (recp)  &
+            !                                          * csite%area                (recp)  &
+            !                                          + csite%mmean_can_co2_c13   (donp)  &
+            !                                          * csite%area                (donp)) &
+            !                                        *   newareai
+            csite%mmean_fast_soil_c13        (recp) = ( csite%mmean_fast_soil_c13    (recp)   &
+                                                      * csite%area                   (recp)   &
+                                                      + csite%mmean_fast_soil_c13    (donp)   &
+                                                      * csite%area                   (donp) ) &
+                                                    *  newareai
+            csite%mmean_slow_soil_c13        (recp) = ( csite%mmean_slow_soil_c13    (recp)   &
+                                                      * csite%area                   (recp)   &
+                                                      + csite%mmean_slow_soil_c13    (donp)   &
+                                                      * csite%area                   (donp) ) &
+                                                    *   newareai
+            csite%mmean_struct_soil_c13      (recp) = ( csite%mmean_struct_soil_c13  (recp)   &
+                                                      * csite%area                   (recp)   &
+                                                      + csite%mmean_struct_soil_c13  (donp)   &
+                                                      * csite%area                   (donp) ) &
+                                                    *  newareai
+            csite%mmean_struct_soil_l_c13    (recp) = ( csite%mmean_struct_soil_l_c13(recp)   &
+                                                    * csite%area                     (recp)   &
+                                                    + csite%mmean_struct_soil_l_c13  (donp)   &
+                                                    * csite%area                     (donp) ) &
+                                                  *  newareai
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -5482,7 +5897,7 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------! 
       !    Mean diel.                                                                      !
       !------------------------------------------------------------------------------------! 
-      if (writing_dcyc .and. (.not. fuse_initial)) then
+      if (writing_dcyc .and. all(csite%qmean_can_prss > 10.0)) then
 
          !---------------------------------------------------------------------------------!
          !      First we solve the mean sum of squares as they depend on the mean and the  !

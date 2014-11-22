@@ -186,6 +186,9 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                              , ed_biomass               & ! function
                              , size2bl                  ! ! function
    use phenology_aux  , only : daylength                ! ! function
+   !----- DS Additional Use Statements ----------------------------------------------------!
+   use isotopes       , only : c13af                    & ! intent(in)
+                             , cri_bdead                ! ! intent(in)
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(polygontype)        , target     :: cpoly
@@ -210,6 +213,9 @@ subroutine update_phenology(doy, cpoly, isi, lat)
    real                                  :: salloci
    real                                  :: elongf_try
    real                                  :: elongf_grow
+   !----- DS Additional Local Vars --------------------------------------------------------!
+   real                                  :: delta_bleaf_c13    !!!DSC!!!
+   real                                  :: lh2tc              !Leaf heavy / total carbon
    !----- Variables used only for debugging purposes. -------------------------------------!
    logical                  , parameter  :: printphen=.false.
    logical, dimension(n_pft), save       :: first_time=.true.
@@ -233,6 +239,12 @@ subroutine update_phenology(doy, cpoly, isi, lat)
       csite%fsn_in(ipa) = 0.0
       csite%ssc_in(ipa) = 0.0
       csite%ssl_in(ipa) = 0.0
+
+      if (c13af > 0) then !!!DSC!!!
+         csite%fsc13_in  (ipa) = 0.0
+         csite%ssc13_in  (ipa) = 0.0
+         csite%ssl_c13_in(ipa) = 0.0
+      end if 
 
       !----- Determine what phenology thresholds have been crossed. -----------------------!
       call phenology_thresholds(daylight,csite%soil_tempk(isoil_lev,ipa)                   &
@@ -308,6 +320,16 @@ subroutine update_phenology(doy, cpoly, isi, lat)
 
 
                !----- Update plant carbon pools. ------------------------------------------!
+               !----- Do everything for c13 first, see case 2 for explanation -------------!
+               if (c13af > 0) then !!!DSC!!
+                  lh2tc                    = cpatch%bleaf_c13(ico)/cpatch%bleaf(ico)
+                  cpatch%balive_c13  (ico) = cpatch%balive_c13(ico) - cpatch%bleaf_c13(ico)
+                  cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico)                      &
+                                        + (cpatch%bleaf_c13(ico) * retained_carbon_fraction)
+                  cpatch%bleaf_c13   (ico) = 0.0
+               end if
+               !---------------------------------------------------------------------------!
+
                cpatch%balive  (ico) = cpatch%balive(ico) - cpatch%bleaf(ico)
                cpatch%bstorage(ico) = cpatch%bstorage(ico)                                 &
                                     + cpatch%bleaf(ico) * retained_carbon_fraction
@@ -333,6 +355,21 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                csite%ssl_in(ipa) = csite%ssl_in(ipa)                                       &
                                  + cpatch%nplant(ico) * cpatch%leaf_drop(ico)              &
                                  * (1.0 - f_labile(ipft)) * l2n_stem / c2n_stem(ipft)
+               !!!DSC!!!
+               if (c13af > 0) then
+               	csite%fsc13_in  (ipa) = csite%fsc13_in(ipa)                              &
+                                        + cpatch%nplant(ico) * cpatch%leaf_drop(ico)       &
+                                        * f_labile(ipft) * lh2tc
+
+               	csite%ssc13_in  (ipa) = csite%ssc13_in(ipa)                              &
+                                        + cpatch%nplant(ico) * cpatch%leaf_drop(ico)       &
+                                        * (1.0 - f_labile(ipft)) * lh2tc
+
+               	csite%ssl_c13_in(ipa) = csite%ssl_c13_in(ipa)                            &
+               					          + cpatch%nplant(ico) * cpatch%leaf_drop(ico)       &
+               					          * (1.0 - f_labile(ipft)) * l2n_stem                &
+                                        / c2n_stem(ipft) * lh2tc			   
+               end if
                !---------------------------------------------------------------------------!
 
 
@@ -391,6 +428,48 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                   !------------------------------------------------------------------------!
                   cpatch%phenology_status(ico) = -1
                   cpatch%leaf_drop(ico) = (1.0 - retained_carbon_fraction) * delta_bleaf
+
+                  !------------------------------------------------------------------------!
+                  !   Do everything for C-13 first, since we need to have the leaf h2tc    !
+                  ! ratio right before we apply changes.                                   !
+                  !------------------------------------------------------------------------!				  
+                  if (c13af > 0) then
+                     if (abs(cpatch%bleaf(ico)) .gt. tiny(1.0)) then
+                        delta_bleaf_c13 =  cpatch%bleaf_c13(ico)                           &
+                                        - (cpatch%bleaf_c13(ico)/cpatch%bleaf(ico)) * bl_max
+                     else 
+                        delta_bleaf_c13 = 0.0
+                     end if
+                        
+                     if (delta_bleaf_c13 > delta_bleaf) then
+                     write (*,*) 'delta_bleaf_c13 > delta_bleaf'
+                     end if
+                     !----------- Update soil pools ---------------------------------------!
+                     lh2tc = cpatch%bleaf_c13(ico)/cpatch%bleaf(ico)
+                     csite%fsc13_in  (ipa) = csite%fsc13_in(ipa)                           &
+                                           + cpatch%nplant(ico) * cpatch%leaf_drop(ico)    &
+                                           * f_labile(ipft) * lh2tc
+
+                     csite%ssc13_in  (ipa) = csite%ssc13_in(ipa)                           &
+                                           + cpatch%nplant(ico) * cpatch%leaf_drop(ico)    &
+                                           * (1.0 - f_labile(ipft)) * lh2tc
+
+                     csite%ssl_c13_in(ipa) = csite%ssl_c13_in(ipa)                         &
+                                           + cpatch%nplant(ico) * cpatch%leaf_drop(ico)    &
+                                           * (1.0 - f_labile(ipft)) * l2n_stem             &
+                                           / c2n_stem(ipft) * lh2tc
+
+                                           
+                     !----------- Update biomass ------------------------------------------!
+                     cpatch%balive_c13    (ico) = cpatch%balive_c13(ico) - delta_bleaf_c13
+                     cpatch%bstorage_c13  (ico) = cpatch%bstorage_c13(ico)                 &
+                                                + retained_carbon_fraction * delta_bleaf_c13
+
+                     cpatch%bleaf_c13     (ico) = lh2tc * bl_max
+                  end if
+                  !------------------------------------------------------------------------!
+                  !   Now back to regular variables.                                       !
+                  !------------------------------------------------------------------------!		
                   csite%fsc_in(ipa) = csite%fsc_in(ipa)                                    &
                                     + cpatch%nplant(ico) * cpatch%leaf_drop(ico)           &
                                     * f_labile(ipft)
@@ -498,6 +577,35 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                cpatch%leaf_drop (ico) = (1.0 - retained_carbon_fraction) * delta_bleaf
                cpatch%elongf    (ico) = elongf_try
                !----- Adjust plant carbon pools. ------------------------------------------!
+               !---------------------------------------------------------------------------!
+               ! Do c13 vars first for reasons noted in analogous section above (case 2)   !
+               !---------------------------------------------------------------------------!
+               if (c13af > 0) then !!!DSC!!!
+                  ! Note that we don't have to worry about dividing by 0, since delta_bleaf 
+                  ! is greater than 0 ==>  (bleaf > 0.0)
+                  lh2tc                  = cpatch%bleaf_c13(ico)/cpatch%bleaf(ico)
+                  delta_bleaf_c13        = lh2tc * delta_bleaf
+
+                  !----------- Update soil pools ------------------------------------------!
+                  csite%fsc13_in  (ipa) = csite%fsc13_in(ipa)                              &
+                                        + cpatch%nplant(ico) * cpatch%leaf_drop(ico)       &
+                                        * f_labile(ipft) * lh2tc
+                  csite%ssc13_in  (ipa) = csite%ssc13_in(ipa)                              &
+                                        + cpatch%nplant(ico) * cpatch%leaf_drop(ico)       &
+                                        * (1.0 - f_labile(ipft)) * lh2tc
+                  csite%ssl_c13_in(ipa) = csite%ssl_c13_in(ipa)                            &
+                                        + cpatch%nplant(ico) * cpatch%leaf_drop(ico)       &
+                                        * (1.0 - f_labile(ipft)) * l2n_stem                &
+                                        / c2n_stem(ipft) * lh2tc
+                  
+                  !----------- Update biomass ---------------------------------------------!
+                  cpatch%bleaf_c13     (ico) = lh2tc * bl_max
+                  cpatch%balive_c13    (ico) = cpatch%balive_c13(ico)   - delta_bleaf_c13
+                  cpatch%bstorage_c13  (ico) = cpatch%bstorage_c13(ico)                    &
+                                             + retained_carbon_fraction * delta_bleaf_c13
+                  !------------------------------------------------------------------------!
+               end if
+
                cpatch%bleaf     (ico) = bl_max
                cpatch%balive    (ico) = cpatch%balive(ico)   - delta_bleaf
                cpatch%bstorage  (ico) = cpatch%bstorage(ico)                               &

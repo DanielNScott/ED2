@@ -245,5 +245,44 @@ Module ed_misc_coms
 
    logical :: suppress_h5_warnings
 
-
+   !---------------------------------------------------------------------------------------!
+   ! ISO_ALLOC_SCHEME -- How should the isotopes be distributed throughout the model?      !
+   !                      -2.  Today's resp. d13C = d13C of yesterday's assimilate.        !
+   !                      -1.  Overlay and propagate, first quasi-mechanistic scheme.      !
+   !                       0.  Use an optimization alg. to 'enforce'                       !
+   !                             dl - dr ~ P1                                              !
+   !                             dl - ds ~ P2                                              !
+   !                       1.  Enforce d13C bleaf = d13C assimilates, solve                !
+   !                             ds - dr = P1 - P2                                         !
+   !                                                                                       !
+   ! ISO_P1 - ISO_P2  -- Parameters for the schemes that fix things.                       !
+   !                      P1:  (default: -1.50) (initially: -3.0)                          !
+   !                      P2:  (default: -3.20) (initially: -1.5)                          !
+   !                                                                                       !
+   ! ISO_R_FLG        -- Determines what (if any) respiration fractionation occurs.        ! 
+   !                       0:  No respiration fractionation.                               !
+   !                       1:  Apparent frac. at leaves and roots from Bowling 2008        !
+   !---------------------------------------------------------------------------------------!
+   integer  :: c13af
+   real     :: iso_P1 
+   real     :: iso_P2
+   integer  :: iso_r_flg
+   !---------------------------------------------------------------------------------------!
+   !----- Pee Dee belemnite ratio 13C:12C -------------------------------------------------!
+   real     :: R_std
+   !---------------------------------------------------------------------------------------!
+   
+   type(simtime)  :: trench_date   ! Date for trenching exp. to begin.
+   real(kind=8)   :: trench_time   ! Model trench time ala grid_coms: 'time'
+   
+   
+   !---------------------------------------------------------------------------------------!
+   ! C_ALLOC_FLG -- The C Allocation scheme.                                               !
+   !                   0.  Original / Normal ED 2.1 C allocation.                          !
+   !                   1.  New C allocation, respiration as loss from 'logical' places.    !
+   !---------------------------------------------------------------------------------------!
+   integer :: c_alloc_flg
+   !---------------------------------------------------------------------------------------!
+   
+   
 end module ed_misc_coms

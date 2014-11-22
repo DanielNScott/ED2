@@ -169,6 +169,8 @@ module physiology_coms
    !---------------------------------------------------------------------------------------!
    real(kind=4)               :: vmfact_c3
    real(kind=4)               :: vmfact_c4
+   real(kind=4)               :: vmfact_hw
+   real(kind=4)               :: vmfact_co
    real(kind=4)               :: mphoto_trc3
    real(kind=4)               :: mphoto_tec3
    real(kind=4)               :: mphoto_c4

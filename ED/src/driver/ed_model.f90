@@ -113,6 +113,7 @@ subroutine ed_model()
                                                     !    during synchronization, so you 
                                                     !    can find out which node is the 
                                                     !    slow one
+   integer                     :: dtlsm_save
    !----- External functions. -------------------------------------------------------------!
    real    , external :: walltime ! Wall time
    integer , external :: num_days ! Number of days in the current month
@@ -226,8 +227,17 @@ subroutine ed_model()
               ' - Simulating:',current_time%month,'/',current_time%date,'/'                &
                               ,current_time%year,' ',current_time%hour,':'                 &
                               ,current_time%min,':',current_time%sec,' UTC'
+         !----- DS Hybrid Integrator Hack -------------------------------------------------!
+         if (integration_scheme == 3 .and. current_time%month == 11) then
+            dtlsm_save = dtlsm;
+            dtlsm = 60;
+         end if
+         if (integration_scheme == 3 .and. current_time%month == 3) then
+            dtlsm = dtlsm_save;
+         end if
+         !---------------------------------------------------------------------------------!
       end if
-
+      
 
       !----- Define which cohorts are to be solved prognostically. ------------------------!
       do ifm=1,ngrids
@@ -421,6 +431,18 @@ subroutine ed_model()
       end if
       !------------------------------------------------------------------------------------!
 
+      
+      !------------------------------------------------------------------------------------!
+      !      Update the yearly variables. DS: Moved this to before output, was wrong.      !
+      !------------------------------------------------------------------------------------!
+      !if (analysis_time .and. new_month .and. new_day .and. current_time%month == 6) then
+      if (annual_time) then
+         do ifm = 1,ngrids
+            call update_ed_yearly_vars(edgrid_g(ifm))
+         end do
+      end if
+      !------------------------------------------------------------------------------------!
+
 
       !------------------------------------------------------------------------------------!
       !     Call the model output driver.                                                  !
@@ -461,13 +483,13 @@ subroutine ed_model()
 
 
       !------------------------------------------------------------------------------------!
-      !      Update the yearly variables.                                                  !
+      !      Update the yearly variables. DS: Moved this to before output, was wrong.      !
       !------------------------------------------------------------------------------------!
-      if (analysis_time .and. new_month .and. new_day .and. current_time%month == 6) then
-         do ifm = 1,ngrids
-            call update_ed_yearly_vars(edgrid_g(ifm))
-         end do
-      end if
+      !if (analysis_time .and. new_month .and. new_day .and. current_time%month == 6) then
+      !   do ifm = 1,ngrids
+      !      call update_ed_yearly_vars(edgrid_g(ifm))
+      !   end do
+      !end if
       !------------------------------------------------------------------------------------!
 
 

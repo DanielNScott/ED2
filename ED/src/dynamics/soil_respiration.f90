@@ -15,6 +15,9 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
    use therm_lib    , only : uextcm2tl                ! ! function
    use ed_misc_coms , only : dtlsm                    & ! intent(in)
                            , frqsum                   ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes     , only : c13af                    ! ! intent(in)    !!!DSC!!!
+   use iso_alloc    , only : resp_h2tc                ! ! function      !!!DSC!!!
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(sitetype)                , target     :: csite
@@ -37,6 +40,8 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
    real                                       :: sum_soil_soilcp
    real                                       :: avg_soil_temp
    real                                       :: avg_soil_fliq
+   !----- DS Additional Vars -----------------------------------------------------------!
+   real                                       :: rrh2tc         !!!DSC!!!
    !----- External functions. -------------------------------------------------------------!
    real                          , external   :: het_resp_weight
    real                          , external   :: root_resp_norm
@@ -47,10 +52,10 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
 
 
    !----- Assign the constant scaling factor. ---------------------------------------------!
-   if (first_time) then
-      first_time     = .false.
+   !if (first_time) then
+   !   first_time     = .false.
       dtlsm_o_frqsum = dtlsm / frqsum
-   end if
+   !end if
    !---------------------------------------------------------------------------------------!
 
 
@@ -102,6 +107,25 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
                                     * umols_2_kgCyr * dtlsm_o_frqsum                       &
                                     / cpatch%nplant          (ico)
       !------------------------------------------------------------------------------------!
+
+
+      !------------------------------------------------------------------------------------!
+      !      Repeat the above 3 steps for c13 vars.                                        !
+      !------------------------------------------------------------------------------------!
+      if (c13af > 0) then !!!DSC!!!
+         cpatch%root_respiration_c13(ico) = cpatch%root_respiration (ico)                  &
+                                 * resp_h2tc('root',cpatch%broot_c13(ico),cpatch%broot(ico))
+         
+         cpatch%today_root_resp_c13(ico)  = cpatch%today_root_resp_c13 (ico)               &
+                                          + cpatch%root_respiration_c13(ico)
+
+         cpatch%fmean_root_resp_c13(ico)  = cpatch%fmean_root_resp_c13 (ico)               &
+                                          + cpatch%root_respiration_c13(ico)               &
+                                          * umols_2_kgCyr * dtlsm_o_frqsum                 &
+                                          / cpatch%nplant              (ico)
+      end if
+      !------------------------------------------------------------------------------------!
+
    end do
    !---------------------------------------------------------------------------------------!
 
@@ -172,6 +196,14 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
                            + csite%rh          (ipa) * umols_2_kgCyr * dtlsm_o_frqsum
    csite%fmean_cwd_rh(ipa) = csite%fmean_cwd_rh(ipa)                                       &
                            + csite%cwd_rh      (ipa) * umols_2_kgCyr * dtlsm_o_frqsum
+   if (c13af > 0) then
+      csite%fmean_rh_c13     (ipa) = csite%fmean_rh_c13    (ipa)                           &
+                                   + csite%rh_c13          (ipa)                           &
+                                   * umols_2_kgCyr * dtlsm_o_frqsum
+      csite%fmean_cwd_rh_c13 (ipa) = csite%fmean_cwd_rh_c13 (ipa)                          &
+                                   + csite%cwd_rh_c13      (ipa)                           &
+                                   * umols_2_kgCyr * dtlsm_o_frqsum
+   end if
    !---------------------------------------------------------------------------------------!
 
    return
@@ -481,6 +513,9 @@ subroutine resp_rh(csite,ipa,Lc)
                            , r_ssc           & ! intent(in)
                            , r_stsc          & ! intent(in)
                            , cwd_frac        ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes     , only : c13af           ! ! intent(in) !!!DSC!!!
+   use iso_alloc    , only : resp_h2tc       ! ! funciton   !!!DSC!!!
 
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
@@ -491,6 +526,10 @@ subroutine resp_rh(csite,ipa,Lc)
    real                         :: fast_C_loss
    real                         :: structural_C_loss
    real                         :: slow_C_loss
+   !----- DS Additional Vars -----------------------------------------------------------!
+   real                         :: fast_c13_loss
+   real                         :: structural_c13_loss
+   real                         :: slow_c13_loss
    !---------------------------------------------------------------------------------------!
 
 
@@ -510,6 +549,30 @@ subroutine resp_rh(csite,ipa,Lc)
    csite%cwd_rh(ipa) = cwd_frac * (r_stsc * structural_C_loss + r_ssc * slow_C_loss)
    !---------------------------------------------------------------------------------------!
 
+   if (c13af > 0) then
+      !----- The following variables have units of [umol_CO2/m2/s]. -----------------------!
+      fast_c13_loss       = kgCday_2_umols * csite%A_decomp(ipa)                           &
+                          * decay_rate_fsc * csite%fast_soil_C(ipa)                        &
+                          * resp_h2tc('het',csite%fast_soil_c13(ipa),csite%fast_soil_C(ipa))
+
+      structural_c13_loss =                                                                &
+              kgCday_2_umols * csite%A_decomp(ipa) * Lc * decay_rate_stsc                  &
+              * csite%structural_soil_C(ipa)* csite%f_decomp(ipa)                          &
+              * resp_h2tc('het',csite%structural_soil_c13(ipa),csite%structural_soil_C(ipa))
+                  
+      slow_c13_loss       = kgCday_2_umols * csite%A_decomp(ipa)                           &
+                          * decay_rate_ssc * csite%slow_soil_C(ipa)                        &
+                          * resp_h2tc('het',csite%slow_soil_c13(ipa),csite%slow_soil_C(ipa))
+      !------------------------------------------------------------------------------------!
+
+      !----- Find the heterotrophic respiration and the fraction due to CWD. --------------!
+      csite%rh_c13    (ipa)   = r_fsc * fast_c13_loss + r_stsc * structural_c13_loss       &
+                              + r_ssc * slow_c13_loss
+      csite%cwd_rh_c13(ipa)   = cwd_frac * (  r_stsc * structural_c13_loss                 &   
+                                            + r_ssc * slow_c13_loss           )
+      !------------------------------------------------------------------------------------!
+   end if
+   
    return
 end subroutine resp_rh
 !==========================================================================================!
@@ -535,6 +598,8 @@ subroutine update_C_and_N_pools(cgrid)
                            , r_stsc          ! ! intent(in)
    use pft_coms     , only : c2n_slow        & ! intent(in)
                            , c2n_structural  ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes     , only : c13af           ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(edtype)     , target   :: cgrid
@@ -551,6 +616,12 @@ subroutine update_C_and_N_pools(cgrid)
    real                        :: structural_L_loss
    real                        :: slow_C_input
    real                        :: slow_C_loss
+   !----- DS Additional Vars -----------------------------------------------------------!
+   real                        :: fast_c13_loss                !!!DSC!!!
+   real                        :: structural_c13_loss
+   real                        :: structural_L_c13_loss
+   real                        :: slow_c13_input
+   real                        :: slow_c13_loss
    !---------------------------------------------------------------------------------------!
 
    polygonloop: do ipy = 1,cgrid%npolygons
@@ -632,6 +703,40 @@ subroutine update_C_and_N_pools(cgrid)
             csite%fast_soil_N(ipa)        = max(0.0,csite%fast_soil_N(ipa))
             csite%mineralized_soil_N(ipa) = max(0.0,csite%mineralized_soil_N(ipa))
             
+            if (c13af > 0) then !!!DSC!!!
+               !----- Fluxes --------------------------------------------------------------!
+               fast_c13_loss = csite%today_A_decomp(ipa) * decay_rate_fsc                  &
+                             * csite%fast_soil_c13(ipa)
+                           
+               structural_c13_loss   = csite%today_Af_decomp(ipa) * Lc * decay_rate_stsc   &
+                                     * csite%structural_soil_c13(ipa)
+               structural_L_c13_loss = csite%today_Af_decomp(ipa) * Lc * decay_rate_stsc   &
+                                     * csite%structural_soil_L_c13(ipa)
+
+               slow_c13_input = (1.0 - r_stsc) * structural_c13_loss
+               slow_c13_loss  = csite%today_A_decomp(ipa) * decay_rate_ssc                 &
+                              * csite%slow_soil_c13(ipa)
+
+               !----- Pools ---------------------------------------------------------------!
+               csite%fast_soil_c13(ipa)       = csite%fast_soil_c13(ipa)                   &
+                                              + csite%fsc13_in(ipa) - fast_c13_loss
+                                              
+               csite%slow_soil_c13(ipa)       = csite%slow_soil_c13(ipa) + slow_c13_input  &
+                                              - slow_c13_loss               
+               
+               csite%structural_soil_c13(ipa)   = csite%structural_soil_c13(ipa)           &
+                                                + csite%ssc13_in(ipa) - structural_c13_loss
+
+               csite%structural_soil_L_c13(ipa) = csite%structural_soil_L_c13(ipa)         &
+                                             + csite%ssl_c13_in(ipa) - structural_L_c13_loss
+
+               csite%fast_soil_c13(ipa)          = max(0.0,csite%fast_soil_c13(ipa))
+               csite%structural_soil_c13(ipa)    = max(0.0,csite%structural_soil_c13(ipa))
+               csite%structural_soil_L_c13(ipa)  = max(0.0,csite%structural_soil_L_c13(ipa))
+               csite%slow_soil_c13(ipa)          = max(0.0,csite%slow_soil_c13(ipa))
+            end if
+            
+
          end do patchloop
       end do siteloop
    end do polygonloop

@@ -53,6 +53,14 @@ subroutine reproduction(cgrid, month)
    use phenology_aux      , only : pheninit_balive_bstorage ! ! intent(in)
    use budget_utils       , only : update_budget            ! ! sub-routine
    use therm_lib          , only : cmtl2uext                ! ! function
+   !----- DS Additional Use Statements -----------------------------------------------------------------------!
+   use isotopes           , only : c13af                    & ! intent(in)
+                                 , cri_broot                & ! intent(in)
+                                 , cri_bleaf                & ! intent(in)
+                                 , cri_bsapwooda            & ! intent(in)
+                                 , cri_bsapwoodb            & ! intent(in)
+                                 , cri_bstorage             & ! intent(in)
+                                 , cri_bdead                ! ! intent(in)
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(edtype)     , target     :: cgrid
@@ -317,6 +325,33 @@ subroutine reproduction(cgrid, month)
                      cpatch%wood_temp_pv    (ico) = recruit(inew)%wood_temp_pv
                      cpatch%leaf_vpdef      (ico) = recruit(inew)%leaf_vpdef
                      !---------------------------------------------------------------------!
+                     
+                     !---------------------------------------------------------------------!
+                     !----- Carry out standard initialization. !!!DSC!!! ------------------!
+                     !---------------------------------------------------------------------!
+                     ! This is a temporary situation: At some point these variables should !
+                     ! really be assigned based on actual c13 information of parents.      !
+                     !---------------------------------------------------------------------!
+                     if (c13af > 0) then !!!DSC!!!
+                        cpatch%bleaf_c13     (ico) = cri_bleaf(recruit(inew)%pft)          &
+                                                   * recruit(inew)%bleaf
+                        cpatch%bdead_c13     (ico) = cri_bdead(recruit(inew)%pft)          &
+                                                   * recruit(inew)%bdead
+                        cpatch%broot_c13     (ico) = cri_broot(recruit(inew)%pft)          &
+                                                   * recruit(inew)%broot
+                        cpatch%bsapwooda_c13 (ico) = cri_bsapwooda(recruit(inew)%pft)      &
+                                                   * recruit(inew)%bsapwooda
+                        cpatch%bsapwoodb_c13 (ico) = cri_bsapwoodb(recruit(inew)%pft)      &
+                                                   * recruit(inew)%bsapwoodb
+                                                   
+                        cpatch%bstorage_c13  (ico) = cri_bstorage(recruit(inew)%pft)       &
+                                                   * recruit(inew)%bstorage
+                                                   
+                        cpatch%balive_c13    (ico) =                                       &
+                                 cpatch%bleaf_c13(ico) + cpatch%broot_c13(ico)             &
+                                 + cpatch%bsapwooda_c13(ico) + cpatch%bsapwoodb_c13(ico)
+                     end if
+                     !---------------------------------------------------------------------!
 
 
                      !----- Initialise the next variables with zeroes... ------------------!
@@ -540,6 +575,7 @@ subroutine reproduction(cgrid, month)
                   !----- Since cohorts may have changed, update patch properties... -------!
                   call update_patch_derived_props(csite,cpoly%lsl(isi)                     &
                                                  ,cpoly%met(isi)%prss,ipa)
+
                   call update_budget(csite,cpoly%lsl(isi),ipa,ipa)
             end do update_patch_loop_big
 

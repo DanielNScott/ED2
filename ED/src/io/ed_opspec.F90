@@ -1258,6 +1258,18 @@ subroutine ed_opspec_misc
    use met_driver_coms       , only : ishuffle                     & ! intent(in)
                                     , imetavg                      ! ! intent(in)
 #endif
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes              , only : c13af                        & ! intent(in)
+                                    , iso_P1                       & ! intent(in)
+                                    , iso_P2                       & ! intent(in)
+                                    , rtrfact                      & ! intent(in) !!!DSC!!!
+                                    , iso_lrf                      & ! intent(in) !!!DSC!!!
+                                    , iso_rrf                      & ! intent(in) !!!DSC!!!
+                                    , iso_grf                      & ! intent(in) !!!DSC!!!
+                                    , iso_strf                     & ! intent(in) !!!DSC!!!
+                                    , iso_vlrf                     & ! intent(in) !!!DSC!!!
+                                    , iso_hrf                      & ! intent(in) !!!DSC!!!
+                                    , rrffact                      ! ! intent(in)
 
    implicit none
    !----- Local variables -----------------------------------------------------------------!
@@ -1651,6 +1663,64 @@ end do
       ifaterr = ifaterr +1
    
    end if
+
+!------------------------- !!!DSC!!! ------------------------------------------------------!
+   if (c13af < 0 .or. c13af > 4) then
+      write (reason,fmt='(a,1x,a,f2.2,a)')                                                   &
+                    'Invalid c13af, it must be between 0 and 4 (inc.), Yours is'  &
+                    ,'set to',c13af,'...'
+   end if
+   
+   if (iso_P1 < -10 .or. iso_P2 > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'Invalid ISO_P1, it must be between -10 and 10 (inc.), Yours is'  &
+                    ,'set to',iso_P1,'...'
+   end if
+      
+   if (iso_P2 < -10 .or. iso_P2 > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'Invalid ISO_P2, it must be between -10 and 10 (inc.), Yours is'  &
+                    ,'set to',iso_P2,'...'
+   end if
+      
+   if (iso_lrf < -10 .or. iso_lrf > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'WARNING: ISO_LRF seems unreasonable. It is likely in [-10,10], but',  &
+                    'yours is set to', iso_lrf,'...'
+   end if
+   if (iso_rrf < -10 .or. iso_rrf > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'WARNING: ISO_RRF seems unreasonable. It is likely in [-10,10], but',  &
+                    'yours is set to', iso_rrf,'...'
+   end if
+   if (iso_grf < -10 .or. iso_grf > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'WARNING: ISO_GRF seems unreasonable. It is likely in [-10,10], but',  &
+                    'yours is set to', iso_grf,'...'
+   end if
+   if (iso_strf < -10 .or. iso_strf > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'WARNING: ISO_STRF seems unreasonable. It is likely in [-10,10], but', &
+                    'yours is set to', iso_strf,'...'
+   end if
+   if (iso_vlrf < -10 .or. iso_vlrf > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'WARNING: ISO_VLRF seems unreasonable. It is likely in [-10,10], but', &
+                    'yours is set to', iso_vlrf,'...'
+   end if
+   if (iso_hrf < -10 .or. iso_hrf > 10) then
+      write (reason,fmt='(a,1x,a,es12.5,a)')                                                   &
+                    'WARNING: ISO_HRF seems unreasonable. It is likely in [-10,10], but',  &
+                    'yours is set to', iso_hrf,'...'
+   end if
+   if (rtrfact < 0.0 .or. rtrfact > 1000.) then    !!!DSC!!! (new)
+      write (reason,fmt='(a,1x,es12.5,a)')                                                   &
+                    'Invalid RTRFACT, it must be between 0.0 and 1000. Yours is set to'    &
+                    ,rtrfact,'...'
+      call opspec_fatal(reason,'opspec_misc')
+      ifaterr = ifaterr +1
+   end if
+   !------------------------------------------------------------------------------------------!
 
    if (iphen_scheme < -1 .or. iphen_scheme > 3) then
       write (reason,fmt='(a,1x,i4,a)')                                                     &

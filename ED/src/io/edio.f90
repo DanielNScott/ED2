@@ -203,6 +203,9 @@ subroutine aggregate_polygon_fmean(cgrid)
    use ed_max_dims           , only : n_pft              ! ! intent(in)
 
 
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes              , only : c13af              & ! intent(in)
+                                    , c_alloc_flg        ! ! intent(in)
    implicit none
    !----- Arguments.      -----------------------------------------------------------------!
    type(edtype)         , target  :: cgrid
@@ -465,6 +468,52 @@ subroutine aggregate_polygon_fmean(cgrid)
                cgrid%fmean_wshed_wg      (ipy) = cgrid%fmean_wshed_wg       (ipy)          &
                                                + cpatch%fmean_wshed_wg      (ico)          &
                                                * patch_wgt
+               if (c_alloc_flg > 0) then
+                  cgrid%fmean_lassim_resp      (ipy) = cgrid%fmean_lassim_resp      (ipy)  &
+                                                  + cpatch%fmean_lassim_resp        (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt            
+               end if
+               if (c13af > 0) then
+                  cgrid%fmean_gpp_c13           (ipy) = cgrid%fmean_gpp_c13         (ipy)  &
+                                                  + cpatch%fmean_gpp_c13            (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt
+                  cgrid%fmean_npp_c13           (ipy) = cgrid%fmean_npp_c13         (ipy)  &
+                                                  + cpatch%fmean_npp_c13            (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt
+                  cgrid%fmean_leaf_resp_c13     (ipy) = cgrid%fmean_leaf_resp_c13   (ipy)  &
+                                                  + cpatch%fmean_leaf_resp_c13      (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt             
+                  cgrid%fmean_root_resp_c13     (ipy) = cgrid%fmean_root_resp_c13   (ipy)  &
+                                                  + cpatch%fmean_root_resp_c13      (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt             
+                  cgrid%fmean_growth_resp_c13   (ipy) = cgrid%fmean_growth_resp_c13 (ipy)  &
+                                                  + cpatch%fmean_growth_resp_c13    (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt             
+                  cgrid%fmean_storage_resp_c13  (ipy) = cgrid%fmean_storage_resp_c13(ipy)  &
+                                                  + cpatch%fmean_storage_resp_c13   (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt             
+                  cgrid%fmean_vleaf_resp_c13    (ipy) = cgrid%fmean_vleaf_resp_c13  (ipy)  &
+                                                  + cpatch%fmean_vleaf_resp_c13     (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt             
+                  cgrid%fmean_plresp_c13        (ipy) = cgrid%fmean_plresp_c13      (ipy)  &
+                                                  + cpatch%fmean_plresp_c13         (ico)  &
+                                                  * cpatch%nplant                   (ico)  &
+                                                  * patch_wgt             
+                  if (c_alloc_flg > 0) then
+                     cgrid%fmean_lassim_resp_c13(ipy) = cgrid%fmean_lassim_resp_c13 (ipy)  &
+                                                     + cpatch%fmean_lassim_resp_c13 (ico)  &
+                                                     * cpatch%nplant                (ico)  &
+                                                     * patch_wgt            
+                  end if
+               end if                                                     
             end do cohortloop
             !------------------------------------------------------------------------------!
 
@@ -519,6 +568,20 @@ subroutine aggregate_polygon_fmean(cgrid)
             cgrid%fmean_sfcw_depth     (ipy) = cgrid%fmean_sfcw_depth     (ipy)            &
                                              + csite%fmean_sfcw_depth     (ipa)            &
                                              * patch_wgt
+            if (c13af > 0) then
+               cgrid%fmean_rh_c13         (ipy) = cgrid%fmean_rh_c13      (ipy)            &
+                                                + csite%fmean_rh_c13      (ipa)            &
+                                                * patch_wgt                  
+               cgrid%fmean_cwd_rh_c13     (ipy) = cgrid%fmean_cwd_rh_c13  (ipy)            &
+                                                + csite%fmean_cwd_rh_c13  (ipa)            &
+                                                * patch_wgt                  
+               cgrid%fmean_nep_c13        (ipy) = cgrid%fmean_nep_c13     (ipy)            &
+                                                + csite%fmean_nep_c13     (ipa)            &
+                                                * patch_wgt                  
+            !   cgrid%fmean_can_co2_c13    (ipy) = cgrid%fmean_can_co2_c13 (ipy)            &
+            !                                    + csite%fmean_can_co2_c13 (ipa)            &
+            !                                    * patch_wgt                  
+            end if                                                   
             !----- Temporarily convert pounding internal energy to J/m2. ------------------!
             cgrid%fmean_sfcw_energy    (ipy) = cgrid%fmean_sfcw_energy    (ipy)            &
                                              + csite%fmean_sfcw_energy    (ipa)            &
@@ -707,6 +770,11 @@ subroutine aggregate_polygon_fmean(cgrid)
          cgrid%fmean_dpcpg          (ipy) = cgrid%fmean_dpcpg          (ipy)               &
                                           + cpoly%fmean_dpcpg          (isi)               &
                                           * site_wgt
+         !if (c13af > 0) then
+         !   cgrid%fmean_atm_co2_c13    (ipy) = cgrid%fmean_atm_co2_c13        (ipy)               &
+         !                                    + cpoly%fmean_atm_co2_c13        (isi)               &
+         !                                    * site_wgt                      
+         !end if
       end do siteloop
       !------------------------------------------------------------------------------------!
 

@@ -19,6 +19,9 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
                             , vm0_amp             & ! intent(in)
                             , vm0_min             & ! intent(in)
                             , llspan_inf          ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes      , only : c13af               & ! intent(in)
+                            , c_alloc_flg         ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(patchtype), target     :: cpatch     ! Current patch
@@ -211,8 +214,34 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%lint_shv              (ico) = 0.
    cpatch%lint_co2_open         (ico) = 0.
    cpatch%lint_co2_closed       (ico) = 0.
-   !---------------------------------------------------------------------------------------!
+   !---- c13 Vars -------------------------------------------------------------------------!
+   if (c_alloc_flg > 0) then
+      cpatch%lassim_resp         (ico) = 0.0
+      cpatch%today_lassim_resp   (ico) = 0.0
+   end if
+   if (c13af > 0) then
+      cpatch%bseeds_c13             (ico) = 0.0
+      cpatch%today_leaf_resp_c13    (ico) = 0.0
+      cpatch%today_root_resp_c13    (ico) = 0.0
+      cpatch%today_gpp_c13          (ico) = 0.0
 
+      cpatch%gpp_c13                (ico) = 0.0
+      cpatch%leaf_respiration_c13   (ico) = 0.0
+      cpatch%root_respiration_c13   (ico) = 0.0
+
+      cpatch%growth_respiration_c13 (ico) = 0.0
+      cpatch%storage_respiration_c13(ico) = 0.0
+      cpatch%vleaf_respiration_c13  (ico) = 0.0
+      cpatch%leaf_maintenance_c13   (ico) = 0.0
+      cpatch%root_maintenance_c13   (ico) = 0.0
+      cpatch%leaf_drop_c13          (ico) = 0.0
+      
+      if (c_alloc_flg > 0) then
+         cpatch%lassim_resp_c13         (ico) = 0.0
+         cpatch%today_lassim_resp_c13   (ico) = 0.0
+      end if
+   end if
+   !---------------------------------------------------------------------------------------!
 
 
    !---------------------------------------------------------------------------------------!
@@ -266,6 +295,26 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%fmean_vapor_wc          (ico) = 0.0
    cpatch%fmean_intercepted_aw    (ico) = 0.0
    cpatch%fmean_wshed_wg          (ico) = 0.0
+   !---- c13 Vars -------------------------------------------------------------------------!
+   if (c_alloc_flg > 0) then
+      cpatch%fmean_lassim_resp            (ico) = 0.0
+   end if
+   if (c13af > 0) then
+      cpatch%fmean_gpp_c13                (ico) = 0.0
+      cpatch%fmean_npp_c13                (ico) = 0.0
+      cpatch%fmean_leaf_resp_c13          (ico) = 0.0
+      cpatch%fmean_root_resp_c13          (ico) = 0.0
+
+      cpatch%fmean_growth_resp_c13        (ico) = 0.0
+      cpatch%fmean_storage_resp_c13       (ico) = 0.0
+      cpatch%fmean_vleaf_resp_c13         (ico) = 0.0
+      cpatch%fmean_plresp_c13             (ico) = 0.0
+      
+      if (c_alloc_flg > 0) then
+         cpatch%lassim_resp_c13           (ico) = 0.0
+         cpatch%fmean_lassim_resp_c13     (ico) = 0.0
+      end if
+   end if
    !---------------------------------------------------------------------------------------!
 
 
@@ -330,6 +379,26 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       cpatch%dmean_vapor_wc          (ico) = 0.0
       cpatch%dmean_intercepted_aw    (ico) = 0.0
       cpatch%dmean_wshed_wg          (ico) = 0.0
+      !---- c13 Vars ----------------------------------------------------------------------!
+      if (c_alloc_flg > 0) then
+         cpatch%dmean_lassim_resp            (ico) = 0.0
+      end if
+      if (c13af > 0) then
+         cpatch%dmean_gpp_c13                (ico) = 0.0
+         cpatch%dmean_npp_c13                (ico) = 0.0
+         cpatch%dmean_leaf_resp_c13          (ico) = 0.0
+         cpatch%dmean_root_resp_c13          (ico) = 0.0
+
+         cpatch%dmean_growth_resp_c13        (ico) = 0.0
+         cpatch%dmean_storage_resp_c13       (ico) = 0.0
+         cpatch%dmean_vleaf_resp_c13         (ico) = 0.0
+         cpatch%dmean_plresp_c13             (ico) = 0.0
+         
+         if (c_alloc_flg > 0) then
+            cpatch%lassim_resp_c13           (ico) = 0.0
+            cpatch%dmean_lassim_resp_c13     (ico) = 0.0
+         end if
+      end if
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -411,6 +480,33 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       cpatch%mmsqu_transp              (ico) = 0.0
       cpatch%mmsqu_sensible_wc         (ico) = 0.0
       cpatch%mmsqu_vapor_wc            (ico) = 0.0
+      !---- c13 Vars ----------------------------------------------------------------------!
+      if (c_alloc_flg > 0) then
+         cpatch%mmean_lassim_resp            (ico) = 0.0
+      end if
+      if (c13af > 0) then
+         cpatch%mmean_gpp_c13                (ico) = 0.0
+         cpatch%mmean_npp_c13                (ico) = 0.0
+         cpatch%mmean_leaf_resp_c13          (ico) = 0.0
+         cpatch%mmean_root_resp_c13          (ico) = 0.0
+
+         cpatch%mmean_growth_resp_c13        (ico) = 0.0
+         cpatch%mmean_storage_resp_c13       (ico) = 0.0
+         cpatch%mmean_vleaf_resp_c13         (ico) = 0.0
+         cpatch%mmean_plresp_c13             (ico) = 0.0
+         
+         cpatch%mmean_bleaf_c13               (ico) = 0.0
+         cpatch%mmean_broot_c13               (ico) = 0.0
+         cpatch%mmean_bstorage_c13            (ico) = 0.0
+         cpatch%mmean_leaf_maintenance_c13    (ico) = 0.0
+         cpatch%mmean_root_maintenance_c13    (ico) = 0.0
+         cpatch%mmean_leaf_drop_c13           (ico) = 0.0
+         
+         if (c_alloc_flg > 0) then
+            cpatch%lassim_resp_c13           (ico) = 0.0
+            cpatch%mmean_lassim_resp_c13     (ico) = 0.0
+         end if
+      end if
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -508,6 +604,8 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
                              , writing_eorq         & ! intent(in)
                              , writing_dcyc         & ! intent(in)
                              , ied_init_mode        ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes      , only : c13af                 ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(sitetype)   , target     :: csite
@@ -589,6 +687,10 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
    csite%cwd_rh                          (ipaa:ipaz) = 0.0
    csite%today_A_decomp                  (ipaa:ipaz) = 0.0
    csite%today_Af_decomp                 (ipaa:ipaz) = 0.0
+   if (c13af > 0) then
+      csite%rh_c13                       (ipaa:ipaz) = 0.0
+      csite%cwd_rh_c13                   (ipaa:ipaz) = 0.0
+   end if
    !---------------------------------------------------------------------------------------!
 
 
@@ -688,6 +790,11 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
    csite%ggveg                           (ipaa:ipaz) = 0.0
    csite%ggnet                           (ipaa:ipaz) = 0.0
    csite%ggsoil                          (ipaa:ipaz) = 0.0
+   if (c13af > 0) then
+      csite%fsc13_in                     (ipaa:ipaz) = 0.0
+      csite%ssc13_in                     (ipaa:ipaz) = 0.0
+      csite%ssl_c13_in                   (ipaa:ipaz) = 0.0
+   end if
    !---------------------------------------------------------------------------------------!
 
 
@@ -753,6 +860,12 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
    csite%fmean_smoist_gg               (:,ipaa:ipaz) = 0.0
    csite%fmean_transloss               (:,ipaa:ipaz) = 0.0
    csite%fmean_sensible_gg             (:,ipaa:ipaz) = 0.0
+   if (c13af > 0) then
+      csite%fmean_rh_c13                 (ipaa:ipaz) = 0.0
+      csite%fmean_cwd_rh_c13             (ipaa:ipaz) = 0.0
+      csite%fmean_nep_c13                (ipaa:ipaz) = 0.0
+      csite%fmean_can_co2_c13            (ipaa:ipaz) = 0.0
+   end if
    !---------------------------------------------------------------------------------------!
 
 
@@ -824,6 +937,12 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
       csite%dmean_smoist_gg            (:,ipaa:ipaz) = 0.0
       csite%dmean_transloss            (:,ipaa:ipaz) = 0.0
       csite%dmean_sensible_gg          (:,ipaa:ipaz) = 0.0
+      if (c13af > 0) then
+         csite%dmean_rh_c13                 (ipaa:ipaz) = 0.0
+         csite%dmean_cwd_rh_c13             (ipaa:ipaz) = 0.0
+         csite%dmean_nep_c13                (ipaa:ipaz) = 0.0
+         csite%dmean_can_co2_c13            (ipaa:ipaz) = 0.0
+      end if
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -918,6 +1037,16 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
       csite%mmsqu_vapor_ac               (ipaa:ipaz) = 0.0
       csite%mmsqu_sensible_gc            (ipaa:ipaz) = 0.0
       csite%mmsqu_sensible_ac            (ipaa:ipaz) = 0.0
+      if (c13af > 0) then
+         csite%mmean_rh_c13                 (ipaa:ipaz) = 0.0
+         csite%mmean_cwd_rh_c13             (ipaa:ipaz) = 0.0
+         csite%mmean_nep_c13                (ipaa:ipaz) = 0.0
+         csite%mmean_can_co2_c13            (ipaa:ipaz) = 0.0
+         csite%mmean_fast_soil_c13          (ipaa:ipaz) = 0.0
+         csite%mmean_slow_soil_c13          (ipaa:ipaz) = 0.0
+         csite%mmean_struct_soil_c13        (ipaa:ipaz) = 0.0
+         csite%mmean_struct_soil_l_c13      (ipaa:ipaz) = 0.0
+      end if
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -1043,6 +1172,8 @@ subroutine init_ed_site_vars(cpoly, lat)
    use ed_misc_coms , only : writing_long     & ! intent(in)
                            , writing_eorq     & ! intent(in)
                            , writing_dcyc     ! ! intent(in)
+   !----- DS Addnl. Uses ------------------------------------------------------------------!
+   use isotopes     , only : c13af            ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(polygontype), target     :: cpoly
@@ -1159,6 +1290,9 @@ subroutine init_ed_site_vars(cpoly, lat)
    cpoly%fmean_pcpg                     (:) = 0.0
    cpoly%fmean_qpcpg                    (:) = 0.0
    cpoly%fmean_dpcpg                    (:) = 0.0
+   if (c13af > 0) then
+      cpoly%fmean_atm_co2_c13           (:) = 0.0
+   end if
    !---------------------------------------------------------------------------------------!
 
 
@@ -1182,6 +1316,9 @@ subroutine init_ed_site_vars(cpoly, lat)
       cpoly%dmean_pcpg                  (:) = 0.0
       cpoly%dmean_qpcpg                 (:) = 0.0
       cpoly%dmean_dpcpg                 (:) = 0.0
+      if (c13af > 0) then
+         cpoly%dmean_atm_co2_c13           (:) = 0.0
+      end if
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -1206,6 +1343,9 @@ subroutine init_ed_site_vars(cpoly, lat)
       cpoly%mmean_pcpg                  (:) = 0.0
       cpoly%mmean_qpcpg                 (:) = 0.0
       cpoly%mmean_dpcpg                 (:) = 0.0
+      if (c13af > 0) then
+         cpoly%mmean_atm_co2_c13           (:) = 0.0
+      end if
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -1255,6 +1395,8 @@ subroutine init_ed_poly_vars(cgrid)
                            , writing_eorq & ! intent(in)
                            , writing_dcyc ! ! intent(in)
    use consts_coms  , only : day_sec      ! ! intent(in)
+   !----- DS Additional Uses -----------------------------------------------------------!
+   use isotopes      , only : c13af                 ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!  
    type(edtype)     , target  :: cgrid
@@ -1372,6 +1514,22 @@ subroutine init_ed_poly_vars(cgrid)
       cgrid%fast_soil_n                 (ipy) = 0.0
       cgrid%mineral_soil_n              (ipy) = 0.0
       cgrid%cwd_n                       (ipy) = 0.0
+      if (c13af > 0) then
+         cgrid%bdead_c13            (:,:,ipy) = 0.0
+         cgrid%bleaf_c13            (:,:,ipy) = 0.0
+         cgrid%broot_c13            (:,:,ipy) = 0.0
+         cgrid%bsapwooda_c13        (:,:,ipy) = 0.0
+         cgrid%bsapwoodb_c13        (:,:,ipy) = 0.0
+         cgrid%bseeds_c13           (:,:,ipy) = 0.0
+         cgrid%bstorage_c13         (:,:,ipy) = 0.0
+         cgrid%leaf_maintenance_c13 (:,:,ipy) = 0.0
+         cgrid%root_maintenance_c13 (:,:,ipy) = 0.0
+         cgrid%leaf_drop_c13        (:,:,ipy) = 0.0
+         cgrid%fast_soil_c13            (ipy) = 0.0
+         cgrid%slow_soil_c13            (ipy) = 0.0
+         cgrid%struct_soil_c13          (ipy) = 0.0
+         cgrid%cwd_c13                  (ipy) = 0.0
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -1509,6 +1667,21 @@ subroutine init_ed_poly_vars(cgrid)
       cgrid%fmean_smoist_gg          (:,ipy) = 0.0
       cgrid%fmean_transloss          (:,ipy) = 0.0
       cgrid%fmean_sensible_gg        (:,ipy) = 0.0
+      if (c13af > 0) then
+         cgrid%fmean_gpp_c13                  (ipy) = 0.0
+         cgrid%fmean_npp_c13                  (ipy) = 0.0
+         cgrid%fmean_leaf_resp_c13            (ipy) = 0.0
+         cgrid%fmean_root_resp_c13            (ipy) = 0.0
+         cgrid%fmean_growth_resp_c13          (ipy) = 0.0
+         cgrid%fmean_storage_resp_c13         (ipy) = 0.0
+         cgrid%fmean_vleaf_resp_c13           (ipy) = 0.0
+         cgrid%fmean_plresp_c13               (ipy) = 0.0
+         cgrid%fmean_rh_c13                   (ipy) = 0.0
+         cgrid%fmean_cwd_rh_c13               (ipy) = 0.0
+         cgrid%fmean_nep_c13                  (ipy) = 0.0
+         cgrid%fmean_can_co2_c13              (ipy) = 0.0
+         !cgrid%fmean_atm_co2_c13              (ipy) = 0.0
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -1648,6 +1821,21 @@ subroutine init_ed_poly_vars(cgrid)
          cgrid%dmean_smoist_gg          (:,ipy) = 0.0
          cgrid%dmean_transloss          (:,ipy) = 0.0
          cgrid%dmean_sensible_gg        (:,ipy) = 0.0
+         if (c13af > 0) then
+            cgrid%dmean_gpp_c13                  (ipy) = 0.0
+            cgrid%dmean_npp_c13                  (ipy) = 0.0
+            cgrid%dmean_leaf_resp_c13            (ipy) = 0.0
+            cgrid%dmean_root_resp_c13            (ipy) = 0.0
+            cgrid%dmean_growth_resp_c13          (ipy) = 0.0
+            cgrid%dmean_storage_resp_c13         (ipy) = 0.0
+            cgrid%dmean_vleaf_resp_c13           (ipy) = 0.0
+            cgrid%dmean_plresp_c13               (ipy) = 0.0
+            cgrid%dmean_rh_c13                   (ipy) = 0.0
+            cgrid%dmean_cwd_rh_c13               (ipy) = 0.0
+            cgrid%dmean_nep_c13                  (ipy) = 0.0
+            cgrid%dmean_can_co2_c13              (ipy) = 0.0
+            !cgrid%dmean_atm_co2_c13              (ipy) = 0.0
+         end if
       end if
       !------------------------------------------------------------------------------------!
 
@@ -1830,6 +2018,32 @@ subroutine init_ed_poly_vars(cgrid)
          cgrid%mmsqu_vapor_ac             (ipy) = 0.0
          cgrid%mmsqu_sensible_gc          (ipy) = 0.0
          cgrid%mmsqu_sensible_ac          (ipy) = 0.0
+         if (c13af > 0) then
+            cgrid%mmean_gpp_c13                  (ipy) = 0.0
+            cgrid%mmean_npp_c13                  (ipy) = 0.0
+            cgrid%mmean_leaf_resp_c13            (ipy) = 0.0
+            cgrid%mmean_root_resp_c13            (ipy) = 0.0
+            cgrid%mmean_growth_resp_c13          (ipy) = 0.0
+            cgrid%mmean_storage_resp_c13         (ipy) = 0.0
+            cgrid%mmean_vleaf_resp_c13           (ipy) = 0.0
+            cgrid%mmean_plresp_c13               (ipy) = 0.0
+            cgrid%mmean_rh_c13                   (ipy) = 0.0
+            cgrid%mmean_cwd_rh_c13               (ipy) = 0.0
+            cgrid%mmean_nep_c13                  (ipy) = 0.0
+            cgrid%mmean_bleaf_c13            (:,:,ipy) = 0.0
+            cgrid%mmean_broot_c13            (:,:,ipy) = 0.0
+            cgrid%mmean_bstorage_c13         (:,:,ipy) = 0.0
+            !cgrid%mmean_can_co2_c13              (ipy) = 0.0
+            !cgrid%mmean_atm_co2_c13              (ipy) = 0.0
+            cgrid%mmean_leaf_maintenance_c13 (:,:,ipy) = 0.0
+            cgrid%mmean_root_maintenance_c13 (:,:,ipy) = 0.0
+            cgrid%mmean_leaf_drop_c13        (:,:,ipy) = 0.0
+            cgrid%mmean_fast_soil_c13            (ipy) = 0.0
+            cgrid%mmean_slow_soil_c13            (ipy) = 0.0
+            cgrid%mmean_struct_soil_c13          (ipy) = 0.0
+            cgrid%mmean_struct_soil_l_c13        (ipy) = 0.0
+            cgrid%mmean_cwd_c13                  (ipy) = 0.0
+         end if                         
       end if
       !------------------------------------------------------------------------------------!
 
