@@ -47,6 +47,9 @@ subroutine ed_init_atm()
    use met_driver_coms       , only : met_driv_state    ! ! structure
    use canopy_struct_dynamics, only : canopy_turbulence ! ! subroutine
    use budget_utils          , only : update_budget     ! ! subroutine
+   use canopy_layer_coms     , only : canstr            & ! structure 
+                                    , alloc_canopy_layer_mbs ! ! subroutine
+   !$ use omp_lib
    implicit none
    !----- Local variables. ----------------------------------------------------------------!
    type(edtype)        , pointer  :: cgrid
@@ -68,6 +71,7 @@ subroutine ed_init_atm()
    integer                        :: ix
    integer                        :: iy
    integer                        :: ping,ierr
+   integer                        :: nbuff, ibuff
    real                           :: site_area_i
    real                           :: poly_area_i
    real                           :: poly_lai
@@ -79,10 +83,20 @@ subroutine ed_init_atm()
    !----- Add the MPI common block. -------------------------------------------------------!
    include 'mpif.h'
    !---------------------------------------------------------------------------------------!
+   ! With openmp, we need to initialize as many buffers as there are threads
+
+   nbuff = 1
+   !$ nbuff= OMP_get_max_threads()
 
    !----- This is just any integer used to control the MPI sending/receiving tools. -------!
    ping = 6
 
+   allocate(canstr(nbuff))
+   do ibuff=1,nbuff
+      call alloc_canopy_layer_mbs(canstr(ibuff))   ! The arrays in this structure DO NOT
+                                                   ! change in size (currently)
+   end do
+   
    !---------------------------------------------------------------------------------------!
    gridloop: do igr = 1,ngrids
       
