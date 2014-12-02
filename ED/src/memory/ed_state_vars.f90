@@ -22273,6 +22273,15 @@ module ed_state_vars
                            ,'Monthly mean - Heterotrophic respiration'                     &
                            ,'[   kg/m2/yr]','(ipatch)'            )
       end if                                          
+      if (associated(csite%mmean_rh_c13          )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_rh_c13                                        &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_RH_PA_C13            :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Heterotrophic respiration'                     &
+                           ,'[   kg/m2/yr]','(ipatch)'            )
+      end if                                          
       if (associated(csite%mmean_cwd_rh          )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_cwd_rh                                        &
@@ -22282,11 +22291,28 @@ module ed_state_vars
                            ,'Monthly mean - Coarse woody debris respiration'               &
                            ,'[   kg/m2/yr]','(ipatch)'            )
       end if                                          
+      if (associated(csite%mmean_cwd_rh_c13      )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_cwd_rh_c13                                    &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CWD_RH_PA_C13        :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Coarse woody debris respiration'               &
+                           ,'[   kg/m2/yr]','(ipatch)'            )
+      end if                                          
       if (associated(csite%mmean_nep             )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_nep                                           &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
                            ,'MMEAN_NEP_PA               :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Net Ecosystem productivity'                    &
+                           ,'[   kg/m2/yr]','(ipatch)'            )
+      if (associated(csite%mmean_nep_c13         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_nep_c13                                       &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_NEP_PA_C13           :31:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Net Ecosystem productivity'                    &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -22714,6 +22740,15 @@ module ed_state_vars
                            ,'Monthly mean - Soil Carbon (Fast pool)'                       &
                            ,'[     kgC/m2]','(ipatch)'            )
       end if                                          
+      if (associated(csite%mmean_fast_soil_c13   )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_fast_soil_c13                                 &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_FAST_SOIL_C13        :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Soil Carbon (Fast pool)'                       &
+                           ,'[     kgC/m2]','(ipatch)'            )
+      end if                                          
       if (associated(csite%mmean_slow_soil_c     )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_slow_soil_c                                   &
@@ -22723,11 +22758,29 @@ module ed_state_vars
                            ,'Monthly mean - Soil Carbon (Slow pool)'                       &
                            ,'[     kgC/m2]','(ipatch)'            )
       end if                                          
+      if (associated(csite%mmean_slow_soil_c13   )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_slow_soil_c13                                 &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_SLOW_SOIL_C13        :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Soil Carbon (Slow pool)'                       &
+                           ,'[     kgC/m2]','(ipatch)'            )
+      end if                                          
       if (associated(csite%mmean_struct_soil_c   )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_struct_soil_c                                 &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
                            ,'MMEAN_STRUCT_SOIL_C        :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Soil Carbon (Structural pool)'                 &
+                           ,'[     kgC/m2]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%mmean_struct_soil_c13 )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_struct_soil_c13                               &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_STRUCT_SOIL_C13      :31:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Soil Carbon (Structural pool)'                 &
                            ,'[     kgC/m2]','(ipatch)'            )
