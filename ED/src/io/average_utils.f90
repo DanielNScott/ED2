@@ -44,8 +44,8 @@ module average_utils
                                        , dslz               ! ! intent(in)
       use ed_max_dims           , only : n_pft              ! ! intent(in)
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
-                              , c_alloc_flg   ! ! intent(in)
+      use isotopes,               only : c13af         & ! intent(in)
+                                       , c_alloc_flg   ! ! intent(in)
 
 
       implicit none
@@ -800,7 +800,7 @@ module average_utils
       use ed_misc_coms   , only : dtlsm           & ! intent(in)
                                 , frqsum          ! ! intent(in)
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         ! ! intent(in)
+      use isotopes,        only : c13af         ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)      , target  :: cgrid
@@ -923,7 +923,7 @@ module average_utils
                               , dslz               & ! intent(in)
                               , matric_potential   ! ! function
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
+      use isotopes,      only : c13af         & ! intent(in)
                               , c_alloc_flg   ! ! intent(in)
 
       implicit none
@@ -1293,7 +1293,7 @@ module average_utils
                               , patchtype   ! ! structure
       
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
+      use isotopes,      only : c13af         & ! intent(in)
                               , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -1717,8 +1717,8 @@ module average_utils
       use ed_misc_coms         , only : frqsum              ! ! intent(in)
       use consts_coms          , only : day_sec             ! ! intent(in)
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
-                              , c_alloc_flg   ! ! intent(in)
+      use isotopes,              only : c13af         & ! intent(in)
+                                      , c_alloc_flg   ! ! intent(in)
       implicit none
 
       !----- Argument ---------------------------------------------------------------------!
@@ -2575,8 +2575,8 @@ module average_utils
       use consts_coms   , only : umols_2_kgCyr & ! intent(in)
                                , day_sec       ! ! intent(in)
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
-                              , c_alloc_flg   ! ! intent(in)
+      use isotopes      , only : c13af         & ! intent(in)
+                               , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target     :: cgrid
@@ -3240,7 +3240,7 @@ module average_utils
                               , sitetype     & ! structure
                               , patchtype    ! ! structure
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
+      use isotopes,      only : c13af         & ! intent(in)
                               , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -3324,7 +3324,7 @@ module average_utils
                               , sitetype      & ! structure
                               , patchtype     ! ! structure
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
+      use isotopes,      only : c13af         & ! intent(in)
                               , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -3754,7 +3754,7 @@ module average_utils
       use ed_misc_coms , only : current_time  & ! intent(in)
                               , simtime       ! ! structure
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
+      use isotopes,      only : c13af         & ! intent(in)
                               , c_alloc_flg   ! ! intent(in)
       implicit none
       !----- Argument. --------------------------------------------------------------------!
@@ -5459,8 +5459,8 @@ module average_utils
                                , sitetype      & ! structure
                                , patchtype     ! ! structure
       !----- DS Additional Uses -----------------------------------------------------------!
-      use ed_misc_coms , only : c13af         & ! intent(in)
-                              , c_alloc_flg   ! ! intent(in)
+      use isotopes,       only : c13af         & ! intent(in)
+                               , c_alloc_flg   ! ! intent(in)
       implicit none                         
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target  :: cgrid   

@@ -3,10 +3,13 @@ implicit none
 contains
 
 !==========================================================================================!
-subroutine alloc_c13 (cpatch         , ico    ,carbon_balance , carbon13_balance           &
-                     ,tr_bleaf       , tr_broot         , tr_bsapwooda, tr_bsapwoodb       &
-                     ,lh2tc_in       , rh2tc_in         , sth2tc_in   , sah2tc_in          &
-                     ,sbh2tc_in      , bleaf_in         )
+! alloc_c13 is basically a wrapper function for calling the different allocation schemes,  !
+! but it includes a lot of error checking.                                                 !
+!==========================================================================================!
+subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
+                     ,tr_bleaf , tr_broot, tr_bsapwooda  , tr_bsapwoodb       &
+                     ,lh2tc_in , rh2tc_in, sth2tc_in     , sah2tc_in          &
+                     ,sbh2tc_in, bleaf_in         )
    use ed_state_vars,   only : patchtype        ! ! intent(in)
    use isotopes    ,    only : c13af            ! ! intent(in)
    implicit none
@@ -16,40 +19,46 @@ subroutine alloc_c13 (cpatch         , ico    ,carbon_balance , carbon13_balance
    integer         , intent(in)     :: ico
    real            , intent(in)     :: carbon_balance
    real            , intent(in)     :: carbon13_balance
-   
-   real, optional                   :: tr_bleaf       ! Xfer of total C from calling fn
-   real, optional                   :: tr_broot       ! Xfer of total C from calling fn
-   real, optional                   :: tr_bsapwooda   ! Xfer of total C from calling fn
-   real, optional                   :: tr_bsapwoodb   ! Xfer of total C from calling fn
-
+   real, optional                   :: tr_bleaf          ! Xfer of total C from calling fn
+   real, optional                   :: tr_broot          ! Xfer of total C from calling fn
+   real, optional                   :: tr_bsapwooda      ! Xfer of total C from calling fn
+   real, optional                   :: tr_bsapwoodb      ! Xfer of total C from calling fn
    real, optional  , intent(in)     :: lh2tc_in
    real, optional  , intent(in)     :: rh2tc_in
    real, optional  , intent(in)     :: sth2tc_in
    real, optional  , intent(in)     :: sah2tc_in
    real, optional  , intent(in)     :: sbh2tc_in
-   
    real, optional  , intent(in)     :: bleaf_in
    
    !------ Local Vars. --------------------------------------------------------------------!
-   real(kind=8)                     :: pre_alloc_c13
-   real(kind=8)                     :: post_alloc_c13
-   real(kind=8)                     :: c13_diff
+   real(kind=8)   :: pre_alloc_c13           ! Pre-allocation C-13
+   real(kind=8)   :: post_alloc_c13          ! Post-allocation C-13
+   real(kind=8)   :: c13_diff                ! Loss of C-13 in this routine if any
+   real           :: sum_tr                  ! Sum of xfers from storage to tissues
+   real           :: sum_C                   ! Sum of plant C excluding storage.
+   real           :: pre_leaf, post_leaf     ! Leaf C-13 content before & after allocation
+   real           :: pre_root, post_root     ! Root C-13 content before & after allocation
+   real           :: pre_sa  , post_sa       ! SapA C-13 content before & after allocation
+   real           :: pre_sb  , post_sb       ! SapB C-13 content before & after allocation
+   real           :: pre_st  , post_st       ! Stor C-13 content before & after allocation
+   integer        :: diagnostic    = 0       ! Tells us where a problem was if encountered.
+   integer        :: print_details = 0
+   logical        :: check_erythang          ! Sanity check everything this routine sees?
+   character(70)  :: diagnostic_msg
+   character(20)  :: reason
    
-   real :: pre_leaf
-   real :: pre_root
-   real :: pre_sa
-   real :: pre_sb
-   real :: pre_st
-
-   real :: post_leaf
-   real :: post_root
-   real :: post_sa
-   real :: post_sb
-   real :: post_st
-   
-   real :: sum_tr
-   
-   integer :: diagnostic = 0
+   check_erythang = .true.
+   !---------------------------------------------------------------------------------------!
+   ! Check that some of the input stuff even makes sense...                                !
+   !---------------------------------------------------------------------------------------!
+   if (carbon13_balance > carbon_balance .and. check_erythang) then
+      write (*,*) '------------------------------------------------------------------------'
+      write (*,*) 'Whoa! Is it really cool to have greater c-13 balance than c bal?       !'
+      write (*,*) '------------------------------------------------------------------------'
+      write (*,'(A13, I4, I3)') 'Cohort, PFT: ', ico, cpatch%pft(ico)
+      write (*,*) 'Carbon_balance, carbon_13_balance : ', carbon_balance, carbon13_balance
+      write (*,*) ''
+   end if
    
    !------ Save Total Carbon 13 In --------------------------------------------------------!
    pre_leaf = cpatch%bleaf_c13(ico)
@@ -70,9 +79,8 @@ subroutine alloc_c13 (cpatch         , ico    ,carbon_balance , carbon13_balance
    !------ Allocate the 13C ---------------------------------------------------------------!
    select case(c13af)
    case(1)
-      call mech_alloc_2 (cpatch, ico, carbon_balance, carbon13_balance                       &
-                        ,tr_bleaf, tr_broot, tr_bsapwooda, tr_bsapwoodb, lh2tc_in, rh2tc_in, &
-                        sah2tc_in, sbh2tc_in, sth2tc_in, diagnostic)
+      call mech_alloc_2 (cpatch,ico,carbon_balance,carbon13_balance,tr_bleaf,tr_broot,     &
+                         tr_bsapwooda,tr_bsapwoodb,sth2tc_in,diagnostic)
    case(2)
       call nm_alloc_1(cpatch,ico,carbon13_balance)
    !case(3)
@@ -83,8 +91,11 @@ subroutine alloc_c13 (cpatch         , ico    ,carbon_balance , carbon13_balance
    write (*,*) 'ERROR! c13af Not in (1,2,4) but c13_alloc is called!'
    end select
    
+   ! Update the living biomass.
+   cpatch%balive_c13(ico) = cpatch%bleaf_c13    (ico) + cpatch%broot_c13    (ico)          &
+                          + cpatch%bsapwooda_c13(ico) + cpatch%bsapwoodb_c13(ico)
+
    !------ Check We Haven't Lost Any ------------------------------------------------------!
-   
    post_leaf = cpatch%bleaf_c13(ico)
    post_root = cpatch%broot_c13(ico)
    post_sa   = cpatch%bsapwooda_c13(ico)
@@ -98,52 +109,103 @@ subroutine alloc_c13 (cpatch         , ico    ,carbon_balance , carbon13_balance
                   + dble(cpatch%bstorage_c13 (ico))
 
    c13_diff = post_alloc_c13 - pre_alloc_c13 
+   
+   sum_C = cpatch%bleaf(ico) + cpatch%broot(ico) + cpatch%bsapwooda(ico)                   &
+          +cpatch%bsapwoodb(ico)
 
-   if (abs(c13_diff/pre_alloc_c13)  > 0.000001 .or.                                        &
-       abs(c13_diff/post_alloc_c13) > 0.000001 .or.                                        &
-       cpatch%bleaf_c13(ico)     < 0.0         .or. cpatch%broot_c13(ico)     < 0.0 .or.   &
-       cpatch%bsapwooda_c13(ico) < 0.0         .or. cpatch%bsapwoodb_c13(ico) < 0.0 .or.   &
-       cpatch%bstorage_c13(ico)  < -0.000000001 ) then
-      write (*,*) '------------------------------------------------------------------------'
-      write (*,*) 'ERROR! C-13 was not conserved, or a field was set < 0.0 in alloc_c13!'
-      write (*,*) '------------------------------------------------------------------------'
-      write (*,*) '- c13af ------ Cohort ----- pft --------'
-      write (*,*)   c13af       , ico        , cpatch%pft(ico)
-      write (*,*) ''
-      write (*,*) '- carbon13_bal - carbon_bal -'
-      write (*,*)   carbon13_balance, carbon_balance
-      write (*,*) ''
-      write (*,*) '- Prev Total C-13 -- New Total C-13 -- Difference -'
-      write (*,*)   post_alloc_c13, pre_alloc_c13, c13_diff
-      write (*,*) '- Diff / Prev --- Diff / Post -'
-      write (*,*)   c13_diff/pre_alloc_c13, c13_diff/post_alloc_c13
-      write (*,*) '' 
-      write (*,*) '- Variable Name: ---------- Prev. Val --- New Val ---- Difference ------'
-      write (*,*) ' bleaf_c13              :', post_leaf , pre_leaf, post_leaf - pre_leaf
-      write (*,*) ' broot_c13              :', post_root , pre_root, post_root - pre_root
-      write (*,*) ' bsapwooda_c13          :', post_sa   , pre_sa  , post_sa - pre_sa
-      write (*,*) ' bsapwoodb_c13          :', post_sb   , pre_sb  , post_sb - pre_sb
-      write (*,*) ' bstorage_c13           :', post_st   , pre_st  , post_st - pre_st 
-      write (*,*) '' 
-      write (*,*) '- Variable Name ----------- Transfer to Var --------- :' 
-      write (*,*) ' bleaf                  :', tr_bleaf
-      write (*,*) ' broot                  :', tr_broot
-      write (*,*) ' bsapwooda              :', tr_bsapwooda
-      write (*,*) ' bsapwoodab             :', tr_bsapwoodb
-      write (*,*) ' TOTAL                  :', sum_tr
-      write (*,*) ''
-      write (*,*) ' diagnostic (if exists) :', diagnostic
+   !---------------------------------------------------------------------------------------!
+   ! Save a message indicating which condition existed in the mechanistic allocation.      !
+   !---------------------------------------------------------------------------------------!
+   select case(diagnostic)
+   case(1)
+      diagnostic_msg = 'Allocation Conditional (see src): carbon_balance >= sum_tr'
+   case(2)
+      diagnostic_msg = 'Allocation Conditional (see src): carbon_balance < sum_tr'
+   case(3)
+      diagnostic_msg = 'Allocation Conditional (see src): sum_tr is not greater than 0.0'
+   end select
+
+   !---------------------------------------------------------------------------------------!
+   ! Check that we aren't leaking C-13 here for no apparent reason. If so print a banner.  !
+   !---------------------------------------------------------------------------------------!
+   if ((abs(c13_diff/pre_alloc_c13)>0.000001 .or. abs(c13_diff/post_alloc_c13)>0.000001)   &
+      .and. check_erythang) then
+      write(*,*) '------------------------------------------------------------------------'
+      write(*,*) 'Warning! C-13 was not conserved in alloc_c13! The routine has misplaced '
+      write(*,*) 'more than the acceptable upper bound of 1 millionth of plant total C-13.'
+      write(*,*) '------------------------------------------------------------------------'
+      print_details = 1
    end if
-   cpatch%balive_c13(ico) = cpatch%bleaf_c13    (ico) + cpatch%broot_c13    (ico)          &
-                          + cpatch%bsapwooda_c13(ico) + cpatch%bsapwoodb_c13(ico)         
+
+   !---------------------------------------------------------------------------------------!
+   ! Check that none of the C-13 fields were set less than zero... If so, print a banner.  !
+   !---------------------------------------------------------------------------------------!   
+   if ((cpatch%bleaf_c13(ico)   < 0.0         .or. cpatch%broot_c13(ico)     < 0.0 .or.   &
+      cpatch%bsapwooda_c13(ico) < 0.0         .or. cpatch%bsapwoodb_c13(ico) < 0.0 .or.   &
+      cpatch%bstorage_c13(ico)  < -0.000000001 ) .and. check_erythang) then
+      write(*,*) '------------------------------------------------------------------------'
+      write(*,*) 'ERROR! A field was set < 0.0 in alloc_c13!                              '
+      write(*,*) '------------------------------------------------------------------------'
+      print_details = 2
+      reason = 'Negative C-13'
+   end if
+   
+   !---------------------------------------------------------------------------------------!
+   ! Check we're not being stupid and somehow adding more C-13 to things than there is C...!
+   !---------------------------------------------------------------------------------------!
+   if ((cpatch%bleaf_c13(ico)   > cpatch%bleaf(ico)     + tr_bleaf     .or.   & 
+      cpatch%broot_c13(ico)     > cpatch%broot(ico)     + tr_broot     .or.   &
+      cpatch%bsapwooda_c13(ico) > cpatch%bsapwooda(ico) + tr_bsapwooda .or.   &
+      cpatch%bsapwoodb_c13(ico) > cpatch%bsapwoodb(ico) + tr_bsapwoodb        ) & 
+      .and. check_erythang) then
+      !cpatch%bstorage_c13(ico)  > cpatch%bstorage(ico)         ) .and. check_erythang) then
+      write (*,*) '------------------------------------------------------------------------'
+      write (*,*) ' ERROR! There is more C-13 than total C after alloc_c13 call...        !'
+      write (*,*) '------------------------------------------------------------------------'
+      print_details = 2
+      reason = 'Too much C-13'
+   end if
+   
+   !---------------------------------------------------------------------------------------!
+   ! Print the details of any issue we may have found.                                     !
+   !---------------------------------------------------------------------------------------!
+   select case(print_details)
+   case(1)
+      write(*,'(A14, I4, I3)') ' Cohort, PFT :', ico, cpatch%pft(ico)
+      write(*,*) ' '
+      write(*,*) 'Total C-13 Lost, As Fraction of Input C-13, As Fraction of Output C-13'
+      write(*,*)  c13_diff, pre_alloc_c13, post_alloc_c13
+      write(*,*) ''
+   case(2)
+      write(*,'(A14, I4, I3)') ' Cohort, PFT :', ico, cpatch%pft(ico)
+      write(*,*) ' '
+      write(*,*) '- Variable Name: ---- Prev. Val ----- New Val ---- Difference ---'
+      write(*,*) ' bleaf_c13       :', pre_leaf , post_leaf, post_leaf - pre_leaf
+      write(*,*) ' broot_c13       :', pre_root , post_root, post_root - pre_root
+      write(*,*) ' bsapwooda_c13   :', pre_sa   , post_sa  , post_sa   - pre_sa
+      write(*,*) ' bsapwoodb_c13   :', pre_sb   , post_sb  , post_sb   - pre_sb
+      write(*,*) ' bstorage_c13    :', pre_st   , post_st  , post_st   - pre_st 
+      write(*,*) '' 
+      write(*,*) '- Variable Name ---- Xfer to Var ---- Var Val (post Xfer) ------' 
+      write(*,*) ' bleaf           :', tr_bleaf    , cpatch%bleaf(ico)     + tr_bleaf
+      write(*,*) ' broot           :', tr_broot    , cpatch%broot(ico)     + tr_broot
+      write(*,*) ' bsapwooda       :', tr_bsapwooda, cpatch%bsapwooda(ico) + tr_bsapwooda
+      write(*,*) ' bsapwoodab      :', tr_bsapwoodb, cpatch%bsapwoodb(ico) + tr_bsapwoodb
+      write(*,*) ' TOTAL           :', sum_tr      , sum_C + sum_tr
+      write(*,*) ''
+      write(*,*) diagnostic_msg
+      call fatal_error(reason,'alloc_c13','iso_alloc.f90')
+   end select
+   !---------------------------------------------------------------------------------------!
+
 end subroutine alloc_c13
 !==========================================================================================!
 
    
 !==========================================================================================!
-subroutine mech_alloc_2(cpatch, ico, carbon_balance, carbon13_balance         &
-                     ,tr_bleaf, tr_broot, tr_bsapwooda, tr_bsapwoodb, lh2tc_in, rh2tc_in, &
-                     sah2tc_in, sbh2tc_in, sth2tc_in,diagnostic)
+subroutine mech_alloc_2(cpatch   , ico       , carbon_balance, carbon13_balance,         &
+                        tr_bleaf , tr_broot  , tr_bsapwooda  , tr_bsapwoodb    ,         &
+                        sth2tc_in, diagnostic)
    use ed_state_vars, only : patchtype
    implicit none
    
@@ -152,18 +214,11 @@ subroutine mech_alloc_2(cpatch, ico, carbon_balance, carbon13_balance         &
    integer         , intent(in)    :: ico
    real            , intent(in)    :: carbon_balance
    real            , intent(in)    :: carbon13_balance
-   
    real            , intent(in)    :: tr_bleaf
    real            , intent(in)    :: tr_broot
    real            , intent(in)    :: tr_bsapwooda
    real            , intent(in)    :: tr_bsapwoodb
-   
-   real            , intent(in)    :: lh2tc_in
-   real            , intent(in)    :: rh2tc_in
-   real            , intent(in)    :: sah2tc_in
-   real            , intent(in)    :: sbh2tc_in
    real            , intent(in)    :: sth2tc_in
-   
    integer         , intent(inout) :: diagnostic
    
    !------ Local Var. ---------------------------------------------------------------------!
@@ -194,8 +249,8 @@ subroutine mech_alloc_2(cpatch, ico, carbon_balance, carbon13_balance         &
    ! wasn't enough we then rectify the matter.                                             !
    !---------------------------------------------------------------------------------------!
       if (carbon_balance >= sum_tr) then
-         tr_bleaf_c13 = carbon13_balance / carbon_balance * tr_bleaf
-         tr_broot_c13 = carbon13_balance / carbon_balance * tr_broot
+         tr_bleaf_c13     = carbon13_balance / carbon_balance * tr_bleaf
+         tr_broot_c13     = carbon13_balance / carbon_balance * tr_broot
          tr_bsapwooda_c13 = carbon13_balance / carbon_balance * tr_bsapwooda
          tr_bsapwoodb_c13 = carbon13_balance / carbon_balance * tr_bsapwoodb
          
@@ -225,19 +280,18 @@ subroutine mech_alloc_2(cpatch, ico, carbon_balance, carbon13_balance         &
                                 , cpatch%bstorage_c13(ico))
          diagnostic = 2
       else
-         tr_bleaf_c13 = 0.0
-         tr_broot_c13 = 0.0
+         tr_bleaf_c13     = 0.0
+         tr_broot_c13     = 0.0
          tr_bsapwooda_c13 = 0.0
          tr_bsapwoodb_c13 = 0.0
-         tr_bstorage_c13 = 0.0
-         diagnostic = 3
+         tr_bstorage_c13  = 0.0
       end if
    
-      cpatch%bleaf_c13(ico) = cpatch%bleaf_c13(ico) + tr_bleaf_c13
-      cpatch%broot_c13(ico) = cpatch%broot_c13(ico) + tr_broot_c13
+      cpatch%bleaf_c13(ico)     = cpatch%bleaf_c13(ico)     + tr_bleaf_c13
+      cpatch%broot_c13(ico)     = cpatch%broot_c13(ico)     + tr_broot_c13
       cpatch%bsapwooda_c13(ico) = cpatch%bsapwooda_c13(ico) + tr_bsapwooda_c13
       cpatch%bsapwoodb_c13(ico) = cpatch%bsapwoodb_c13(ico) + tr_bsapwoodb_c13
-      cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico) + tr_bstorage_c13
+      cpatch%bstorage_c13(ico)  = cpatch%bstorage_c13(ico)  + tr_bstorage_c13
       
       !----- If there wasn't enough in storage, 'undo' some proportion of the xfers -------!
       ! if (cpatch%bstorage_c13(ico) < 0.0) then
@@ -251,13 +305,9 @@ subroutine mech_alloc_2(cpatch, ico, carbon_balance, carbon13_balance         &
    ! We just put carbon_balance into storage in main routine, only reached if flphen == 1. !
    !---------------------------------------------------------------------------------------!
       cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico) + carbon13_balance
-      diagnostic = 4
+      diagnostic = 3
    !---------------------------------------------------------------------------------------!
    end if
-   if (cpatch%bstorage_c13(ico) < -tiny(1.0)) then
-      write (*,*) 'MECH ALLOC BSTORAGE_c13 NEG! diagnostic: ', diagnostic
-   end if
-   
 end subroutine mech_alloc_2
 !=======================================================================================!      
 
@@ -1409,95 +1459,183 @@ subroutine get_lhc_target(ipft,bleaf,bleaf_c13,today_gpp,today_gpp_c13,lh2tc_in,
 end subroutine get_lhc_target
 !==========================================================================================!
 
-! !==========================================================================================!
-! subroutine c13_sanity_check(cpatch,ico,header)
-   ! use ed_state_vars, only : patchtype
-   ! implicit none
-      
-   ! !---- Arguments ------------------------------------------------------------------------!
-   ! type(patchtype), target, intent(in) :: cpatch
-   ! integer                , intent(in) :: ico
-   ! character(len=*)       , intent(in) :: header
-   ! !---- Local Vars -----------------------------------------------------------------------!
-   ! real, pointer                       :: tissue
-   ! real, pointer                       :: tissue_c13
-   ! character(len=9)                    :: tissue_name
-   ! integer                             :: i
-   ! real                                :: lb, ub
-   
-   ! !---------------------------------------------------------------------------------------!
-   ! !Check that c13 tissues are neither out of bounds, nor NAN.                            !
-   ! !---------------------------------------------------------------------------------------!
-   ! do i = 10,10
-      ! lb = -1000.
-      ! ub =   500.
-      ! select case(i)
-      ! case(1)
-         ! tissue      => cpatch%balive(ico)
-         ! tissue_c13  => cpatch%balive_c13(ico)
-         ! tissue_name = 'BALIVE'
-      ! case(2)
-         ! tissue      => cpatch%bleaf(ico)
-         ! tissue_c13  => cpatch%bleaf_c13(ico)
-         ! tissue_name = 'BLEAF'
-         ! lb          = -65.0
-         ! ub          =   0.0
-      ! case(3)
-         ! tissue      => cpatch%broot(ico)
-         ! tissue_c13  => cpatch%broot_c13(ico)
-         ! tissue_name = 'BROOT'
-      ! case(4)
-         ! tissue      => cpatch%bstorage(ico)
-         ! tissue_c13  => cpatch%bstorage_c13(ico)
-         ! tissue_name = 'BSTORAGE'
-      ! case(5)
-         ! tissue      => cpatch%bsapwooda(ico)
-         ! tissue_c13  => cpatch%bsapwooda_c13(ico)
-         ! tissue_name = 'BSAPWOODA'
-      ! case(6)
-         ! tissue      => cpatch%bsapwoodb(ico)
-         ! tissue_c13  => cpatch%bsapwoodb_c13(ico)
-         ! tissue_name = 'BSAPWOODB'
-      ! case(7)
-         ! tissue      => cpatch%bdead(ico)
-         ! tissue_c13  => cpatch%bdead_c13(ico)
-         ! tissue_name = 'BDEAD'
-      ! case default
-      ! end select
-         
-      ! if (tissue_c13 > tissue .and. tissue_c13 > tiny(1.0)) then
-         ! write (*,*) '----------------------- 13C Sanity Check -------------------------------'
-         ! write (*,*) 'ERROR!!!!', tissue_name, 'c13 >', tissue_name, '!!!!'
-         ! write (*,*) 'Call from     : ', header
-         ! write (*,*) 'Cohort , PFT  : ', ico, cpatch%pft(ico)
-         ! write (*,*) 'Total C, C-13 : ', tissue, tissue_c13
-      ! end if
-      ! if (tissue_c13 < -1.0*tiny(1.0)) then
-         ! write (*,*) '----------------------- 13C Sanity Check -------------------------------'
-         ! write (*,*) 'ERROR!!!!', tissue_name, 'c13 < 0.0 !!!!'
-         ! write (*,*) 'Call from     : ', header
-         ! write (*,*) 'Cohort , PFT  : ', ico, cpatch%pft(ico)
-         ! write (*,*) 'Total C, C-13 : ', tissue, tissue_c13
-      ! end if
-      ! if (isNaN(tissue_c13)) then
-         ! write (*,*) '----------------------- 13C Sanity Check -------------------------------'
-         ! write (*,*) 'ERROR!!!!', tissue_name, ' is NaN !!!!'
-         ! write (*,*) 'Call from     : ', header
-         ! write (*,*) 'Cohort, PFT   : ', ico, cpatch%pft(ico)
-      ! end if
-      ! if (( htIsoDelta(tissue_c13,tissue) >        ub  .or.                                &
-            ! htIsoDelta(tissue_c13,tissue) <        lb       ) .and.                        &
-                                   ! tissue > tiny(1.0)               ) then
-         ! write (*,*) '----------------------- 13C Sanity Check -------------------------------'
-         ! write (*,*) 'ERROR!!!! delta 13C ', tissue_name, ' outside [,',lb,',',ub,'] !!!!'
-         ! write (*,*) 'Call from     : ', header
-         ! write (*,*) 'Cohort, PFT   : ', ico, cpatch%pft(ico)
-         ! write (*,*) 'Total C, C-13 : ', tissue, tissue_c13
-         ! write (*,*) 'd13C          : ', htIsoDelta(tissue_c13,tissue)
-      ! end if
-   ! end do
 
-! end subroutine c13_sanity_check
-! !==========================================================================================!
+
+
+
+
+!==========================================================================================!
+!==========================================================================================!
+!     This sub-routine does a pretty comprehensive sanity check on C-13 variables.         !
+!------------------------------------------------------------------------------------------!
+subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
+   use ed_max_dims    , only : str_len            ! ! intent(in)
+   use ed_state_vars  , only : patchtype          ! ! structure
+   use isotopes       , only : c13af              & ! intent(in)
+                             , c_alloc_flg        ! ! intent(in)
+   use isotopes       , only : larprop            ! ! intent(in)
+   implicit none
+   !----- Arguments. ----------------------------------------------------------------------!
+   type(patchtype)           , intent(in) :: cpatch      ! Current patch
+   integer                   , intent(in) :: ico         ! Current cohort number
+   character(*)              , intent(in) :: call_loc    ! What routine called this check?
+   character(*)              , intent(in) :: fname       ! What file is that routine in?
+   real        ,optional     , intent(in) :: assim_h2tc  ! Ratio of C-13/C in assimilate
+   real        ,optional     , intent(in) :: leaf_h2tc   ! Ratio of C-13/C in leaves
+   !----- Local variables. ----------------------------------------------------------------!
+   integer        :: diagnosis = 0        ! Error or warning diagnosis code
+   logical        :: show_gpp  = .false.  ! Print Gross Primay Production?
+   logical        :: show_LR   = .false.  ! Print Leaf Respiration?
+   logical        :: show_LAR  = .false.  ! Print Leaf Assimilate Respiration?
+   character(60)  :: reason               ! Error or warning diagnosis reason
+   character(17)  :: Cfmt                 ! Character format, for strings
+   character(37)  :: Rfmt                 ! Real format, for reals.
+   !---------------------------------------------------------------------------------------!
+   Cfmt = '(A18,A18,A18,A18)'
+   Rfmt = '(ES18.4E3,ES18.4E3,ES18.4E3,ES18.4E3)'
+
+   !------------------------------------------------------------------------------!
+   ! Perform a great big sanity check. Today_XXX vars are included to potentially !
+   ! detect problems generated elsewhere in the code. Clearly it is the case in   !
+   ! this routine that if a today var is messed up it is because it's sub-daily   !
+   ! analogue is to blame.                                                        !
+   !------------------------------------------------------------------------------!
+   if (c13af > 0 .and. c_alloc_flg > 0) then
+      ! Assimilated C-13 should not exceed assimilated C.
+      if (cpatch%gpp_c13      (ico) > cpatch%gpp      (ico) .or. &
+          cpatch%today_gpp_c13(ico) > cpatch%today_gpp(ico)) diagnosis = 1
+      
+      ! Leaf respired C-13 should exceed respired C.
+      if (cpatch%leaf_respiration_c13(ico) > cpatch%leaf_respiration(ico) .or. &
+          cpatch%today_leaf_resp_c13 (ico) > cpatch%today_leaf_resp (ico)) diagnosis = 2
+   
+      ! Assimilate based resp should be positive.
+      if (cpatch%today_lassim_resp(ico) < 0.0 .or. cpatch%today_lassim_resp_c13(ico) < 0.0 .or. &
+          cpatch%lassim_resp      (ico) < 0.0 .or. cpatch%lassim_resp_c13      (ico) < 0.0) diagnosis = 3
+      
+      ! Assimilate based resp should not exceed total resp.
+      if (cpatch%lassim_resp      (ico) > cpatch%leaf_respiration(ico) .and. abs(cpatch%lassim_resp      (ico)) > tiny(1.0) .or. &
+          cpatch%today_lassim_resp(ico) > cpatch%today_leaf_resp (ico) .and. abs(cpatch%today_lassim_resp(ico)) > tiny(1.0)) diagnosis = 4
+                     
+      ! Assimilate based resp shold not exceed total assimilate
+      if (cpatch%lassim_resp      (ico) > cpatch%gpp      (ico) .and. cpatch%gpp_c13      (ico) > tiny(1.0) .or. &
+          cpatch%today_lassim_resp(ico) > cpatch%today_gpp(ico) .and. cpatch%today_gpp_c13(ico) > tiny(1.0)) diagnosis = 5
+      
+      ! Assimilate based resp c13 should not exceed total assim respiration
+      if (cpatch%lassim_resp_c13      (ico) > cpatch%lassim_resp      (ico) .or. &
+          cpatch%today_lassim_resp_c13(ico) > cpatch%today_lassim_resp(ico)) diagnosis = 6
+
+     ! Assimilate based resp c13 should not exceed total resp c13
+      if (cpatch%lassim_resp_c13      (ico) > cpatch%leaf_respiration_c13(ico) .or. &
+          cpatch%today_lassim_resp_c13(ico) > cpatch%today_leaf_resp_c13 (ico)) diagnosis = 7
+      
+      ! Assim Resp c13 should not exceed total assimilate c13
+      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp_c13(ico) .and. &
+          cpatch%gpp_c13              (ico) > tiny(1.0)           .and. & 
+          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) diagnosis = 8
+          
+      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp_c13(ico) .and. &
+          cpatch%today_gpp_c13        (ico) > tiny(1.0)                 .and. &
+          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) diagnosis = 8
+
+      ! Assim Resp c13 should not exceed total assimilate
+      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp       (ico) .and. &
+          cpatch%gpp                  (ico) > tiny(1.0)              .and. &
+          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) diagnosis = 9
+          
+      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp (ico) .and. &
+          cpatch%today_gpp_c13        (ico) > tiny(1.0)              .and. &
+          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) diagnosis = 9
+   end if
+
+   if (diagnosis > 0) then
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,*) ' Error found with C-13 sanity check! Potentially relevant info follows.'
+      write(*,*) '-----------------------------------------------------------------------'
+
+      select case(diagnosis)
+      case(1)
+         write(*,*) ' There is too much C-13 in gpp...'
+         reason   = 'GPP C-13 too high.'
+         show_gpp = .true.
+      case(2)
+         write(*,*) ' There is too much C-13 in leaf respiration...'
+         reason   = 'Respired C-13 too high.'
+         show_LR  = .true.
+      case(3)
+         write(*,*) ' Leaf respiration of assimilate is less than 0...'
+         reason   = 'Respired C-13 is neg.'
+         show_LAR = .true.
+      case(4)
+         write(*,*) ' Leaf respiration of assimilate exceeds total leaf respiration...'
+         reason   = 'LAR too high.'
+         show_LR  = .true.
+         show_LAR = .true.
+      case(5)
+         write(*,*) ' Leaf respiration of assimilate exceeds total assimilation...'
+         reason   = 'LAR too high.'
+         show_gpp = .true.
+         show_LAR = .true.
+      case(6)
+         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total LAR...'
+         reason   = 'LAR C-13 too high.'
+         show_LAR = .true.
+      case(7)
+         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total resp of C-13...'
+         reason   = 'LAR C-13 too high.'
+         show_LR  = .true.
+         show_LAR = .true.
+      case(8)
+         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total assimilated C-13..'
+         reason   = 'LAR C-13 too high.'
+         show_GPP = .true.
+         show_LAR = .true.
+      case(9)
+         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total assimilate..'
+         reason   = 'LAR C-13 too high.'
+         show_GPP = .true.
+         show_LAR = .true.
+      end select
+      
+      if (show_gpp .or. show_LR .or. show_LAR) then
+         write(*,*) ' cohort, pft, larprop : ', ico, cpatch%pft(ico), larprop
+      end if
+      if (show_gpp) then
+         write(*,*) ' gpp              ,         gpp_c13 : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
+         write(*,*) ' today_gpp        ,   today_gpp_c13 : ', cpatch%today_gpp(ico)        , cpatch%today_gpp_c13(ico)
+      end if
+      if (show_LR ) then
+         write(*,*) ' leaf_resp        ,   leaf_resp_c13 : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
+         write(*,*) ' today_leaf_resp  ,         ..._c13 : ', cpatch%today_leaf_resp(ico)  , cpatch%today_leaf_resp_c13(ico)
+      end if
+      if (show_LAR) then
+         write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
+         write(*,*) ' today_lassim_resp,         ..._c13 : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)
+      end if
+      
+      if (present(assim_h2tc)) then
+         write(*,*) '-----------------------------------------------------------------------'
+         write(*,*) ' Pieces of leaf C-13 respiration computation'
+         write(*,Cfmt) 'R Leaf Tissue', 'R Leaf Assim',                        &
+                       'Leaf C-13/C'  , '"leaf_h2tc" '
+         write(*,Rfmt) cpatch%leaf_respiration(ico) - cpatch%lassim_resp(ico), &
+                       cpatch%lassim_resp     (ico)                          , &
+                       cpatch%bleaf_c13       (ico) / cpatch%bleaf      (ico), &
+                       leaf_h2tc
+         write(*,*)
+         write(*,*) ' Leaf assimilate C-13/C ratio and recalculation from GPP and GPP_C13'
+         write(*,*) ' If this msg is not from canopy_photosynthesis, ignore them.        '
+         write(*,*) ' assim_h2tc : ', assim_h2tc, cpatch%gpp_c13(ico) / cpatch%gpp(ico)
+         write(*,*) '-----------------------------------------------------------------------'
+         call fatal_error(reason,call_loc,fname)
+      end if
+   end if
+   
+   
+   return
+end subroutine c13_sanity_check
+!==========================================================================================!
+!==========================================================================================!
+
 
 end module iso_alloc

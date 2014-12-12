@@ -158,7 +158,7 @@ subroutine load_ed_ecosystem_params()
    ! These parameters are derived from other parameters.  This was for a short-time        !
    ! after the xml call, but has been moved to just before that call to prevent over-writes!
    !---------------------------------------------------------------------------------------!
-   call ed_params_dependents()
+   !call ed_params_dependents()
 
    return
 end subroutine load_ed_ecosystem_params

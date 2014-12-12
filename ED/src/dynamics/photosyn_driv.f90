@@ -41,7 +41,8 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
    use isotopes       , only : larprop            ! ! intent(in)
    use iso_alloc      , only : photo_h2tc         & ! function
                              , resp_h2tc          & ! function
-                             , htIsoDelta         ! ! function
+                             , htIsoDelta         & ! function
+                             , c13_sanity_check   ! ! function
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(sitetype)            , target      :: csite             ! Current site
@@ -102,11 +103,6 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
    real(kind=8)                            :: bleaf
    real(kind=8)                            :: bleaf_c13
    real(kind=8)                            :: leaf_h2tc
-   real, pointer                           :: lresp
-   real, pointer                           :: lresp_c13
-   real, pointer                           :: lassim_resp
-   real, pointer                           :: lassim_resp_c13
-   integer                                 :: throw_DS_error
    !----- Locally saved variables. --------------------------------------------------------!
    real                          , save    :: dtlsm_o_frqsum
    logical                       , save    :: first_time = .true.
@@ -565,37 +561,55 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
             ! augmented with a parameter for skewing the preference of metabolism towards  !
             ! one or the other of the sources. DS                                          !
             !------------------------------------------------------------------------------!
-            ! Set some pointers to make our lives easier ----------------------------------!
-            lresp           => cpatch%leaf_respiration(ico)
-            
             if (c_alloc_flg > 0) then
-               lassim_resp     => cpatch%lassim_resp(ico)
-            end if
-            if (c13af > 0) then
-               lresp_c13       => cpatch%leaf_respiration_c13(ico)
-               if (c_alloc_flg > 0) then
-                  lassim_resp_c13 => cpatch%lassim_resp_c13(ico)
-               end if
-            end if
-
-            if (c_alloc_flg > 0) then
+               ! Initialize leaf assimilate respiration to zero. It will remain zero if no
+               ! conditions are satisfied below for it to be non-zero.
                cpatch%lassim_resp(ico) = 0.0
+               
+               ! If gpp exceeds respiration, set respiration of assimilate appropriately. 
                if (cpatch%gpp(ico) > cpatch%leaf_respiration(ico)) then
                   cpatch%lassim_resp(ico) = cpatch%leaf_respiration(ico) *larprop
                else
-                  if (cpatch%gpp(ico) > tiny(1.0)) then
-                     cpatch%lassim_resp(ico) = cpatch%gpp(ico) *larprop
+               
+                  ! If not, but gpp is still non-zero, take as much as appropriate...
+ 
+                  ! If we want e.g. 70% of leaf respiration to come directly from assim. but
+                  ! there is not enough gpp for this, we can assume we're consuming all GPP
+                  ! then going into reserves for the respiration.
+                  if (cpatch%gpp             (ico) > tiny(1.0)         .and.               &
+                      cpatch%leaf_respiration(ico) > cpatch%gpp(ico) ) then
+                     cpatch%lassim_resp(ico) = cpatch%gpp(ico)
                   end if
+                  
+                  ! If we want larprop to instead be some kind of mixing param. rather than
+                  ! a metabolic preference parameter, we can take assume complete mixing
+                  ! and take lassim resp as... (unfinished thought)
+                  !if (cpatch%gpp             (ico) > tiny(1.0)) then
+                  !   cpatch%lassim_resp(ico) = cpatch%gpp(ico) *larprop
+                  !end if
+                  
                end if
+            !----- The output variable must be in [kgC/plant/yr]. -------------------------!
+               cpatch%fmean_lassim_resp(ico)  = cpatch%fmean_lassim_resp (ico)             &
+                                              + cpatch%lassim_resp       (ico)             &
+                                              * dtlsm_o_frqsum * umols_2_kgCyr             &
+                                              / cpatch%nplant          (ico)
+               
+               ! Either way, increment daily total with whatever we just took.
                cpatch%today_lassim_resp(ico)  = cpatch%today_lassim_resp(ico)              &
                                               + cpatch%lassim_resp(ico)
             end if
             !------------------------------------------------------------------------------!
 
 
-
-            if (c13af > 0) then    !!!DSC!!!
-               !---------------- Compute Assim. and Leaf Resp. 13C:C ----------------------!
+            !------------------------------------------------------------------------------!
+            !     Here we basically mirror everything we've done above with total C for    !
+            ! The isotopic composition. There are of course some complications though.     !
+            !------------------------------------------------------------------------------!
+            if (c13af > 0) then
+               !---------------------------------------------------------------------------!
+               ! Compute ratio of assimilated C-13 to total C, and get gpp terms.          !
+               !---------------------------------------------------------------------------!
                assim_h2tc  = photo_h2tc   (-8.1                                            &
                                           ,csite%can_co2(ipa)                              &
                                           ,cpatch%fs_open(ico)                             &
@@ -604,121 +618,82 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                                           ,cpatch%lint_co2_open(ico)                       &
                                           ,cpatch%lint_co2_closed(ico))
 
-               cpatch%gpp_c13(ico) = assim_h2tc * cpatch%gpp(ico)
+               cpatch%gpp_c13      (ico) = assim_h2tc * cpatch%gpp(ico)
                cpatch%today_gpp_c13(ico) = cpatch%today_gpp_c13(ico) + cpatch%gpp_c13(ico)
+               !----- The average must be in [kgC/plant/yr]. ------------------------------!
+               cpatch%fmean_gpp_c13(ico)  = cpatch%fmean_gpp_c13(ico)                      &
+                                          + cpatch%gpp_c13      (ico) * umols_2_kgCyr      &
+                                          * dtlsm_o_frqsum / cpatch%nplant(ico)
+               !---------------------------------------------------------------------------!
 
-               bleaf           =  dble(cpatch%bleaf(ico))
-               bleaf_c13       =  dble(cpatch%bleaf_c13(ico))
-               gpp             =  dble(cpatch%gpp(ico))
-               gpp_c13         =  dble(cpatch%gpp_c13(ico))
 
+               !---------------------------------------------------------------------------!
+               ! Duplicate the considerations from 2 paragraphs ago for lassim_resp.       !
+               !---------------------------------------------------------------------------!
                if (c_alloc_flg > 0) then
-                  lassim_resp_c13 = 0.0
-                  if (gpp < tiny(1.0)) then
-                     ! This is previously computed without reference to what GPP actually is
-                     assim_h2tc = 0.0
-                  end if
-                  if (lassim_resp > tiny(1.0) .and. gpp > tiny(1.0)) then
-                     lassim_resp_c13 = lassim_resp * assim_h2tc
-                     lassim_resp_c13 = min(lassim_resp_c13,gpp_c13)
-                  end if
-                  if (bleaf > tiny(1.0)) then
-                     leaf_h2tc = bleaf_c13 / bleaf
+                  !------------------------------------------------------------------------!
+                  ! C-13 content of leaf assimilate respiration has signiature of assimm,  !
+                  ! but it also can't be greater than GPP C-13 (shouldn't happen anyway).  !
+                  !------------------------------------------------------------------------!
+                  cpatch%lassim_resp_c13(ico) =     cpatch%lassim_resp    (ico) *assim_h2tc
+                  cpatch%lassim_resp_c13(ico) = min(cpatch%lassim_resp_c13(ico),           &
+                                                    cpatch%gpp_c13        (ico))
+                  
+                  cpatch%today_lassim_resp_c13(ico)= cpatch%today_lassim_resp_c13(ico)     &
+                                                   + cpatch%lassim_resp_c13(ico)
+               !----- The output variable must be in [kgC/plant/yr]. ----------------------!
+                  cpatch%fmean_lassim_resp_c13(ico)= cpatch%fmean_lassim_resp_c13 (ico)    &
+                                                   + cpatch%lassim_resp_c13       (ico)    &
+                                                   * dtlsm_o_frqsum * umols_2_kgCyr        &
+                                                   / cpatch%nplant          (ico)
+                  !------------------------------------------------------------------------!
+
+                  
+                  !------------------------------------------------------------------------!
+                  ! Set leaf respiration of C-13 as the sum of the assimilate C-13 respired!
+                  ! and the leaf biomass respired, the latter assumed to have C-13/C ratio !
+                  ! identical with leaf biomass as a whole.                                !
+                  !                                                                        !
+                  ! First, get leaf C-13/ C ratio and avoid a potential division by zero.  !
+                  !------------------------------------------------------------------------!
+                  if (cpatch%bleaf(ico) > tiny(1.0)) then
+                     leaf_h2tc = cpatch%bleaf_c13(ico) / cpatch%bleaf(ico)
                   else
                      leaf_h2tc = 0.0
                   end if
-                  lresp_c13       = (lresp - lassim_resp)*leaf_h2tc + lassim_resp_c13
-                  cpatch%today_lassim_resp_c13(ico)= cpatch%today_lassim_resp_c13(ico)     &
-                                                   + cpatch%lassim_resp_c13(ico)
+                  
+                  cpatch%leaf_respiration_c13(ico) = (  cpatch%leaf_respiration(ico)       &
+                                                      - cpatch%lassim_resp     (ico) )     &
+                                                     * leaf_h2tc                           &
+                                                     + cpatch%lassim_resp_c13(ico)
+                  !------------------------------------------------------------------------!
                else
+                  !------------------------------------------------------------------------!
+                  ! Here we're using the ED2.1 standard and larprop is irrelevant.         !
+                  ! We get the C-13/C ratio in leaf respriation and set the respiration.   !
+                  !------------------------------------------------------------------------!
                   lr_h2tc = resp_h2tc('leaf',cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
                   cpatch%leaf_respiration_c13(ico) = lr_h2tc * cpatch%leaf_respiration(ico)
+                  !------------------------------------------------------------------------!
                end if
+               !----- The output variable must be in [kgC/plant/yr]. ----------------------!
+               cpatch%fmean_leaf_resp_c13(ico) = cpatch%fmean_leaf_resp_c13 (ico)          &
+                                               + cpatch%leaf_respiration_c13(ico)          &
+                                               * dtlsm_o_frqsum * umols_2_kgCyr            &
+                                               / cpatch%nplant          (ico)
+               !---------------------------------------------------------------------------!
+
+               !---------------------------------------------------------------------------!
+               ! No matter the case with c_alloc_flg, we update the daily sum of C-13 resp.
+               !---------------------------------------------------------------------------!
                cpatch%today_leaf_resp_c13 (ico) = cpatch%today_leaf_resp_c13(ico)          &
                                                 + cpatch%leaf_respiration_c13(ico)
                !---------------------------------------------------------------------------!
                
-               throw_DS_error = 0
-               if (.true.) then
-                  ! Resp should be positive.
-                  if (cpatch%today_lassim_resp(ico) < 0.0) throw_DS_error = 1
-                  if (cpatch%lassim_resp      (ico) < 0.0) throw_DS_error = 2
-                  
-                  ! Assimilate based resp should not exceed total resp.
-                  if (cpatch%lassim_resp          (ico) > cpatch%leaf_respiration(ico) .and. abs(cpatch%lassim_resp(ico)) > tiny(1.0)) throw_DS_error = 3
-                  if (cpatch%today_lassim_resp    (ico) > cpatch%today_leaf_resp (ico) .and. abs(cpatch%today_lassim_resp(ico)) > tiny(1.0)) throw_DS_error = 4
-                                 
-                  ! Assimilate based resp shold not exceed total assimilate
-                  if (cpatch%lassim_resp      (ico) > cpatch%gpp         (ico) .and. cpatch%gpp_c13(ico) > tiny(1.0)) throw_DS_error = 5
-                  if (cpatch%today_lassim_resp(ico) > cpatch%today_gpp   (ico) .and. cpatch%today_gpp_c13(ico) > tiny(1.0)) throw_DS_error = 6
-                  
-                  ! Assimilate based resp c13 should not exceed total assim respiration
-                  if (cpatch%lassim_resp_c13      (ico) > cpatch%lassim_resp      (ico)) throw_DS_error = 7
-                  if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_lassim_resp(ico)) throw_DS_error = 8
-
-                 ! Assimilate based resp c13 should not exceed total resp c13
-                  if (cpatch%lassim_resp_c13      (ico) > cpatch%leaf_respiration_c13(ico)) throw_DS_error = 9
-                  if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_leaf_resp_c13 (ico)) throw_DS_error = 10
-                  
-                  ! Assim Resp c13 should not exceed total assimilate c13
-                  if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp_c13(ico) .and. &
-                      cpatch%gpp_c13              (ico) > tiny(1.0)           .and. & 
-                      cpatch%lassim_resp_c13      (ico) > tiny(1.0)) throw_DS_error = 11
-                  if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp_c13(ico) .and. &
-                      cpatch%today_gpp_c13        (ico) > tiny(1.0)                 .and. &
-                      cpatch%today_lassim_resp_c13(ico) > tiny(1.0))    throw_DS_error = 12
-
-                  ! Assim Resp c13 should not exceed total assimilate c13
-                  if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp       (ico) .and. &
-                      cpatch%gpp_c13              (ico) > tiny(1.0)              .and. &
-                      cpatch%lassim_resp_c13      (ico) > tiny(1.0)) throw_DS_error = 13
-                  if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp (ico) .and. &
-                      cpatch%today_gpp_c13        (ico) > tiny(1.0)              .and. &
-                      cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) throw_DS_error = 14
-               end if
-               ! THIS IS MADE NONFUNCTIONAL BY < 0 CRITERION
-            if (throw_DS_error > 0) then
-               write (*,*) '!=== Notice from Canopy_Photosynthesis ===============================!'
-               write (*,*) ' Bad lassim_resp.  larprop, code     : ', larprop                          , throw_DS_error
-               write (*,*) ' cohort           , pft              : ', ico                              , cpatch%pft(ico)
-               write (*,*) ''
-               write (*,*) '!--- Leaf Resp and GPP ----------------------!'
-               write (*,*) ' gpp              , gpp_c13          : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
-               write (*,*) ' leaf_resp        , leaf_resp_c13    : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
-               write (*,*) ' lassim_resp      , lassim_resp_c13: : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
-               write (*,*) ''
-               write (*,*) ' today_gpp        , today_gpp_c13    : ', cpatch%today_gpp(ico)        , cpatch%today_gpp_c13(ico)
-               write (*,*) ' today_leaf_resp  ,       ..._c13    : ', cpatch%today_leaf_resp(ico)  , cpatch%today_leaf_resp_c13(ico)
-               write (*,*) ' today_lassim_resp,       ..._c13    : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)                
-               write (*,*) ''
-               ! write (*,*) '!--- Double Prec. Aliases -------------------!'
-               ! write (*,*) ' bleaf      dbl                      : ', bleaf
-               ! write (*,*) ' bleaf_c13  dbl                      : ', bleaf_c13
-               ! write (*,*) ' gpp     dbl                         : ', gpp
-               ! write (*,*) ' gpp_c13 dbl                         : ', gpp
-               ! write (*,*) ''
-               write (*,*) '!--- Diagnostics ----------------------------!'
-               write (*,*) ' Pieces of lassim_resp_c13 computation  :'
-               write (*,*) ' assim_h2tc                             : ', assim_h2tc
-               write (*,*) ' gpp_c13    dbl / gpp   dbl             : ', gpp_c13/gpp
-               write (*,*) ' lassim_resp *(gpp_c13 dbl/gpp dbl)     : ', lassim_resp*(gpp_c13/gpp)
-               write (*,*) ' lassim_resp *(gpp_c13 dbl/gpp dbl)     : ', lassim_resp*assim_h2tc
-               write (*,*)
-               write (*,*) ' Pieces of lresp_c13 computation        :'
-               write (*,*) ' lresp - lassim_resp                    : ', lresp - lassim_resp
-               write (*,*) ' leaf_h2tc                              : ', leaf_h2tc
-               write (*,*) ' bleaf_c13  dbl / bleaf dbl             : ', bleaf_c13/bleaf
-               write (*,*) ' (lresp - lassim_resp)*(bleaf_c13/bleaf): ', (lresp - lassim_resp) *(bleaf_c13/bleaf)
-               write (*,*) ' (lresp - lassim_resp)*(bleaf_c13/bleaf): ', (lresp - lassim_resp) *leaf_h2tc
-                write (*,*) '!=====================================================================!'
-            
-            end if
+               call c13_sanity_check(cpatch,ico,'canopy_photosynth.','photosyn_driv.f90')
+               !---------------------------------------------------------------------------!
+            end if ! End of C-13 conditional (c13af > 0)
             !------------------------------------------------------------------------------!
-               
-              
-               
-            !---------------------------------------------------------------------------!
-         end if
       else
          !----- If the cohort wasn't solved, we must assign some zeroes. ------------------!
          cpatch%A_open(ico)               = 0.0
@@ -735,16 +710,20 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
          cpatch%leaf_respiration(ico)     = 0.0
          vm                               = 0.0
          limit_flag                       = 0
+         
+         !----- Replicate the above considerations, but for new variables ------------------!
          if (c_alloc_flg > 0) then
             cpatch%lassim_resp(ico)          = 0.0
          end if
-         if (c13af > 0) then       !!!DSC!!!
+         if (c13af > 0) then
             cpatch%gpp_c13(ico)              = 0.0
             cpatch%leaf_respiration_c13(ico) = 0.0
             if (c_alloc_flg > 0) then
                cpatch%lassim_resp_c13(ico)   = 0.0
             end if
          end if
+         !---------------------------------------------------------------------------------!
+         
       end if
       
       !------------------------------------------------------------------------------------!

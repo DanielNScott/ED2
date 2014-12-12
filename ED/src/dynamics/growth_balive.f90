@@ -644,9 +644,10 @@ module growth_balive
                               , storage_turnover_rate ! ! intent(in)
       use consts_coms  , only : umol_2_kgC         & ! intent(in)
                               , day_sec            ! ! intent(in)
-      use isotopes     , only : c13af              & ! intent(in)	     !!!DSC!!!
-                              , c_alloc_flg        ! ! intent(in)      !!!DSC!!!
-      use iso_alloc    , only : resp_h2tc          ! ! function        !!!DSC!!!
+      use isotopes     , only : c13af              & ! intent(in)
+                              , c_alloc_flg        ! ! intent(in)
+      use iso_alloc    , only : resp_h2tc          & ! function
+                              , c13_sanity_check   ! ! function
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype), target       :: cpatch
@@ -802,7 +803,7 @@ module growth_balive
       
       
       !----- Compute daily C uptake [kgC/plant/day]. --------------------------------------!
-      if (c13af > 0) then     !!!DSC!!!
+      if (c13af > 0) then
          !---------------------------------------------------------------------------------!
          ! Compute daily_c13_gain, leaf and root heavy to total C ratios.                  !
          !---------------------------------------------------------------------------------!
@@ -945,7 +946,9 @@ module growth_balive
          cpatch%bstorage(ico) = cpatch%bstorage(ico) - cpatch%vleaf_respiration(ico)
       end if
 
-      !call c13_sanity_check(cpatch,ico,'End of plant_maintenance')
+      if (c13af > 0) then
+         call c13_sanity_check(cpatch,ico,'plant_maintenance','growth_balive.f90')
+      end if
       return
    end subroutine plant_maintenance
    !=======================================================================================!
@@ -1018,36 +1021,6 @@ module growth_balive
             carbon13_balance = daily_c13_gain - cpatch%growth_respiration_c13(ico)  
          end if
       end if
-
-      !------------------------------------------------------------------------------------!
-      ! This notice should not be necessary, and should be removed by the time
-      ! this code is incorporated into the mainline. DS
-      !------------------------------------------------------------------------------------!
-
-      if (c_alloc_flg > 0 .and. carbon_balance   < 0.0 .and. abs(carbon_balance  ) > tiny(1.0) .or. &
-          c_alloc_flg > 0 .and. carbon13_balance < 0.0 .and. abs(carbon13_balance) > tiny(1.0) .or. &
-          c_alloc_flg > 0 .and. daily_c13_gain   < 0.0 .and. abs(daily_c13_gain)   > tiny(1.0)) then
-         write (*,*) '!=== Notice from plant_carbon_balances ===============================!'
-         write (*,*) ' Bad carbon balance with cohort, pft :', ico                            , cpatch%pft(ico)
-         write (*,*) ' Some notes: carbon_balance = daily_C_gain - growth_resp'
-         write (*,*) '               daily_C_gain = today_gpp    - today_lassim_resp'
-         write (*,*) ''
-         write (*,*) ' carbon_balance   , carbon13_balance : ', carbon_balance                , carbon13_balance
-         write (*,*) ' daily_C_gain     , daily_c13_gain   : ', daily_C_gain                  , daily_c13_gain
-         write (*,*) ''
-         write (*,*) ' vleaf_respiration, vleaf_resp_c13   : ', cpatch%vleaf_respiration(ico) , cpatch%vleaf_respiration_c13(ico)
-         write (*,*) ' growth_resp      , growth_resp_c13  : ', cpatch%growth_respiration(ico), cpatch%growth_respiration_c13(ico)
-         write (*,*) ''
-         write (*,*) '!--- Leaf Resp and GPP ----------------------!'
-         write (*,*) ' gpp              , gpp_c13          : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
-         write (*,*) ' leaf_resp        , leaf_resp_c13    : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
-         write (*,*) ' lassim_resp      , lassim_resp_c13: : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
-         write (*,*) ' today_gpp        , today_gpp_c13    : ', cpatch%today_gpp(ico)        , cpatch%today_gpp_c13(ico)
-         write (*,*) ' today_leaf_resp  ,       ..._c13    : ', cpatch%today_leaf_resp(ico)  , cpatch%today_leaf_resp_c13(ico)
-         write (*,*) ' today_lassim_resp,         ..._c13  : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)                
-         write (*,*) '!=====================================================================!'
-      end if
-      
       !------------------------------------------------------------------------------------!
 
       if (cpatch%nplant(ico) > tiny(1.0)) then
@@ -1155,6 +1128,9 @@ module growth_balive
              ,cpatch%leaf_maintenance(ico),cpatch%root_maintenance(ico)
       end if
 
+      call plant_cbal_sanity(cpatch,ico,carbon_balance,carbon13_balance,daily_C_gain,      &
+                             daily_c13_gain)
+      
       return
    end subroutine plant_carbon_balances
    !=======================================================================================!
@@ -1185,10 +1161,10 @@ module growth_balive
       use allometry     , only : size2bl                  ! ! function
       use phenology_coms, only : elongf_min               ! ! intent(in)
       !----- DS Addnl Uses ----------------------------------------------------------------!
-      use isotopes       , only : c13af                    & ! intent(in)	   !!!DSC!!!
-                                , c_alloc_flg              & ! intent(inout)   !!!DSC!!!
-                                , close_nonfatalmessage    ! ! intent(inout)   !!!DSC!!!
-      use iso_alloc      , only : alloc_c13                ! ! function	      !!!DSC!!!
+      use isotopes       , only : c13af                    & ! intent(in)
+                                , c_alloc_flg              & ! intent(inout)
+                                , close_nonfatalmessage    ! ! intent(inout)
+      use iso_alloc      , only : alloc_c13                ! ! function
 
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -1201,8 +1177,8 @@ module growth_balive
       real           , intent(inout) :: nitrogen_uptake
       real           , intent(in)    :: green_leaf_factor
       !----- DS Addnl Args ----------------------------------------------------------------!
-      real , optional, intent(in)    :: carbon13_balance          !!!DSC!!!
-      real , optional, intent(in)    :: bleaf_in                  !!!DSC!!!
+      real , optional, intent(in)    :: carbon13_balance
+      real , optional, intent(in)    :: bleaf_in
       !----- Local variables. -------------------------------------------------------------!
       type(patchtype), pointer       :: cpatch
       integer                        :: ipft
@@ -2385,9 +2361,9 @@ module growth_balive
       use pft_coms      , only: storage_turnover_rate & ! intent(in)
                               , growth_resp_factor    ! ! intent(in)
       use decomp_coms   , only: f_labile              ! ! intent(in)
-      use isotopes      , only: c13af                 & ! intent(in)      !!!DSC!!!
+      use isotopes      , only: c13af                 & ! intent(in)
                               , c_alloc_flg           ! ! intent(in)
-      use iso_alloc       , only: resp_h2tc             ! ! function        !!!DSC!!!
+      use iso_alloc     , only: resp_h2tc             ! ! function
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype) , intent(inout)  :: cpatch
@@ -2414,7 +2390,7 @@ module growth_balive
       ! Resp 13C loss computed (with frac.) via total * ratio. Currently this  !
       ! is done s.t. growth resp. carries no fractionation for two reasons:    !
       !  1) G.r. being taken from carbon_bal. has no clear relation w/ reality !
-      !  2) (or 1b...) Incl. it req.s casing in iso_alloc  w/o clear meaning    ! 
+      !  2) (or 1b...) Incl. it req.s casing in iso_alloc w/o clear meaning    ! 
       !------------------------------------------------------------------------!
       if (c13af > 0) then
          cpatch%growth_respiration_c13(ico)  =                                 &
@@ -2447,17 +2423,117 @@ module growth_balive
       !------------------------------------------------------------------------!
 
       if (c_alloc_flg > 0) then
-         cpatch%vleaf_respiration(ico) = min(cpatch%vleaf_respiration(ico)                 &
-                                            ,cpatch%bstorage(ico))
+         !cpatch%vleaf_respiration(ico) = min(cpatch%vleaf_respiration(ico)                 &
+         !                                   ,cpatch%bstorage(ico))
+         cpatch%vleaf_respiration(ico) = 0.0
+         
          if (c13af > 0) then
-            cpatch%vleaf_respiration_c13(ico) = min(cpatch%vleaf_respiration_c13(ico)      &
-                                                   ,cpatch%bstorage_c13(ico))
+            !cpatch%vleaf_respiration_c13(ico) = min(cpatch%vleaf_respiration_c13(ico)      &
+            !                                       ,cpatch%bstorage_c13(ico))
+            cpatch%vleaf_respiration_c13(ico) = 0.0
          end if
       end if
 
    end subroutine gvl_resp
    !=======================================================================================!
+   !=======================================================================================!
+   
+   
+   
+   !=======================================================================================!
+   !=======================================================================================!
+   subroutine plant_cbal_sanity(cpatch,ico,carbon_balance,carbon13_balance,daily_C_gain,   &
+                                daily_c13_gain)
+      use ed_state_vars  , only : patchtype           ! ! structure
+      use isotopes       , only : c_alloc_flg         & ! intent(in)
+                                , c13af               & ! intent(in)
+                                , larprop             ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      type(patchtype), target  , intent(in)  :: cpatch
+      integer                  , intent(in)  :: ico
+      real                     , intent(in)  :: carbon_balance
+      real                     , intent(in)  :: carbon13_balance
+      real                     , intent(in)  :: daily_C_gain
+      real                     , intent(in)  :: daily_c13_gain
+      !----- Local variables. -------------------------------------------------------------!
+      logical        :: warning  = .false.   ! Warning flag.
+      logical        :: error    = .false.   ! Error flag.
+      character(60)  :: reason               ! Reason for warning or error.
+      character(17)  :: Cfmt                 ! Character format, for strings
+      character(37)  :: Rfmt                 ! Real format, for reals.
+      !------------------------------------------------------------------------------------!
+      Cfmt = '(A18,A18,A18,A18)'
+      Rfmt = '(ES18.4E3,ES18.4E3,ES18.4E3,ES18.4E3)'
+      
+      if (c_alloc_flg > 0) then
+         ! Check carbon balance and C-13 balance. These throw warnings.
+         if (carbon_balance   < 0.0 .and. abs(carbon_balance  ) > 0.0) then
+            reason  = 'Carbon balance is negative.'
+            warning = .true.
+         end if
+         if (carbon13_balance < 0.0 .and. abs(carbon13_balance) > 0.0) then
+            reason  = 'Carbon-13 balance is negative.'
+            warning = .true. 
+         end if
+         if (carbon13_balance > carbon_balance) then
+            reason  = 'Carbon-13 balance is greater than carbon balance.'
+            warning = .true.
+         end if
+
+         ! Check daily C and daily C-13 gains. These throw errors.
+         if (daily_C_gain   < 0.0 .and. abs(daily_C_gain  ) > 0.0) then
+            reason  = 'Daily C gain is negative.'
+            error = .true.
+         end if
+         if (daily_c13_gain < 0.0 .and. abs(daily_c13_gain) > 0.0) then
+            reason  = 'Daily C-13 balance is negative.'
+            error = .true. 
+         end if
+         if (daily_c13_gain > daily_C_gain) then
+            reason  = 'Daily C-13 gain is greater than daily C gain.'
+            error = .true.
+         end if
+      end if
+  
+      if (warning .or. error) then
+         write(*,*) '------------------------------------------------------------------------'
+         write(*,*) 'Plant carbon balances sanity check found a problem...                  !'
+         write(*,*) '------------------------------------------------------------------------'
+         write(*,*) ' ', reason
+         write(*,'(A13, I4, I3)') ' Cohort, PFT, larprop: ', ico, cpatch%pft(ico), larprop
+         write(*,*) ''
+         write(*,*) ' Note:'
+         write(*,*) ' carbon_balance = daily_C_gain - growth_resp'
+         write(*,*) ' daily_C_gain   = today_gpp    - today_lassim_resp'
+         write(*,*) ''
+         write(*,*) '!--- Gains and Balances -----------------------------------------------!'
+         write(*,Cfmt) 'carbon_balance', 'carbon13_balance', 'daily_C_gain', 'daily_c13_gain'
+         write(*,Rfmt)  carbon_balance , carbon13_balance  , daily_C_gain  ,  daily_c13_gain
+         write(*,*) ''
+         write(*,Cfmt) 'vleaf_resp', 'vleaf_resp_c13' , 'growth_resp', 'growth_resp_c13'
+         write(*,Rfmt)  cpatch%vleaf_respiration (ico), cpatch%vleaf_respiration_c13 (ico), &
+                        cpatch%growth_respiration(ico), cpatch%growth_respiration_c13(ico)
+         write(*,*) ''
+         write(*,*) '!--- Resps and GPPs ---------------------------------------------------!'
+         write(*,*) ' gpp              ,         gpp_c13 : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
+         write(*,*) ' leaf_resp        ,   leaf_resp_c13 : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
+         write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
+         write(*,*) ' today_gpp        ,   today_gpp_c13 : ', cpatch%today_gpp(ico)        , cpatch%today_gpp_c13(ico)
+         write(*,*) ' today_leaf_resp  ,         ..._c13 : ', cpatch%today_leaf_resp(ico)  , cpatch%today_leaf_resp_c13(ico)
+         write(*,*) ' today_lassim_resp,         ..._c13 : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)                
+         write(*,*) '------------------------------------------------------------------------'
+      end if
+      
+      if (error) then
+         call fatal_error(reason,'plant_carbon_balances','growth_balive.f90')
+      end if
+   end subroutine plant_cbal_sanity
+   !=======================================================================================!
    !=======================================================================================!   
+   
+   
+   
 end module growth_balive
 !==========================================================================================!
 !==========================================================================================!

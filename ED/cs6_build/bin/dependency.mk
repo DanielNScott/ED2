@@ -54,7 +54,7 @@ hybrid_driver.o: ed_misc_coms.mod ed_state_vars.mod grid_coms.mod
 hybrid_driver.o: hydrology_coms.mod met_driver_coms.mod rk4_coms.mod
 hybrid_driver.o: rk4_driver.mod rk4_stepper.mod soil_coms.mod therm_lib.mod
 hybrid_driver.o: therm_lib8.mod
-iso_alloc.o: decomp_coms.mod ed_state_vars.mod isotopes.mod
+iso_alloc.o: decomp_coms.mod ed_max_dims.mod ed_state_vars.mod isotopes.mod
 lsm_hyd.o: consts_coms.mod ed_misc_coms.mod ed_node_coms.mod ed_state_vars.mod
 lsm_hyd.o: grid_coms.mod hydrology_coms.mod hydrology_constants.mod pft_coms.mod
 lsm_hyd.o: soil_coms.mod therm_lib.mod
@@ -144,8 +144,8 @@ landuse_init.o: ed_misc_coms.mod ed_state_vars.mod grid_coms.mod
 phenology_startup.o: ed_max_dims.mod ed_misc_coms.mod ed_state_vars.mod
 phenology_startup.o: grid_coms.mod phenology_aux.mod phenology_coms.mod
 average_utils.o: consts_coms.mod ed_max_dims.mod ed_misc_coms.mod
-average_utils.o: ed_state_vars.mod grid_coms.mod met_driver_coms.mod
-average_utils.o: soil_coms.mod therm_lib.mod
+average_utils.o: ed_state_vars.mod grid_coms.mod isotopes.mod
+average_utils.o: met_driver_coms.mod soil_coms.mod therm_lib.mod
 ed_init_full_history.o: allometry.mod ed_max_dims.mod ed_misc_coms.mod
 ed_init_full_history.o: ed_node_coms.mod ed_state_vars.mod
 ed_init_full_history.o: fusion_fission_coms.mod grid_coms.mod 
