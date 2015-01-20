@@ -12813,7 +12813,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_gpp                                           &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_GPP_PY               :11:'//trim(fast_keys)     )
+                           ,'FMEAN_GPP_PY               :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Gross primary productivity'                  &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -12822,7 +12822,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_npp                                           &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_NPP_PY               :11:'//trim(fast_keys)     )
+                           ,'FMEAN_NPP_PY               :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Net primary productivity'                    &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -12831,7 +12831,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_leaf_resp                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_LEAF_RESP_PY         :11:'//trim(fast_keys)     )
+                           ,'FMEAN_LEAF_RESP_PY         :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Leaf respiration'                            &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -12840,7 +12840,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_root_resp                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_ROOT_RESP_PY         :11:'//trim(fast_keys)     )
+                           ,'FMEAN_ROOT_RESP_PY         :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Root respiration'                            &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -12849,7 +12849,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_growth_resp                                   &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_GROWTH_RESP_PY       :11:'//trim(fast_keys)     )
+                           ,'FMEAN_GROWTH_RESP_PY       :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Growth respiration'                          &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -12858,7 +12858,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_storage_resp                                  &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_STORAGE_RESP_PY      :11:'//trim(fast_keys)     )
+                           ,'FMEAN_STORAGE_RESP_PY      :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Storage respiration'                         &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -12867,7 +12867,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_vleaf_resp                                    &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_VLEAF_RESP_PY        :11:'//trim(fast_keys)     )
+                           ,'FMEAN_VLEAF_RESP_PY        :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Virtual leaf respiration'                    &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -12876,7 +12876,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_plresp                                        &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_PLRESP_PY            :11:'//trim(fast_keys)     )
+                           ,'FMEAN_PLRESP_PY            :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Plant respiration'                           &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -13209,7 +13209,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_rh                                            &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_RH_PY                :11:'//trim(fast_keys)     )
+                           ,'FMEAN_RH_PY                :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Heterotrophic respiration'                   &
                            ,'[   kg/m2/yr]','(ipoly)'            )
@@ -13218,7 +13218,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_cwd_rh                                        &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_CWD_RH_PY            :11:'//trim(fast_keys)     )
+                           ,'FMEAN_CWD_RH_PY            :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Coarse woody debris respiration'             &
                            ,'[   kg/m2/yr]','(ipoly)'            )
@@ -13227,7 +13227,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_nep                                           &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_NEP_PY               :11:'//trim(fast_keys)     )
+                           ,'FMEAN_NEP_PY               :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Net Ecosystem productivity'                  &
                            ,'[   kg/m2/yr]','(ipoly)'            )
@@ -13299,7 +13299,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_can_co2                                       &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_CAN_CO2_PY           :11:'//trim(fast_keys)     )
+                           ,'FMEAN_CAN_CO2_PY           :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - CO2 mixing ratio - CAS'                      &
                            ,'[   umol/mol]','(ipoly)'            )
@@ -13506,7 +13506,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_ustar                                         &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_USTAR_PY             :11:'//trim(fast_keys)     )
+                           ,'FMEAN_USTAR_PY             :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Friction velocity'                           &
                            ,'[        m/s]','(ipoly)'            )
@@ -13542,7 +13542,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_carbon_ac                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_CARBON_AC_PY         :11:'//trim(fast_keys)     )
+                           ,'FMEAN_CARBON_AC_PY         :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - CO2 flux: atmosphere -> CAS'                 &
                            ,'[  umol/m2/s]','(ipoly)'            )
@@ -13551,7 +13551,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_carbon_st                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_CARBON_ST_PY         :11:'//trim(fast_keys)     )
+                           ,'FMEAN_CARBON_ST_PY         :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - CO2 storage at CAS'                          &
                            ,'[  umol/m2/s]','(ipoly)'            )
@@ -13560,7 +13560,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_vapor_gc                                      &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_VAPOR_GC_PY          :11:'//trim(fast_keys)     )
+                           ,'FMEAN_VAPOR_GC_PY          :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Water vapour flux: ground -> CAS'            &
                            ,'[    kg/m2/s]','(ipoly)'            )
@@ -13569,7 +13569,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_vapor_ac                                      &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_VAPOR_AC_PY          :11:'//trim(fast_keys)     )
+                           ,'FMEAN_VAPOR_AC_PY          :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Water vapour flux: atmosphere -> CAS'        &
                            ,'[    kg/m2/s]','(ipoly)'            )
@@ -13614,7 +13614,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_sensible_ac                                   &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_SENSIBLE_AC_PY       :11:'//trim(fast_keys)     )
+                           ,'FMEAN_SENSIBLE_AC_PY       :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Sensible heat flux: atmosphere -> CAS'       &
                            ,'[       W/m2]','(ipoly)'            )
@@ -13767,7 +13767,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_atm_co2                                       &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_ATM_CO2_PY           :11:'//trim(fast_keys)     )
+                           ,'FMEAN_ATM_CO2_PY           :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - CO2 mixing ratio: Atmosphere'                &
                            ,'[   umol/mol]','(ipoly)'            )

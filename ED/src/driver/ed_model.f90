@@ -171,6 +171,7 @@ subroutine ed_model()
 
       !----- Output initial state. --------------------------------------------------------!
       do ifm=1,ngrids
+         call zero_ed_yearly_vars(edgrid_g(ifm))         ! Zero growth rates etc.
          call update_ed_yearly_vars(edgrid_g(ifm))
       end do
    end if
