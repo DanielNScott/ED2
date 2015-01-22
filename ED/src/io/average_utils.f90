@@ -506,22 +506,21 @@ module average_utils
                cgrid%fmean_qdrainage      (ipy) = cgrid%fmean_qdrainage      (ipy)         &
                                                 + csite%fmean_qdrainage      (ipa)         &
                                                 * patch_wgt
-
+               !--- Repeat for C13 vars... ------------------------------------------------!
                if (c13af > 0) then
-                  cgrid%fmean_rh_c13      (ipy) = cgrid%fmean_rh_c13             (ipy)         &
-                                                + csite%fmean_rh_c13             (ipa)         &
+                  cgrid%fmean_rh_c13      (ipy) = cgrid%fmean_rh_c13             (ipy)     &
+                                                + csite%fmean_rh_c13             (ipa)     &
                                                 * patch_wgt
-                  cgrid%fmean_cwd_rh_c13  (ipy) = cgrid%fmean_cwd_rh_c13         (ipy)         &
-                                                + csite%fmean_cwd_rh_c13         (ipa)         &
+                  cgrid%fmean_cwd_rh_c13  (ipy) = cgrid%fmean_cwd_rh_c13         (ipy)     &
+                                                + csite%fmean_cwd_rh_c13         (ipa)     &
                                                 * patch_wgt
-                  cgrid%fmean_nep_c13     (ipy) = cgrid%fmean_nep_c13            (ipy)         &
-                                                + csite%fmean_nep_c13            (ipa)         &
+                  cgrid%fmean_nep_c13     (ipy) = cgrid%fmean_nep_c13            (ipy)     &
+                                                + csite%fmean_nep_c13            (ipa)     &
                                                 * patch_wgt
-               !   cgrid%fmean_can_co2_c13 (ipy) = cgrid%fmean_can_co2_c13        (ipy)         &
-               !                                 + csite%fmean_can_co2_c13        (ipa)         &
-               !                                 * patch_wgt
+                  cgrid%fmean_can_co2_c13 (ipy) = cgrid%fmean_can_co2_c13        (ipy)     &
+                                                + csite%fmean_can_co2_c13        (ipa)     &
+                                                * patch_wgt
                end if
-                                                
                !----- Soil (extensive) properties. ----------------------------------------!
                do k=1,nzg
                   nsoil = cpoly%ntext_soil(k,isi)
@@ -618,9 +617,9 @@ module average_utils
                                              + cpoly%fmean_dpcpg          (isi)            &
                                              * site_wgt
             if (c13af > 0) then
-            !   cgrid%fmean_atm_co2_c13 (ipy) = cgrid%fmean_atm_co2_c13        (ipy)            &
-            !                                 + cpoly%fmean_atm_co2_c13        (isi)            &
-            !                                 * site_wgt
+               cgrid%fmean_atm_co2_c13 (ipy) = cgrid%fmean_atm_co2_c13        (ipy)            &
+                                             + cpoly%fmean_atm_co2_c13        (isi)            &
+                                             * site_wgt
             end if
          end do siteloop
          !---------------------------------------------------------------------------------!
@@ -878,9 +877,9 @@ module average_utils
                                              * dtlsm_o_frqsum
                                              
             if (c13af > 0) then
-            !   cpoly%fmean_atm_co2_c13 (isi) = cpoly%fmean_atm_co2_c13    (isi)            &
-            !                                 + cmet%atm_co2_c13                            &
-            !                                 * dtlsm_o_frqsum
+               cpoly%fmean_atm_co2_c13 (isi) = cpoly%fmean_atm_co2_c13    (isi)            &
+                                             + cmet%atm_co2_c13                            &
+                                             * dtlsm_o_frqsum
             end if
             !------------------------------------------------------------------------------!
          end do siteloop
@@ -1432,10 +1431,11 @@ module average_utils
          cgrid%fmean_soil_wetness    (  ipy) = 0.0
          cgrid%fmean_skin_temp       (  ipy) = 0.0
 
+         !--- Repeat for C13 vars... ------------------------------------------------------!
          if (c_alloc_flg > 0) then
             cgrid%fmean_lassim_resp          (  ipy) = 0.0
          end if
-         if (c13af > 0) then !!!DSC!!!
+         if (c13af > 0) then
             cgrid%fmean_gpp_c13              (  ipy) = 0.0
             cgrid%fmean_npp_c13              (  ipy) = 0.0
             cgrid%fmean_leaf_resp_c13        (  ipy) = 0.0
@@ -1449,12 +1449,13 @@ module average_utils
             cgrid%fmean_cwd_rh_c13           (  ipy) = 0.0
             cgrid%fmean_nep_c13              (  ipy) = 0.0
             
-            !cgrid%fmean_can_co2_c13         (  ipy) = 0.0
-            !cgrid%fmean_atm_co2_c13         (  ipy) = 0.0
+            cgrid%fmean_can_co2_c13          (  ipy) = 0.0
+            cgrid%fmean_atm_co2_c13         (  ipy) = 0.0
             if (c_alloc_flg > 0) then
                cgrid%fmean_lassim_resp_c13   (  ipy) = 0.0
             end if
          end if         
+         !---------------------------------------------------------------------------------!
          
          siteloop: do isi = 1,cpoly%nsites
             csite => cpoly%site(isi)
@@ -1477,7 +1478,7 @@ module average_utils
             cpoly%fmean_qpcpg          (isi) = 0.0
             cpoly%fmean_dpcpg          (isi) = 0.0
             if (c13af > 0) then
-            !   cpoly%fmean_atm_co2_c13    (isi) = 0.0
+               cpoly%fmean_atm_co2_c13    (isi) = 0.0
             end if
 
             patchloop: do ipa = 1,csite%npatches
@@ -1576,7 +1577,7 @@ module average_utils
                   csite%fmean_rh_c13             (  ipa) = 0.0
                   csite%fmean_cwd_rh_c13         (  ipa) = 0.0
                   csite%fmean_nep_c13            (  ipa) = 0.0
-               !   csite%fmean_can_co2        (  ipa) = 0.0
+                  csite%fmean_can_co2_c13        (  ipa) = 0.0
                end if
                !---------------------------------------------------------------------------!
 
@@ -1633,6 +1634,7 @@ module average_utils
                   cpatch%fmean_vapor_wc          (ico) = 0.0
                   cpatch%fmean_intercepted_aw    (ico) = 0.0
                   cpatch%fmean_wshed_wg          (ico) = 0.0
+                  !--- Repeat for C13 vars... ---------------------------------------------!
                   if (c_alloc_flg > 0) then
                      cpatch%fmean_lassim_resp           (ico) = 0.0
                   end if
@@ -1649,6 +1651,7 @@ module average_utils
                         cpatch%fmean_lassim_resp_c13    (ico) = 0.0
                      end if
                   end if
+                  !------------------------------------------------------------------------!
                end do cohortloop
                !---------------------------------------------------------------------------!
             end do patchloop
@@ -2101,12 +2104,12 @@ module average_utils
             cgrid%dmean_nep_c13         (ipy) = cgrid%dmean_nep_c13            (ipy)               &
                                               + cgrid%fmean_nep_c13            (ipy)               &
                                               * frqsum_o_daysec
-         !   cgrid%dmean_can_co2_c13     (ipy) = cgrid%dmean_can_co2_c13        (ipy)               &
-         !                                     + cgrid%fmean_can_co2_c13        (ipy)               &
-         !                                     * frqsum_o_daysec
-         !   cgrid%dmean_atm_co2_c13     (ipy) = cgrid%dmean_atm_co2_c13        (ipy)               &
-         !                                     + cgrid%fmean_atm_co2_c13        (ipy)               &
-         !                                     * frqsum_o_daysec
+            cgrid%dmean_can_co2_c13     (ipy) = cgrid%dmean_can_co2_c13        (ipy)               &
+                                              + cgrid%fmean_can_co2_c13        (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_atm_co2_c13     (ipy) = cgrid%dmean_atm_co2_c13        (ipy)               &
+                                              + cgrid%fmean_atm_co2_c13        (ipy)               &
+                                              * frqsum_o_daysec
             if (c_alloc_flg > 0) then
                cgrid%dmean_lassim_resp_c13 (ipy) = cgrid%dmean_lassim_resp_c13 (ipy)               &
                                                  + cgrid%fmean_lassim_resp_c13 (ipy)               &
@@ -2180,9 +2183,9 @@ module average_utils
                                              + cpoly%fmean_dpcpg          (isi)            &
                                              * frqsum_o_daysec
             if (c13af > 0) then
-            !   cpoly%dmean_atm_co2_c13    (isi) = cpoly%dmean_atm_co2_c13    (isi)            &
-            !                                    + cpoly%fmean_atm_co2_c13    (isi)            &
-            !                                    * frqsum_o_daysec
+               cpoly%dmean_atm_co2_c13    (isi) = cpoly%dmean_atm_co2_c13    (isi)            &
+                                                + cpoly%fmean_atm_co2_c13    (isi)            &
+                                                * frqsum_o_daysec
             end if
             !------------------------------------------------------------------------------!
 
@@ -2354,18 +2357,18 @@ module average_utils
                                                    + csite%fmean_transloss       (:,ipa)   &
                                                    * frqsum_o_daysec
                if (c13af > 0) then
-                  csite%dmean_rh_c13         (ipa) = csite%dmean_rh_c13                (ipa)   &
-                                                   + csite%fmean_rh_c13                (ipa)   &
+                  csite%dmean_rh_c13         (ipa) = csite%dmean_rh_c13            (ipa)   &
+                                                   + csite%fmean_rh_c13            (ipa)   &
                                                    * frqsum_o_daysec
-                  csite%dmean_cwd_rh_c13     (ipa) = csite%dmean_cwd_rh_c13            (ipa)   &
-                                                   + csite%fmean_cwd_rh_c13            (ipa)   &
+                  csite%dmean_cwd_rh_c13     (ipa) = csite%dmean_cwd_rh_c13        (ipa)   &
+                                                   + csite%fmean_cwd_rh_c13        (ipa)   &
                                                    * frqsum_o_daysec
-                  csite%dmean_nep_c13        (ipa) = csite%dmean_nep_c13               (ipa)   &
-                                                   + csite%fmean_nep_c13               (ipa)   &
+                  csite%dmean_nep_c13        (ipa) = csite%dmean_nep_c13           (ipa)   &
+                                                   + csite%fmean_nep_c13           (ipa)   &
                                                    * frqsum_o_daysec
-               !   csite%dmean_can_co2_c13    (ipa) = csite%dmean_can_co2_c13           (ipa)   &
-               !                                    + csite%fmean_can_co2_c13           (ipa)   &
-               !                                    * frqsum_o_daysec
+                  csite%dmean_can_co2_c13    (ipa) = csite%dmean_can_co2_c13       (ipa)   &
+                                                   + csite%fmean_can_co2_c13       (ipa)   &
+                                                   * frqsum_o_daysec
                end if
                !---------------------------------------------------------------------------!
 
@@ -3498,8 +3501,8 @@ module average_utils
             cgrid%dmean_cwd_rh_c13             (ipy) = 0.0
             cgrid%dmean_nep_c13                (ipy) = 0.0
             
-         !   cgrid%dmean_can_co2_c13            (ipy) = 0.0
-         !   cgrid%dmean_atm_co2_c13            (ipy) = 0.0
+            cgrid%dmean_can_co2_c13            (ipy) = 0.0
+            cgrid%dmean_atm_co2_c13            (ipy) = 0.0
             if (c_alloc_flg > 0) then
                cgrid%dmean_lassim_resp_c13         (ipy) = 0.0
             end if
@@ -3530,7 +3533,7 @@ module average_utils
             cpoly%dmean_qpcpg          (isi) = 0.0
             cpoly%dmean_dpcpg          (isi) = 0.0
             if (c13af > 0) then
-            !   cpoly%dmean_atm_co2_c13        (isi) = 0.0
+               cpoly%dmean_atm_co2_c13        (isi) = 0.0
             end if
 
             !------------------------------------------------------------------------------!
@@ -3605,7 +3608,7 @@ module average_utils
                   csite%dmean_rh_c13               (ipa) = 0.0
                   csite%dmean_cwd_rh_c13           (ipa) = 0.0
                   csite%dmean_nep_c13              (ipa) = 0.0
-               !   csite%dmean_can_co2_c13          (ipa) = 0.0
+                  csite%dmean_can_co2_c13          (ipa) = 0.0
                end if
 
 
@@ -4400,12 +4403,12 @@ module average_utils
             cgrid%mmean_nep_c13          (ipy) = cgrid%mmean_nep_c13              (ipy)           &
                                                + cgrid%dmean_nep_c13              (ipy)           &
                                                * ndaysi
-         !   cgrid%mmean_can_co2_c13      (ipy) = cgrid%mmean_can_co2_c13          (ipy)           &
-         !                                      + cgrid%dmean_can_co2_c13          (ipy)           &
-         !                                      * ndaysi
-         !   cgrid%mmean_atm_co2_c13      (ipy) = cgrid%mmean_atm_co2_c13          (ipy)           &
-         !                                      + cgrid%dmean_atm_co2_c13          (ipy)           &
-         !                                      * ndaysi
+            cgrid%mmean_can_co2_c13      (ipy) = cgrid%mmean_can_co2_c13          (ipy)           &
+                                               + cgrid%dmean_can_co2_c13          (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_atm_co2_c13      (ipy) = cgrid%mmean_atm_co2_c13          (ipy)           &
+                                               + cgrid%dmean_atm_co2_c13          (ipy)           &
+                                               * ndaysi
             if (c_alloc_flg > 0) then
                cgrid%mmean_lassim_resp_c13(ipy) = cgrid%mmean_lassim_resp_c13      (ipy)          &
                                                 + cgrid%dmean_lassim_resp_c13      (ipy)          &
@@ -4471,9 +4474,9 @@ module average_utils
                                              + cpoly%dmean_dpcpg          (isi)            &
                                              * ndaysi
             if (c13af > 0) then
-            !   cpoly%mmean_atm_co2_c13 (isi) = cpoly%mmean_atm_co2_c13        (isi)         &
-            !                                 + cpoly%dmean_atm_co2_c13        (isi)         &
-            !                                 * ndaysi
+               cpoly%mmean_atm_co2_c13 (isi) = cpoly%mmean_atm_co2_c13        (isi)         &
+                                             + cpoly%dmean_atm_co2_c13        (isi)         &
+                                             * ndaysi
             end if
             !------------------------------------------------------------------------------!
 
@@ -4599,9 +4602,9 @@ module average_utils
                   csite%mmean_nep_c13          (ipa) = csite%mmean_nep_c13              (ipa)     &
                                                      + csite%dmean_nep_c13              (ipa)     &
                                                      * ndaysi
-               !   csite%mmean_can_co2_c13      (ipa) = csite%mmean_can_co2_c13          (ipa)     &
-               !                                      + csite%dmean_can_co2_c13          (ipa)     &
-               !                                      * ndaysi
+                  csite%mmean_can_co2_c13      (ipa) = csite%mmean_can_co2_c13          (ipa)     &
+                                                     + csite%dmean_can_co2_c13          (ipa)     &
+                                                     * ndaysi
                end if               
                !----- Temporarily make pounding energy extensive [J/m2]. ------------------!
                csite%mmean_sfcw_energy      (ipa) = csite%mmean_sfcw_energy      (ipa)     &
@@ -5686,8 +5689,8 @@ module average_utils
             cgrid%mmean_rh_c13                  (ipy) = 0.0 
             cgrid%mmean_cwd_rh_c13              (ipy) = 0.0 
             cgrid%mmean_nep_c13                 (ipy) = 0.0
-         !   cgrid%mmean_can_co2_c13             (ipy) = 0.0 
-         !   cgrid%mmean_atm_co2_c13             (ipy) = 0.0 
+            cgrid%mmean_can_co2_c13             (ipy) = 0.0 
+            cgrid%mmean_atm_co2_c13             (ipy) = 0.0 
             if (c_alloc_flg > 0) then
                cgrid%mmean_lassim_resp_c13           (ipy) = 0.0 
             end if
@@ -5823,7 +5826,7 @@ module average_utils
                   csite%mmean_rh_c13               (ipa) = 0.0
                   csite%mmean_cwd_rh_c13           (ipa) = 0.0
                   csite%mmean_nep_c13              (ipa) = 0.0
-               !   csite%mmean_can_co2_c13          (ipa) = 0.0
+                  csite%mmean_can_co2_c13          (ipa) = 0.0
                end if
                                             
                                             

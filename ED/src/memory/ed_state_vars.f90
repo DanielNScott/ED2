@@ -13304,6 +13304,15 @@ module ed_state_vars
                            ,'Sub-daily mean - CO2 mixing ratio - CAS'                      &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%fmean_can_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_can_co2_c13                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_CAN_CO2_C13_PY      :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 mixing ratio - CAS'                      &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%fmean_can_rhos        )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_can_rhos                                      &
@@ -13770,6 +13779,15 @@ module ed_state_vars
                            ,'FMEAN_ATM_CO2_PY           :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - CO2 mixing ratio: Atmosphere'                &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%fmean_atm_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_atm_co2_c13                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_ATM_CO2_C13_PY       :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 C13 mixing ratio: Atmosphere'            &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
       if (associated(cgrid%fmean_pcpg            )) then
@@ -14477,6 +14495,15 @@ module ed_state_vars
                            ,'Daily mean - CO2 mixing ratio - CAS'                          &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%dmean_can_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%dmean_can_co2_c13                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_CAN_CO2_C13_PY       :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 C13 mixing ratio - CAS'                      &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%dmean_can_rhos        )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%dmean_can_rhos                                      &
@@ -14943,6 +14970,15 @@ module ed_state_vars
                            ,'DMEAN_ATM_CO2_PY           :11:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - CO2 mixing ratio: Atmosphere'                    &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%dmean_atm_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%dmean_atm_co2_c13                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_ATM_CO2_C13_PY       :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 C13 mixing ratio: Atmosphere'                &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
       if (associated(cgrid%dmean_pcpg            )) then
@@ -15524,6 +15560,15 @@ module ed_state_vars
                            ,'Monthly mean - CO2 mixing ratio - CAS'                        &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%mmean_can_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_can_co2_c13                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CAN_CO2_C13_PY       :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 C13 mixing ratio - CAS'                    &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%mmean_can_rhos        )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%mmean_can_rhos                                      &
@@ -16098,6 +16143,15 @@ module ed_state_vars
                            ,'MMEAN_ATM_CO2_PY           :11:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - CO2 mixing ratio: Atmosphere'                  &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%mmean_atm_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_atm_co2_c13                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_ATM_CO2_C13_PY       :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 C13 mixing ratio: Atmosphere'              &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
       if (associated(cgrid%mmean_pcpg            )) then
@@ -19161,6 +19215,15 @@ module ed_state_vars
                            ,'Sub-daily mean - CO2 mixing ratio: Atmosphere'                &
                            ,'[   umol/mol]','(isite)'            )
       end if                                          
+      if (associated(cpoly%fmean_atm_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpoly%fmean_atm_co2_c13                                   &
+                           ,nvar,igr,init,cpoly%siglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_ATM_CO2_C13_SI       :21:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 C13 mixing ratio: Atmosphere'            &
+                           ,'[   umol/mol]','(isite)'            )
+      end if                                          
       if (associated(cpoly%fmean_pcpg            )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpoly%fmean_pcpg                                          &
@@ -19377,6 +19440,15 @@ module ed_state_vars
                            ,'Daily mean - CO2 mixing ratio: Atmosphere'                    &
                            ,'[   umol/mol]','(isite)'            )
       end if                                          
+      if (associated(cpoly%dmean_atm_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpoly%dmean_atm_co2_c13                                   &
+                           ,nvar,igr,init,cpoly%siglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_ATM_CO2_C13_SI       :21:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 C13 mixing ratio: Atmosphere'                &
+                           ,'[   umol/mol]','(isite)'            )
+      end if                                          
       !------------------------------------------------------------------------------------!
                                                       
       return                                          
@@ -19565,6 +19637,15 @@ module ed_state_vars
                            ,'MMEAN_ATM_CO2_SI           :21:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - CO2 mixing ratio: Atmosphere'                  &
+                           ,'[   umol/mol]','(isite)'            )
+      end if                                          
+      if (associated(cpoly%mmean_atm_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpoly%mmean_atm_co2_c13                                   &
+                           ,nvar,igr,init,cpoly%siglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_ATM_CO2_C13_SI       :21:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 C13 mixing ratio: Atmosphere'              &
                            ,'[   umol/mol]','(isite)'            )
       end if                                          
       if (associated(cpoly%mmean_pcpg            )) then
@@ -20466,6 +20547,12 @@ module ed_state_vars
            var_len,var_len_global,max_ptrs,'CAN_CO2 :31:hist') 
          call metadata_edio(nvar,igr,'Canopy air CO2 mixing ratio','[umol/mol]','NA') 
       end if                                          
+      if (associated(csite%can_co2_c13)) then             
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,csite%can_co2_c13,nvar,igr,init,csite%paglob_id, &
+           var_len,var_len_global,max_ptrs,'CAN_CO2_C13 :31:hist') 
+         call metadata_edio(nvar,igr,'Canopy air CO2 C13 mixing ratio','[umol/mol]','NA') 
+      end if                                          
                                                       
       if (associated(csite%can_rhos)) then            
          nvar=nvar+1                                  
@@ -21318,6 +21405,15 @@ module ed_state_vars
                            ,'Sub-daily mean - CO2 mixing ratio - CAS'                      &
                            ,'[   umol/mol]','(ipatch)'            )
       end if                                          
+      if (associated(csite%fmean_can_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%fmean_can_co2_c13                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_CAN_CO2_C13_PA       :31:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 C13 mixing ratio - CAS'                  &
+                           ,'[   umol/mol]','(ipatch)'            )
+      end if                                          
       if (associated(csite%fmean_can_rhos        )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%fmean_can_rhos                                      &
@@ -21877,6 +21973,15 @@ module ed_state_vars
                            ,'Daily mean - CO2 mixing ratio - CAS'                          &
                            ,'[   umol/mol]','(ipatch)'            )
       end if                                          
+      if (associated(csite%dmean_can_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%dmean_can_co2_c13                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_CAN_CO2_C13_PA       :31:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 C13 mixing ratio - CAS'                      &
+                           ,'[   umol/mol]','(ipatch)'            )
+      end if                                          
       if (associated(csite%dmean_can_rhos        )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%dmean_can_rhos                                      &
@@ -22406,6 +22511,15 @@ module ed_state_vars
                            ,'MMEAN_CAN_CO2_PA           :31:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - CO2 mixing ratio - CAS'                        &
+                           ,'[   umol/mol]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%mmean_can_co2_c13     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_can_co2_c13                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CAN_CO2_C13_PA       :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 C13 mixing ratio - CAS'                    &
                            ,'[   umol/mol]','(ipatch)'            )
       end if                                          
       if (associated(csite%mmean_can_rhos        )) then

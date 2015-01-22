@@ -126,6 +126,7 @@ subroutine init_met_drivers
                               , ed_met_driver_db  & ! intent(out)
                               , no_ll             & ! intent(out)
                               , has_co2           & ! intent(out)
+                              , has_co2_c13       & ! intent(out)
                               , has_ustar         ! ! intent(out)
    use canopy_air_coms , only : isfclyrm          ! ! intent(in)
    use ed_state_vars   , only : edgrid_g          & ! structure
@@ -151,8 +152,9 @@ subroutine init_met_drivers
    end do
 
    !----- Read the information for each format. -------------------------------------------!
-   has_co2   = .false.
-   has_ustar = .false.
+   has_co2     = .false.
+   has_co2_c13 = .false.
+   has_ustar   = .false.
    formloop: do iformat = 1,nformats
       !----- Finding the met driver boundaries. -------------------------------------------!
       westedge  = met_xmin(iformat) - 0.5 * met_dx(iformat)
@@ -275,6 +277,12 @@ subroutine init_met_drivers
                   nullify(cgrid%metinput(ipy)%co2)
                   allocate(cgrid%metinput(ipy)%co2(mem_size))
                   cgrid%metinput(ipy)%co2 = huge(1.)
+
+               case ('co2_c13') !----- CO2 C13 mixing ratio. ------------------ [    ppm] -!
+                  has_co2_c13 = .true.
+                  nullify(cgrid%metinput(ipy)%co2_c13)
+                  allocate(cgrid%metinput(ipy)%co2_c13(mem_size))
+                  cgrid%metinput(ipy)%co2_c13 = huge(1.)
 
                case ('ustar')   !----- Friction velocity. --------------------- [    m/s] -!
                   has_ustar = .true.
@@ -843,7 +851,10 @@ subroutine update_met_drivers(cgrid)
                                    , thetaeiv          & ! function
                                    , vpdefil           & ! function
                                    , rehuil            ! ! function
-
+   use isotopes             , only : c13af             & ! intent(in)
+                                   , initial_d13C      ! ! intent(in)
+   use iso_alloc            , only : d13C2Ratio        ! ! function
+   use met_driver_coms      , only : has_co2_c13       ! ! intent(in)
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(edtype)     , target  :: cgrid
@@ -1517,6 +1528,12 @@ subroutine update_met_drivers(cgrid)
                do ipy = 1,cgrid%npolygons
                   cgrid%met(ipy)%atm_co2 = cgrid%metinput(ipy)%co2(mprev)
                end do
+
+            case('co2_c13') !----- CO2 C13 mixing ratio. ---------------------- [    ppm] -!
+               do ipy = 1,cgrid%npolygons
+                  cgrid%met(ipy)%atm_co2_c13 = cgrid%metinput(ipy)%co2_c13(mprev)
+               end do
+               
             end select
             
          !----- In this case, we need to interpolate. -------------------------------------!
@@ -2225,6 +2242,12 @@ subroutine update_met_drivers(cgrid)
                                          + cgrid%metinput(ipy)%co2(mprev) * wprev
                end do
 
+            case('co2_c13') !----- CO2 C13 mixing ratio. ---------------------- [    ppm] -!
+               do ipy = 1,cgrid%npolygons
+                  cgrid%met(ipy)%atm_co2_c13 = cgrid%metinput(ipy)%co2_c13(mnext) * wnext  &
+                                             + cgrid%metinput(ipy)%co2_c13(mprev) * wprev
+               end do
+
             end select
          end select
       end do varloop
@@ -2241,6 +2264,11 @@ subroutine update_met_drivers(cgrid)
    polyloop: do ipy = 1,cgrid%npolygons
       !----- CO2 (only if it hasn't been read). -------------------------------------------!
       if (.not. has_co2) cgrid%met(ipy)%atm_co2 = initial_co2
+      !------------------------------------------------------------------------------------!
+      
+      !----- CO2 (only if it hasn't been read). -------------------------------------------!
+      if (.not. has_co2_c13) cgrid%met(ipy)%atm_co2_c13 =                                  &
+                                           cgrid%met(ipy)%atm_co2 * d13C2Ratio(initial_d13C)
       !------------------------------------------------------------------------------------!
 
       !----- Set the default Exner function from pressure. --------------------------------!
@@ -2370,6 +2398,11 @@ subroutine update_met_drivers(cgrid)
 
          !----- CO2.  In case we used the namelist, use that value. -----------------------!
          if (.not. has_co2) cpoly%met(isi)%atm_co2 = initial_co2
+         !---------------------------------------------------------------------------------!
+         
+         !----- CO2 C13. In case we used the namelist, use that value. --------------------!
+         if (.not. has_co2_c13) cpoly%met(isi)%atm_co2_c13 =                               &
+                                           cpoly%met(isi)%atm_co2 * d13C2Ratio(initial_d13C)
          !---------------------------------------------------------------------------------!
 
 
@@ -2846,6 +2879,8 @@ subroutine read_ol_file(infile,iformat, iv, year_use, mname, year, offset, cgrid
          cgrid%metinput(ipy)%tmp(ioa:ioz)       = metvar(1:np,ilon,ilat)
       case('co2')
          cgrid%metinput(ipy)%co2(ioa:ioz)       = metvar(1:np,ilon,ilat)
+      case('co2_c13')
+         cgrid%metinput(ipy)%co2_c13(ioa:ioz)   = metvar(1:np,ilon,ilat)
       end select
       
    end do
@@ -2973,6 +3008,11 @@ subroutine transfer_ol_month(vname, frq, cgrid)
    case ('co2')
       do ipy=1,cgrid%npolygons
          cgrid%metinput(ipy)%co2(ica:icz)        = cgrid%metinput(ipy)%co2(ifa:ifz)
+      end do
+
+   case ('co2_c13')
+      do ipy=1,cgrid%npolygons
+         cgrid%metinput(ipy)%co2_c13(ica:icz)    = cgrid%metinput(ipy)%co2_c13(ifa:ifz)
       end do
 
    end select

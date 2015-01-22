@@ -279,7 +279,8 @@ subroutine copy_nl(copy_type)
                                     , iso_P2                    & ! intent(out)				!!!DSC!!!
 !                                    , trench_time               & ! intent(out)				!!!DSC!!!
 !                                    , trench_date               & ! intent(out)				!!!DSC!!!
-                                    , c_alloc_flg               ! ! intent(out)				!!!DSC!!!
+                                    , c_alloc_flg               & ! intent(out)				!!!DSC!!!
+                                    , initial_d13C              ! ! intent(out)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    character(len=*), intent(in) :: copy_type
@@ -515,6 +516,7 @@ subroutine copy_nl(copy_type)
       edres                     = nl%edres
 
       c13af                     = nl%c13af         !!!DSC!!!
+      initial_d13C              = nl%initial_d13C !!!DSC!!!
       iso_P1                    = nl%iso_P1        !!!DSC!!!
       iso_P2                    = nl%iso_P2        !!!DSC!!!
       rtrfact                   = nl%rtrfact       !!!DSC!!!

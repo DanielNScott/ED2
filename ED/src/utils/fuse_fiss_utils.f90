@@ -4426,9 +4426,9 @@ module fuse_fiss_utils
                                            ( csite%structural_soil_L_c13(donp)* csite%area(donp) &
                                            + csite%structural_soil_L_c13(recp)* csite%area(recp) )
                                         
-         !csite%can_co2_c13(recp)        = newareai *                                            &
-         !                               ( csite%can_co2_c13(donp)            * csite%area(donp) &
-         !                               + csite%can_co2_c13(recp)            * csite%area(recp) )
+         csite%can_co2_c13(recp)        = newareai *                                            &
+                                        ( csite%can_co2_c13(donp)            * csite%area(donp) &
+                                        + csite%can_co2_c13(recp)            * csite%area(recp) )
       end if
       !------------------------------------------------------------------------------------!
       !    There is no guarantee that there will be a minimum amount of mass in the tempo- !
@@ -4932,11 +4932,11 @@ module fuse_fiss_utils
                                                       + csite%fmean_nep_c13        (donp)  &
                                                       * csite%area                 (donp)) &
                                                     *   newareai
-            !csite%fmean_can_co2              (recp) = ( csite%fmean_can_co2           (recp)  &
-            !                                          * csite%area                    (recp)  &
-            !                                          + csite%fmean_can_co2           (donp)  &
-            !                                          * csite%area                    (donp)) &
-            !                                        *   newareai
+            csite%fmean_can_co2_c13          (recp) = ( csite%fmean_can_co2_c13       (recp)  &
+                                                      * csite%area                    (recp)  &
+                                                      + csite%fmean_can_co2_c13       (donp)  &
+                                                      * csite%area                    (donp)) &
+                                                    *   newareai
          end if
          !---------------------------------------------------------------------------------!
 
@@ -5285,11 +5285,11 @@ module fuse_fiss_utils
                                                       + csite%dmean_nep_c13        (donp)  &
                                                       * csite%area                 (donp)) &
                                                     *   newareai
-            !csite%dmean_can_co2              (recp) = ( csite%dmean_can_co2           (recp)  &
-            !                                          * csite%area                    (recp)  &
-            !                                          + csite%dmean_can_co2           (donp)  &
-            !                                          * csite%area                    (donp)) &
-            !                                        *   newareai
+            csite%dmean_can_co2_c13          (recp) = ( csite%dmean_can_co2_c13       (recp)  &
+                                                      * csite%area                    (recp)  &
+                                                      + csite%dmean_can_co2_c13       (donp)  &
+                                                      * csite%area                    (donp)) &
+                                                    *   newareai
          end if
          !---------------------------------------------------------------------------------!
 
@@ -5788,11 +5788,11 @@ module fuse_fiss_utils
                                                       + csite%mmean_nep_c13        (donp)  &
                                                       * csite%area                 (donp)) &
                                                     *   newareai
-            !csite%mmean_can_co2_c13         (recp) = ( csite%mmean_can_co2_c13    (recp)  &
-            !                                          * csite%area                (recp)  &
-            !                                          + csite%mmean_can_co2_c13   (donp)  &
-            !                                          * csite%area                (donp)) &
-            !                                        *   newareai
+            csite%mmean_can_co2_c13         (recp) = ( csite%mmean_can_co2_c13    (recp)  &
+                                                      * csite%area                (recp)  &
+                                                      + csite%mmean_can_co2_c13   (donp)  &
+                                                      * csite%area                (donp)) &
+                                                    *   newareai
             csite%mmean_fast_soil_c13        (recp) = ( csite%mmean_fast_soil_c13    (recp)   &
                                                       * csite%area                   (recp)   &
                                                       + csite%mmean_fast_soil_c13    (donp)   &

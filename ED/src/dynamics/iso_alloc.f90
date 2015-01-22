@@ -457,8 +457,8 @@ subroutine l_r_diff(cpatch,ico,carbon13_balance,lh2tc_in,rh2tc_in,sth2tc_in,blea
    !use isotope_utils, only : iso_err_fn            & ! function
    !                        , htIsoDelta            & ! function
    !                        , htIsoDelta8           & ! function
-   !                        , isoDelta2htRatio      & ! function
-   !                        , isoDelta2htRatio8     & ! function
+   !                        , d13C2Ratio      & ! function
+   !                        , d13C2Ratio8     & ! function
    !                        , get_lhc_target        ! ! subroutine
 !   use iso_checks          , c13_sanity_check      ! ! subroutine
    use isotopes,  only : iso_P1                & ! intent(in)
@@ -621,7 +621,7 @@ subroutine l_r_diff(cpatch,ico,carbon13_balance,lh2tc_in,rh2tc_in,sth2tc_in,blea
    !--------------  Attempt to fix iso_P1 = d13Cleaf - d13Croot ---------------------------!
    if (cpatch%bleaf(ico) > tiny(1.0)) then
       d13Cleaf   = htIsoDelta8(lhc,lc)
-      rhc_target = isoDelta2htRatio8(d13Cleaf - iso_P1) * rc
+      rhc_target = d13C2Ratio8(d13Cleaf - iso_P1) * rc
       rhc_diff   = rhc - rhc_target
    else
       rhc_target = dist_c13 * rc  / (sac + sbc + stc + rc)
@@ -1264,7 +1264,7 @@ end function htIsoDelta8
 !==========================================================================================!   
 
 !==========================================================================================!
-real function isoDelta2htRatio(delta)
+real function d13C2Ratio(delta)
    use isotopes, only  : R_std  ! ! intent(in)
    implicit none
    
@@ -1274,15 +1274,15 @@ real function isoDelta2htRatio(delta)
    real     :: delta       ! Delta value
    real     :: R_hl        ! Ratio of heavy to light carbon
    
-   R_hl              = (delta/1000.0 + 1.0) * R_std
-   isoDelta2htRatio  = R_hl/(R_hl + 1.0)
+   R_hl        = (delta/1000.0 + 1.0) * R_std
+   d13C2Ratio  = R_hl/(R_hl + 1.0)
    
    return
-end function isoDelta2htRatio
+end function d13C2Ratio
 !==========================================================================================!   
 
 !==========================================================================================!
-real function isoDelta2htRatio8(delta)
+real function d13C2Ratio8(delta)
    use isotopes, only  : R_std  ! ! intent(in)
    implicit none
    
@@ -1292,11 +1292,11 @@ real function isoDelta2htRatio8(delta)
    real(kind=8)     :: delta       ! Delta value
    real(kind=8)     :: R_hl        ! Ratio of heavy to light carbon
    
-   R_hl              = (delta/1000.0 + 1.0) * R_std
-   isoDelta2htRatio8 = R_hl/(R_hl + 1.0)
+   R_hl        = (delta/1000.0 + 1.0) * R_std
+   d13C2Ratio8 = R_hl/(R_hl + 1.0)
    
    return
-end function isoDelta2htRatio8
+end function d13C2Ratio8
 !==========================================================================================!
 
 

@@ -49,6 +49,8 @@ module met_driver_coms
    integer, parameter :: metvars_len =  16    !
    logical            :: has_co2              ! Do the H5 data have CO2, or did the user
                                               !    specify it with initial_co2?
+   logical            :: has_co2_c13          ! Do the H5 data have CO2 C13, or was it
+                                              !    specified with initial_co2_c13?
    logical            :: has_ustar            ! Do the H5 data have u*, or the model is
                                               !    supposed to calculate it?
    real               :: initial_co2          ! CO2 in case the meteorological forcing 
@@ -117,6 +119,7 @@ module met_driver_coms
       real, pointer, dimension(:) :: sh
       real, pointer, dimension(:) :: tmp
       real, pointer, dimension(:) :: co2
+      real, pointer, dimension(:) :: co2_c13
    end type met_driv_data
    !---------------------------------------------------------------------------------------!
 
@@ -150,6 +153,7 @@ module met_driver_coms
       real :: exner
       real :: geoht
       real :: atm_co2
+      real :: atm_co2_c13
       real :: pptnorm
    end type met_driv_state
    !---------------------------------------------------------------------------------------!

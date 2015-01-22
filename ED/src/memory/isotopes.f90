@@ -31,6 +31,7 @@ logical :: flushing_memory = .true.
 !                       1:  Apparent frac. at leaves and roots from Bowling 2008        !
 !---------------------------------------------------------------------------------------!
 integer  :: c13af
+real     :: initial_d13C
 real     :: iso_P1 
 real     :: iso_P2
 integer  :: iso_r_flg

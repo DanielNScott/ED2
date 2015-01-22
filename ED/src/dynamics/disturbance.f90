@@ -1289,6 +1289,8 @@ module disturbance_utils
          csite%structural_soil_c13         (np) = 0.0
          csite%structural_soil_L_c13       (np) = 0.0
          
+         csite%can_co2_c13                 (np) = 0.0
+         
          csite%fsc13_in                    (np) = 0.0
          csite%ssc13_in                    (np) = 0.0
          csite%ssl_c13_in                  (np) = 0.0
@@ -1372,7 +1374,7 @@ module disturbance_utils
       end do
 
       !----- Now isotope variables... -----------------------------------------------------!
-      if (c13af > 0) then !!!DSC!!!
+      if (c13af > 0) then
          csite%fast_soil_c13        (ipa) = csite%fast_soil_c13         (ipa) * area_fac
          csite%slow_soil_c13        (ipa) = csite%slow_soil_c13         (ipa) * area_fac
          csite%structural_soil_c13  (ipa) = csite%structural_soil_c13   (ipa) * area_fac
@@ -1381,9 +1383,9 @@ module disturbance_utils
          csite%fsc13_in             (ipa) = csite%fsc13_in            (ipa) * area_fac
          csite%ssc13_in             (ipa) = csite%ssc13_in            (ipa) * area_fac
          csite%ssl_c13_in           (ipa) = csite%ssl_c13_in          (ipa) * area_fac
+         
+         csite%can_co2_c13          (ipa) = csite%can_co2_c13         (ipa) * area_fac
       end if
-      
-      
       !------------------------------------------------------------------------------------!
 
 
@@ -1446,7 +1448,17 @@ module disturbance_utils
          csite%fmean_sensible_gg(k,ipa) = csite%fmean_sensible_gg(k,ipa) * area_fac
       end do
       !------------------------------------------------------------------------------------!
+      
+      !----- Now isotope variables... -----------------------------------------------------!
+      if (c13af > 0) then
+         csite%fmean_rh_c13         (ipa) = csite%fmean_rh_c13         (ipa) * area_fac
+         csite%fmean_cwd_rh_c13     (ipa) = csite%fmean_cwd_rh_c13     (ipa) * area_fac
+         csite%fmean_nep_c13        (ipa) = csite%fmean_nep_c13        (ipa) * area_fac
 
+         csite%fmean_can_co2_c13    (ipa) = csite%fmean_can_co2_c13    (ipa) * area_fac
+      end if
+      !------------------------------------------------------------------------------------!
+      
       return
    end subroutine normal_patch_vars
    !=======================================================================================!
@@ -1600,7 +1612,7 @@ module disturbance_utils
       !------------------------------------------------------------------------------------!
       
       !----- Now isotope variables... -----------------------------------------------------!
-      if (c13af > 0) then !!!DSC!!!
+      if (c13af > 0) then
          csite%fast_soil_c13           (np) = csite%fast_soil_c13              (np)        &
                                             + csite%fast_soil_c13              (cp)        &
                                             * area_fac
@@ -1622,8 +1634,11 @@ module disturbance_utils
          csite%ssl_c13_in              (np) = csite%ssl_c13_in                 (np)        &
                                             + csite%ssl_c13_in                 (cp)        &
                                             * area_fac
+         csite%can_co2_c13             (np) = csite%can_co2_c13                (np)        &
+                                            + csite%can_co2_c13                (cp)        &
+                                            * area_fac
       end if
-      
+      !------------------------------------------------------------------------------------!
       
 
 
@@ -1787,6 +1802,7 @@ module disturbance_utils
                                        + csite%fmean_sensible_gg(k,cp)                     &
                                        * area_fac
       end do
+      !----- Now isotope variables... -----------------------------------------------------!
       if (c13af > 0) then
          csite%fmean_rh_c13         (    np) = csite%dmean_rh_c13             (    np)     &
                                              + csite%dmean_rh_c13             (    cp)     &
@@ -1996,6 +2012,7 @@ module disturbance_utils
          csite%dmean_sensible_gg    (  :,np) = csite%dmean_sensible_gg    (  :,np)         &
                                              + csite%dmean_sensible_gg    (  :,cp)         &
                                              * area_fac
+         !----- Now isotope variables... --------------------------------------------------!
          if (c13af > 0) then
             csite%dmean_rh_c13         (    np) = csite%dmean_rh_c13             (    np)  &
                                                 + csite%dmean_rh_c13             (    cp)  &
@@ -2010,6 +2027,7 @@ module disturbance_utils
                                                 + csite%dmean_can_co2_c13        (    cp)  &
                                                 * area_fac
          end if
+         !---------------------------------------------------------------------------------!
       end if
       !------------------------------------------------------------------------------------!
 
@@ -2287,6 +2305,7 @@ module disturbance_utils
          csite%mmean_sensible_gg    (  :,np) = csite%mmean_sensible_gg    (  :,np)         &
                                              + csite%mmean_sensible_gg    (  :,cp)         &
                                              * area_fac
+         !----- Now isotope variables... --------------------------------------------------!
          if (c13af > 0) then
             csite%mmean_fast_soil_c13    (    np) = csite%mmean_fast_soil_c13    (    np)  &
                                                   + csite%mmean_fast_soil_c13    (    cp)  &
@@ -2300,19 +2319,20 @@ module disturbance_utils
             csite%mmean_struct_soil_l_c13(    np) = csite%mmean_struct_soil_l_c13(    np)  &
                                                   + csite%mmean_struct_soil_l_c13(    cp)  &
                                                   * area_fac
-            csite%mmean_rh_c13         (    np) = csite%dmean_rh_c13             (    np)  &
-                                                + csite%dmean_rh_c13             (    cp)  &
-                                                * area_fac
-            csite%mmean_cwd_rh_c13     (    np) = csite%dmean_cwd_rh_c13         (    np)  &
-                                                + csite%dmean_cwd_rh_c13         (    cp)  &
-                                                * area_fac
-            csite%mmean_nep_c13        (    np) = csite%dmean_nep_c13            (    np)  &
-                                                + csite%dmean_nep_c13            (    cp)  &
-                                                * area_fac
-            csite%mmean_can_co2_c13    (    np) = csite%dmean_can_co2_c13        (    np)  &
-                                                + csite%dmean_can_co2_c13        (    cp)  &
-                                                * area_fac
+            csite%mmean_rh_c13            (   np) = csite%mmean_rh_c13           (    np)  &
+                                                  + csite%mmean_rh_c13           (    cp)  &
+                                                  * area_fac
+            csite%mmean_cwd_rh_c13        (   np) = csite%mmean_cwd_rh_c13       (    np)  &
+                                                  + csite%mmean_cwd_rh_c13       (    cp)  &
+                                                  * area_fac
+            csite%mmean_nep_c13           (   np) = csite%mmean_nep_c13          (    np)  &
+                                                  + csite%mmean_nep_c13          (    cp)  &
+                                                  * area_fac
+            csite%mmean_can_co2_c13       (   np) = csite%mmean_can_co2_c13      (    np)  &
+                                                  + csite%mmean_can_co2_c13      (    cp)  &
+                                                  * area_fac
          end if
+         !---------------------------------------------------------------------------------!
       end if
       !------------------------------------------------------------------------------------!
 
@@ -2542,6 +2562,34 @@ module disturbance_utils
          csite%qmsqu_sensible_ac    (  :,np) = csite%qmsqu_sensible_ac    (  :,np)         &
                                              + csite%qmsqu_sensible_ac    (  :,cp)         &
                                              * area_fac
+         !----- Now isotope variables... --------------------------------------------------!
+         if (c13af > 0) then
+            !csite%qmean_fast_soil_c13    (    np) = csite%qmean_fast_soil_c13    (    np)  &
+            !                                      + csite%qmean_fast_soil_c13    (    cp)  &
+            !                                      * area_fac
+            !csite%qmean_slow_soil_c13    (    np) = csite%qmean_slow_soil_c13    (    np)  &
+            !                                      + csite%qmean_slow_soil_c13    (    cp)  &
+            !                                      * area_fac
+            !csite%qmean_struct_soil_c13  (    np) = csite%qmean_struct_soil_c13  (    np)  &
+            !                                      + csite%qmean_struct_soil_c13  (    cp)  &
+            !                                      * area_fac
+            !csite%qmean_struct_soil_l_c13(    np) = csite%qmean_struct_soil_l_c13(    np)  &
+            !                                      + csite%qmean_struct_soil_l_c13(    cp)  &
+            !                                      * area_fac
+            !csite%qmean_rh_c13         (    np) = csite%qmean_rh_c13             (    np)  &
+            !                                    + csite%qmean_rh_c13             (    cp)  &
+            !                                    * area_fac
+            !csite%qmean_cwd_rh_c13     (    np) = csite%qmean_cwd_rh_c13         (    np)  &
+            !                                    + csite%qmean_cwd_rh_c13         (    cp)  &
+            !                                    * area_fac
+            !csite%qmean_nep_c13        (    np) = csite%qmean_nep_c13            (    np)  &
+            !                                    + csite%qmean_nep_c13            (    cp)  &
+            !                                    * area_fac
+            !csite%qmean_can_co2_c13    (    np) = csite%qmean_can_co2_c13        (    np)  &
+            !                                    + csite%qmean_can_co2_c13        (    cp)  &
+            !                                    * area_fac
+         end if
+         !---------------------------------------------------------------------------------!
       end if
       !------------------------------------------------------------------------------------!
 
@@ -2788,7 +2836,8 @@ module disturbance_utils
          struct_litter = struct_litter + struct_cohort
          struct_lignin = struct_lignin + struct_cohort * l2n_stem / c2n_stem(ipft)
          
-         if (c13af > 0) then !!!DSC!!!
+         !----- Replicate for c13 vars. ---------------------------------------------------!
+         if (c13af > 0) then
             fast_litter_c13   = fast_litter_c13                                            &
                               + (1. - survival_fac)                                        &
                               * ( f_labile(ipft) * cpatch%balive_c13  (ico)                &
@@ -2803,7 +2852,7 @@ module disturbance_utils
             struct_lignin_c13 = struct_lignin_c13                                          &
                               + struct_cohort_c13 * l2n_stem / c2n_stem(ipft)
          end if
-         
+         !---------------------------------------------------------------------------------!         
       end do
 
       !----- Load disturbance litter directly into carbon and N pools. --------------------!
@@ -2811,7 +2860,9 @@ module disturbance_utils
       csite%structural_soil_C(np) = csite%structural_soil_C(np) + struct_litter * area_fac
       csite%structural_soil_L(np) = csite%structural_soil_L(np) + struct_lignin * area_fac
       csite%fast_soil_N(np)       = csite%fast_soil_N(np)       + fast_litter_n * area_fac
-      if (c13af > 0) then !!!DSC!!!
+
+      !----- Replicate for c13 vars. ------------------------------------------------------!
+      if (c13af > 0) then
          csite%fast_soil_c13        (np) = csite%fast_soil_c13        (np)                 &
                                          + fast_litter_c13 * area_fac
          csite%structural_soil_c13  (np) = csite%structural_soil_c13  (np)                 &
@@ -2819,6 +2870,7 @@ module disturbance_utils
          csite%structural_soil_L_c13(np) = csite%structural_soil_L_c13(np)                 &
                                          + struct_lignin_c13 * area_fac
       end if
+      !------------------------------------------------------------------------------------!
 
       return
    end subroutine accum_dist_litt

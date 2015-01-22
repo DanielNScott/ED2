@@ -1037,6 +1037,7 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
       csite%mmsqu_vapor_ac               (ipaa:ipaz) = 0.0
       csite%mmsqu_sensible_gc            (ipaa:ipaz) = 0.0
       csite%mmsqu_sensible_ac            (ipaa:ipaz) = 0.0
+      !--- Replicate for C13 vars... ------------------------------------------------------!
       if (c13af > 0) then
          csite%mmean_rh_c13                 (ipaa:ipaz) = 0.0
          csite%mmean_cwd_rh_c13             (ipaa:ipaz) = 0.0
@@ -1047,6 +1048,7 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
          csite%mmean_struct_soil_c13        (ipaa:ipaz) = 0.0
          csite%mmean_struct_soil_l_c13      (ipaa:ipaz) = 0.0
       end if
+      !------------------------------------------------------------------------------------!
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -1130,6 +1132,14 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
       csite%qmean_smoist_gg          (:,:,ipaa:ipaz) = 0.0
       csite%qmean_transloss          (:,:,ipaa:ipaz) = 0.0
       csite%qmean_sensible_gg        (:,:,ipaa:ipaz) = 0.0
+      !--- Replicate for C13 vars... ------------------------------------------------------!
+      !if (c13af > 0) then
+      !   csite%qmean_rh_c13               (:,ipaa:ipaz) = 0.0
+      !   csite%qmean_cwd_rh_c13           (:,ipaa:ipaz) = 0.0
+      !   csite%qmean_nep_c13              (:,ipaa:ipaz) = 0.0
+      !   csite%qmean_can_co2_c13          (:,ipaa:ipaz) = 0.0
+      !end if
+      !------------------------------------------------------------------------------------!
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -1680,7 +1690,7 @@ subroutine init_ed_poly_vars(cgrid)
          cgrid%fmean_cwd_rh_c13               (ipy) = 0.0
          cgrid%fmean_nep_c13                  (ipy) = 0.0
          cgrid%fmean_can_co2_c13              (ipy) = 0.0
-         !cgrid%fmean_atm_co2_c13              (ipy) = 0.0
+         cgrid%fmean_atm_co2_c13              (ipy) = 0.0
       end if
       !------------------------------------------------------------------------------------!
 
@@ -1834,7 +1844,7 @@ subroutine init_ed_poly_vars(cgrid)
             cgrid%dmean_cwd_rh_c13               (ipy) = 0.0
             cgrid%dmean_nep_c13                  (ipy) = 0.0
             cgrid%dmean_can_co2_c13              (ipy) = 0.0
-            !cgrid%dmean_atm_co2_c13              (ipy) = 0.0
+            cgrid%dmean_atm_co2_c13              (ipy) = 0.0
          end if
       end if
       !------------------------------------------------------------------------------------!
@@ -2018,6 +2028,7 @@ subroutine init_ed_poly_vars(cgrid)
          cgrid%mmsqu_vapor_ac             (ipy) = 0.0
          cgrid%mmsqu_sensible_gc          (ipy) = 0.0
          cgrid%mmsqu_sensible_ac          (ipy) = 0.0
+         !--- Repeat for C13 vars... ------------------------------------------------------!
          if (c13af > 0) then
             cgrid%mmean_gpp_c13                  (ipy) = 0.0
             cgrid%mmean_npp_c13                  (ipy) = 0.0
@@ -2033,8 +2044,8 @@ subroutine init_ed_poly_vars(cgrid)
             cgrid%mmean_bleaf_c13            (:,:,ipy) = 0.0
             cgrid%mmean_broot_c13            (:,:,ipy) = 0.0
             cgrid%mmean_bstorage_c13         (:,:,ipy) = 0.0
-            !cgrid%mmean_can_co2_c13              (ipy) = 0.0
-            !cgrid%mmean_atm_co2_c13              (ipy) = 0.0
+            cgrid%mmean_can_co2_c13              (ipy) = 0.0
+            cgrid%mmean_atm_co2_c13              (ipy) = 0.0
             cgrid%mmean_leaf_maintenance_c13 (:,:,ipy) = 0.0
             cgrid%mmean_root_maintenance_c13 (:,:,ipy) = 0.0
             cgrid%mmean_leaf_drop_c13        (:,:,ipy) = 0.0
@@ -2044,6 +2055,7 @@ subroutine init_ed_poly_vars(cgrid)
             cgrid%mmean_struct_soil_l_c13        (ipy) = 0.0
             cgrid%mmean_cwd_c13                  (ipy) = 0.0
          end if                         
+         !---------------------------------------------------------------------------------!
       end if
       !------------------------------------------------------------------------------------!
 
@@ -2196,6 +2208,34 @@ subroutine init_ed_poly_vars(cgrid)
          cgrid%qmsqu_vapor_ac           (:,ipy) = 0.0
          cgrid%qmsqu_sensible_gc        (:,ipy) = 0.0
          cgrid%qmsqu_sensible_ac        (:,ipy) = 0.0
+         !--- Repeat for C13 vars... ------------------------------------------------------!
+         !if (c13af > 0) then
+         !   cgrid%qmean_gpp_c13                  (:,ipy) = 0.0
+         !   cgrid%qmean_npp_c13                  (:,ipy) = 0.0
+         !   cgrid%qmean_leaf_resp_c13            (:,ipy) = 0.0
+         !   cgrid%qmean_root_resp_c13            (:,ipy) = 0.0
+         !   cgrid%qmean_growth_resp_c13          (:,ipy) = 0.0
+         !   cgrid%qmean_storage_resp_c13         (:,ipy) = 0.0
+         !   cgrid%qmean_vleaf_resp_c13           (:,ipy) = 0.0
+         !   cgrid%qmean_plresp_c13               (:,ipy) = 0.0
+         !   cgrid%qmean_rh_c13                   (:,ipy) = 0.0
+         !   cgrid%qmean_cwd_rh_c13               (:,ipy) = 0.0
+         !   cgrid%qmean_nep_c13                  (:,ipy) = 0.0
+         !   cgrid%qmean_bleaf_c13            (:,:,:,ipy) = 0.0
+         !   cgrid%qmean_broot_c13            (:,:,:,ipy) = 0.0
+         !   cgrid%qmean_bstorage_c13         (:,:,:,ipy) = 0.0
+         !   cgrid%qmean_can_co2_c13              (:,ipy) = 0.0
+         !   cgrid%qmean_atm_co2_c13              (:,ipy) = 0.0
+         !   cgrid%qmean_leaf_maintenance_c13 (:,:,:,ipy) = 0.0
+         !   cgrid%qmean_root_maintenance_c13 (:,:,:,ipy) = 0.0
+         !   cgrid%qmean_leaf_drop_c13        (:,:,:,ipy) = 0.0
+         !   cgrid%qmean_fast_soil_c13            (:,ipy) = 0.0
+         !   cgrid%qmean_slow_soil_c13            (:,ipy) = 0.0
+         !   cgrid%qmean_struct_soil_c13          (:,ipy) = 0.0
+         !   cgrid%qmean_struct_soil_l_c13        (:,ipy) = 0.0
+         !   cgrid%qmean_cwd_c13                  (:,ipy) = 0.0
+         !end if                         
+         !---------------------------------------------------------------------------------!
       end if
       !------------------------------------------------------------------------------------!
    end do

@@ -245,6 +245,7 @@ module ename_coms
 
       !----- DS Additional Vars -----------------------------------------------------------!
       integer                                           :: c13af        !!!DSC!!!
+      real                                              :: initial_d13C !!!DSC!!!
       real                                              :: iso_p1       !!!DSC!!!
       real                                              :: iso_p2       !!!DSC!!!
       real                                              :: iso_lrf      !!!DSC!!!
@@ -545,6 +546,7 @@ module ename_coms
 
       !---- DS Addnl. Vars ---------------------------------------------------------------!
       enl%c13af                     = undef_integer
+      enl%initial_d13C              = undef_integer
       enl%c_alloc_flg               = undef_integer
       enl%larprop                   = undef_real
       enl%iso_P1                    = undef_real

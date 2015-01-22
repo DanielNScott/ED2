@@ -49,6 +49,7 @@ subroutine ed_init_atm()
    use budget_utils          , only : update_budget     ! ! subroutine
    use canopy_layer_coms     , only : canstr            & ! structure 
                                     , alloc_canopy_layer_mbs ! ! subroutine
+   use isotopes              , only : c13af             ! ! intent(in)
    !$ use omp_lib
    implicit none
    !----- Local variables. ----------------------------------------------------------------!
@@ -150,7 +151,10 @@ subroutine ed_init_atm()
                                               ,csite%can_shv (ipa),.true.)
                csite%can_rhos (ipa) = idealdenssh(csite%can_prss(ipa)                      &
                                                  ,csite%can_temp(ipa),csite%can_shv(ipa))
-
+               !----- If tracking C-13, initialize this here as well. ---------------------!
+               if (c13af > 0) then
+                  csite%can_co2_c13(ipa) = cmet%atm_co2_c13
+               end if
                !----- Initialise the ground radiation parameters. -------------------------!
                csite%rshort_g(ipa) = 0.
                csite%par_g   (ipa) = 0.

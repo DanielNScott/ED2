@@ -583,9 +583,9 @@ subroutine aggregate_polygon_fmean(cgrid)
                cgrid%fmean_nep_c13        (ipy) = cgrid%fmean_nep_c13     (ipy)            &
                                                 + csite%fmean_nep_c13     (ipa)            &
                                                 * patch_wgt                  
-            !   cgrid%fmean_can_co2_c13    (ipy) = cgrid%fmean_can_co2_c13 (ipy)            &
-            !                                    + csite%fmean_can_co2_c13 (ipa)            &
-            !                                    * patch_wgt                  
+               cgrid%fmean_can_co2_c13    (ipy) = cgrid%fmean_can_co2_c13 (ipy)            &
+                                                + csite%fmean_can_co2_c13 (ipa)            &
+                                                * patch_wgt                  
             end if                                                   
             !----- Temporarily convert pounding internal energy to J/m2. ------------------!
             cgrid%fmean_sfcw_energy    (ipy) = cgrid%fmean_sfcw_energy    (ipy)            &
@@ -775,11 +775,11 @@ subroutine aggregate_polygon_fmean(cgrid)
          cgrid%fmean_dpcpg          (ipy) = cgrid%fmean_dpcpg          (ipy)               &
                                           + cpoly%fmean_dpcpg          (isi)               &
                                           * site_wgt
-         !if (c13af > 0) then
-         !   cgrid%fmean_atm_co2_c13    (ipy) = cgrid%fmean_atm_co2_c13        (ipy)               &
-         !                                    + cpoly%fmean_atm_co2_c13        (isi)               &
-         !                                    * site_wgt                      
-         !end if
+         if (c13af > 0) then
+            cgrid%fmean_atm_co2_c13    (ipy) = cgrid%fmean_atm_co2_c13        (ipy)               &
+                                             + cpoly%fmean_atm_co2_c13        (isi)               &
+                                             * site_wgt                      
+         end if
       end do siteloop
       !------------------------------------------------------------------------------------!
 
