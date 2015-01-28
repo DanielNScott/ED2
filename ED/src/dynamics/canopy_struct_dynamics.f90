@@ -242,6 +242,7 @@ module canopy_struct_dynamics
       real           :: tai_drygrass ! TAI for when a grass-only patch is dry   [    m2/m2]
       real           :: c3_lad       ! c3 * lad for estimating drag coefficient [      ---]
       integer        :: ibuff
+      real           :: snowfac_can  ! percent vertical canopy covered in snow
       !----- External functions. ----------------------------------------------------------!
       real(kind=4), external :: cbrt ! Cubic root that works for negative numbers
       !------------------------------------------------------------------------------------!
@@ -298,6 +299,14 @@ module canopy_struct_dynamics
       !------------------------------------------------------------------------------------!
 
 
+      !------------------------------------------------------------------------------------!
+      !     Find the fraction of the canopy covered in snow (original snowfac function)    !
+      !     I think canopy roughness may need to be re-thought, but this was necessary     !
+      ! for turbulence & CO2 mixing to not occasionally fail sanity checks in young patches!
+      !------------------------------------------------------------------------------------!
+      snowfac_can     = min(9.9d-1,csite%total_sfcw_depth(ipa)/csite%veg_height(ipa))
+      !------------------------------------------------------------------------------------!
+
 
       !------------------------------------------------------------------------------------!
       !     If there is no vegetation in this patch, then we apply turbulence to bare      !
@@ -313,8 +322,8 @@ module canopy_struct_dynamics
          end if
 
          !----- Calculate the surface roughness inside the canopy. ------------------------!
-         csite%rough       (ipa) = soil_rough * (1.0 - csite%snowfac(ipa))                 &
-                                 + snow_rough * csite%snowfac(ipa)
+         csite%rough       (ipa) = soil_rough * (1.0 - snowfac_can)                 &
+                                 + snow_rough * snowfac_can
          csite%veg_displace(ipa) = vh2dh * csite%rough(ipa) / vh2vr
          !---------------------------------------------------------------------------------!
 
@@ -380,10 +389,10 @@ module canopy_struct_dynamics
          ! ground, and apply the snow cover to further scale it.  The weighting factors    !
          ! are the fraction of open canopy and the fraction of the canopy buried in snow.  !
          !---------------------------------------------------------------------------------!
-         csite%rough(ipa) = snow_rough * csite%snowfac(ipa)                                &
+         csite%rough(ipa) = snow_rough * snowfac_can		                               &
                           + ( soil_rough           * csite%opencan_frac(ipa)               &
                             + csite%veg_rough(ipa) * (1.0 - csite%opencan_frac(ipa)) )     &
-                          * (1.0 - csite%snowfac(ipa))
+                          * (1.0 - snowfac_can)
          !---------------------------------------------------------------------------------!
 
 
@@ -415,7 +424,7 @@ module canopy_struct_dynamics
          !---------------------------------------------------------------------------------!
          !     Find the aerodynamic resistance due to vegetated ground.                    !
          !---------------------------------------------------------------------------------!
-         if (csite%snowfac(ipa) < 0.9) then
+         if (snowfac_can < 0.9) then
             select case (icanturb)
             case (0)
                !----- LEAF-3 method. ------------------------------------------------------!
@@ -554,7 +563,7 @@ module canopy_struct_dynamics
          ! net resistance, which is, in turn, the weighted average of the resistances in   !
          ! bare and vegetated grounds.                                                     !
          !---------------------------------------------------------------------------------!
-         if (csite%opencan_frac(ipa) > 0.999 .or. csite%snowfac(ipa) >= 0.9) then
+         if (csite%opencan_frac(ipa) > 0.999 .or. snowfac_can >= 0.9) then
             csite%ggnet(ipa) = csite%ggbare(ipa)
          else
             csite%ggnet(ipa) = csite%ggbare(ipa) * csite%ggveg(ipa)                        &
@@ -579,17 +588,17 @@ module canopy_struct_dynamics
          ! soil and vegetation roughness.  The other is the fraction of the vegetation     !
          ! that is covered in snow.                                                        !
          !---------------------------------------------------------------------------------!
-         csite%rough(ipa) = snow_rough * csite%snowfac(ipa)                                &
+         csite%rough(ipa) = snow_rough * snowfac_can		                               &
                           + ( soil_rough           * csite%opencan_frac(ipa)               &
                             + csite%veg_rough(ipa) * (1.0 - csite%opencan_frac(ipa)) )     &
-                          * (1.0 - csite%snowfac(ipa))
+                          * (1.0 - snowfac_can)
          !---------------------------------------------------------------------------------!
 
 
 
          !----- Calculate the soil surface roughness inside the canopy. -------------------!
-         surf_rough = soil_rough * (1.0 - csite%snowfac(ipa))                              &
-                    + snow_rough * csite%snowfac(ipa)
+         surf_rough = soil_rough * (1.0 - snowfac_can)                              	   &
+                    + snow_rough * snowfac_can
          !---------------------------------------------------------------------------------!
 
 
@@ -720,7 +729,7 @@ module canopy_struct_dynamics
          ! net resistance, which is, in turn, the weighted average of the resistances in   !
          ! bare and vegetated grounds.                                                     !
          !---------------------------------------------------------------------------------!
-         if (csite%opencan_frac(ipa) > 0.999 .or. csite%snowfac(ipa) >= 0.9) then
+         if (csite%opencan_frac(ipa) > 0.999 .or. snowfac_can >= 0.9) then
             csite%ggnet(ipa) = csite%ggbare(ipa)
          else
             csite%ggnet(ipa) = csite%ggbare(ipa) * csite%ggveg(ipa)                        &
@@ -1304,7 +1313,7 @@ module canopy_struct_dynamics
          ! net resistance, which is, in turn, the weighted average of the resistances in   !
          ! bare and vegetated grounds.                                                     !
          !---------------------------------------------------------------------------------!
-         if (csite%opencan_frac(ipa) > 0.999 .or. csite%snowfac(ipa) >= 0.9) then
+         if (csite%opencan_frac(ipa) > 0.999 .or. snowfac_can >= 0.9) then
             csite%ggnet(ipa) = csite%ggbare(ipa)
          else
             csite%ggnet(ipa) = csite%ggbare(ipa) * csite%ggveg(ipa)                        &
@@ -1554,6 +1563,7 @@ module canopy_struct_dynamics
       real(kind=8)   :: tai_drygrass ! TAI for when a grass-only patch is dry   [    m2/m2]
       real(kind=8)   :: c3_lad       ! c3 * lad for estimating drag coefficient [      ---]
       integer        :: ibuff
+      real(kind=8)   :: snowfac_can  ! percent vertical canopy covered in snow
       !------ External procedures ---------------------------------------------------------!
       real(kind=8), external :: cbrt8    ! Cubic root that works for negative numbers
       real(kind=4), external :: sngloff  ! Safe double -> simple precision.
@@ -1576,6 +1586,13 @@ module canopy_struct_dynamics
          windext_full8 => canstr(ibuff)%windext_full8, &
          windext_half8 => canstr(ibuff)%windext_half8 )
 
+      !------------------------------------------------------------------------------------!
+      !     Find the fraction of the canopy covered in snow (original snowfac function)    !
+      !     I think canopy roughness may need to be re-thought, but this was necessary     !
+      ! for turbulence & CO2 mixing to not occasionally fail sanity checks in young patches!
+      !------------------------------------------------------------------------------------!
+      snowfac_can     = min(9.9d-1,initp%total_sfcw_depth/initp%veg_height)
+      !------------------------------------------------------------------------------------!
 
       !------------------------------------------------------------------------------------!
       !     Find the virtual potential temperatures and decide whether the canopy air is   !
@@ -1592,8 +1609,8 @@ module canopy_struct_dynamics
       if (cpatch%ncohorts == 0) then
 
          !----- Calculate the surface roughness and displacement height. ------------------!
-         initp%rough        = soil_rough8 *(1.d0 - initp%snowfac)                          &
-                            + snow_rough8 * initp%snowfac
+         initp%rough        = soil_rough8 *(1.d0 - snowfac_can)                            &
+                            + snow_rough8 * snowfac_can
          initp%veg_displace = vh2dh8 * initp%rough / vh2vr8
          
          !----- Find the characteristic scales (a.k.a. stars). ----------------------------!
@@ -1660,10 +1677,10 @@ module canopy_struct_dynamics
          ! soil and vegetation roughness.  The other is the fraction of the vegetation     !
          ! that is covered in snow.                                                        !
          !---------------------------------------------------------------------------------!
-         initp%rough = snow_rough8 * initp%snowfac                                         &
+         initp%rough = snow_rough8 * snowfac_can                                           &
                      + ( soil_rough8     * initp%opencan_frac                              &
                        + initp%veg_rough * (1.d0 - initp%opencan_frac) )                   &
-                     * (1.d0 - initp%snowfac)
+                     * (1.d0 - snowfac_can)
          !---------------------------------------------------------------------------------!
 
 
@@ -1683,7 +1700,7 @@ module canopy_struct_dynamics
          !---------------------------------------------------------------------------------!
          !     Find the aerodynamic resistance due to vegetated ground.                    !
          !---------------------------------------------------------------------------------!
-         if (initp%snowfac < 9.d-1) then
+         if (snowfac_can < 9.d-1) then
             select case (icanturb)
             case (0)
                !----- LEAF-3 method. ------------------------------------------------------!
@@ -1838,7 +1855,7 @@ module canopy_struct_dynamics
          ! net resistance, which is, in turn, the weighted average of the resistances in   !
          ! bare and vegetated grounds.                                                     !
          !---------------------------------------------------------------------------------!
-         if (initp%opencan_frac > 9.99d-1 .or. initp%snowfac >= 9.d-1) then
+         if (initp%opencan_frac > 9.99d-1 .or. snowfac_can >= 9.d-1) then
             initp%ggnet = initp%ggbare
          else
             initp%ggnet = initp%ggbare * initp%ggveg                                       &
@@ -1862,14 +1879,14 @@ module canopy_struct_dynamics
          ! soil and vegetation roughness.  The other is the fraction of the vegetation     !
          ! that is covered in snow.                                                        !
          !---------------------------------------------------------------------------------!
-         initp%rough = snow_rough8 * initp%snowfac                                         &
+         initp%rough = snow_rough8 * snowfac_can                                           &
                      + ( soil_rough8     * initp%opencan_frac                              &
                        + initp%veg_rough * (1.d0 - initp%opencan_frac) )                   &
-                     * (1.d0 - initp%snowfac)
+                     * (1.d0 - snowfac_can)
          !---------------------------------------------------------------------------------!
          
          !----- Calculate the soil surface roughness inside the canopy. -------------------!
-         surf_rough = soil_rough8 * (1.d0 - initp%snowfac) + snow_rough8 * initp%snowfac
+         surf_rough = soil_rough8 * (1.d0 - snowfac_can) + snow_rough8 * snowfac_can
          !---------------------------------------------------------------------------------!
 
 
@@ -2009,7 +2026,7 @@ module canopy_struct_dynamics
          ! net resistance, which is, in turn, the weighted average of the resistances in   !
          ! bare and vegetated grounds.                                                     !
          !---------------------------------------------------------------------------------!
-         if (initp%opencan_frac > 9.99d-1 .or. initp%snowfac >= 9.d-1) then
+         if (initp%opencan_frac > 9.99d-1 .or. snowfac_can >= 9.d-1) then
             initp%ggnet = initp%ggbare
          else
             initp%ggnet = initp%ggbare * initp%ggveg                                       &
@@ -2591,7 +2608,7 @@ module canopy_struct_dynamics
          ! net resistance, which is, in turn, the weighted average of the resistances in   !
          ! bare and vegetated grounds.                                                     !
          !---------------------------------------------------------------------------------!
-         if (initp%opencan_frac > 9.99d-1 .or. initp%snowfac >= 9.d-1) then
+         if (initp%opencan_frac > 9.99d-1 .or. snowfac_can >= 9.d-1) then
             initp%ggnet = initp%ggbare
          else
             initp%ggnet = initp%ggbare * initp%ggveg                                       &
