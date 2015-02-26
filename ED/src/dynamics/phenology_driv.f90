@@ -214,8 +214,8 @@ subroutine update_phenology(doy, cpoly, isi, lat)
    real                                  :: elongf_try
    real                                  :: elongf_grow
    !----- DS Additional Local Vars --------------------------------------------------------!
-   real                                  :: delta_bleaf_c13    !!!DSC!!!
-   real                                  :: lh2tc              !Leaf heavy / total carbon
+   real                                  :: delta_bleaf_c13    ! Change in leaf heavy carbon
+   real                                  :: lh2tc              ! Leaf heavy / total carbon
    !----- Variables used only for debugging purposes. -------------------------------------!
    logical                  , parameter  :: printphen=.false.
    logical, dimension(n_pft), save       :: first_time=.true.

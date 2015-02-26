@@ -32,7 +32,7 @@ subroutine structural_growth(cgrid, month)
    use physiology_coms, only : ddmort_const           & ! intent(in)
                              , iddmort_scheme         ! ! intent(in)
    !----- DS Additional Use Statements ----------------------------------------------------!
-   use isotopes       , only : c13af      			   & ! intent(in)
+   use isotopes       , only : c13af                  & ! intent(in)
                              , cri_bdead              ! ! intent(in)	!!!DSC!!!
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
@@ -75,12 +75,15 @@ subroutine structural_growth(cgrid, month)
    real                          :: old_leaf_hcap
    real                          :: old_wood_hcap
    !----- DS Additional Local Vars --------------------------------------------------------!
-   real                          :: balive_mort_litter_c13    !!!DSC!!!
+   real                          :: balive_mort_litter_c13
    real                          :: bstorage_mort_litter_c13
    real                          :: struct_litter_c13
    real                          :: seed_litter_c13
    integer                       :: idbh
-   
+   integer                       :: irow
+   integer                       :: icol
+   logical, parameter            :: dbg_growth = .false.       ! Debugging output flag 
+   integer, dimension(2,4)       :: phen_table                 ! counts, status & phen bins 
    !---------------------------------------------------------------------------------------!
 
    polyloop: do ipy = 1,cgrid%npolygons
@@ -97,12 +100,34 @@ subroutine structural_growth(cgrid, month)
             cpatch => csite%patch(ipa)
             ilu = csite%dist_type(ipa)
 
+            if (dbg_growth) then
+               phen_table = 0
+            end if
+
             cohortloop: do ico = 1,cpatch%ncohorts
                !----- Assigning an alias for PFT type. ------------------------------------!
                ipft    = cpatch%pft(ico)
 
                salloc  = 1.0 + q(ipft) + qsw(ipft) * cpatch%hite(ico)
                salloci = 1.0 / salloc
+            
+               !----- Assign debugging output if necessary --------------------------------!
+               if (dbg_growth) then
+                  select case (ipft)
+                  case(6,8)
+                     irow = 1
+                  case(9,10,11)
+                     irow = 2
+                  case default
+                     irow = 0
+                  end select
+
+                  icol = cpatch%phenology_status(ico) + 2
+
+                  if (irow /= 0) then
+                     phen_table(irow,icol) = phen_table(irow,icol) + 1
+                  end if
+               end if
 
                !----- Remember inputs in order to calculate increments later on. ----------!
                balive_in   = cpatch%balive  (ico)
@@ -413,19 +438,32 @@ subroutine structural_growth(cgrid, month)
 
             end do cohortloop
 
-            !write (*,*) 'Basal Area (pft = 6:11,dbh = 1:5, isi) from structural_growth:' 
-            !do ipft = 6,11
-            !   write (*,*) (cpoly%basal_area(ipft,idbh,isi),idbh=1,5)
-            !end do
-            !write (*,*) 'Basal Area Growth(pft = 6:11,dbh = 1:5, isi) from structural_growth:' 
-            !do ipft = 6,11
-            !   write (*,*) (cpoly%basal_area_growth(ipft,idbh,isi),idbh=1,5)
-            !end do
-            !write (*,*) 'Basal Area Mort (pft = 6:11,dbh = 1:5, isi) from structural_growth:' 
-            !do ipft = 6,11
-            !   write (*,*) (cpoly%basal_area_mort(ipft,idbh,isi),idbh=1,5)
-            !end do
-                        
+            !------- Print debugging output if desired... ---------------------------------!
+            if (dbg_growth) then
+               write (*,*) '---------------------------------------------------------------'
+               write (*,*) 'Debugging Output from Structural Growth'
+               write (*,*) 'Poly: ', ipy, 'Site: ', isi, 'Patch: ', ipa
+               write (*,*) '---------------------------------------------------------------'
+               write (*,*) 'Phenology Status Count Bins (Co,Hw)x(-1,0,1,2):'
+               do irow = 1,2
+                  write (*,*) (phen_table(irow,icol),icol=1,4)
+               end do
+               write (*,*) 'Basal Area (pft = 6:11, dbh = 1:5, isi):' 
+               do ipft = 6,11
+                  write (*,*) (cpoly%basal_area(ipft,idbh,isi),idbh=1,5)
+               end do
+               write (*,*) 'Basal Area Growth(pft = 6:11, dbh = 1:5, isi):' 
+               do ipft = 6,11
+                  write (*,*) (cpoly%basal_area_growth(ipft,idbh,isi),idbh=1,5)
+               end do
+               write (*,*) 'Basal Area Mort (pft = 6:11, dbh = 1:5, isi):' 
+               do ipft = 6,11
+                  write (*,*) (cpoly%basal_area_mort(ipft,idbh,isi),idbh=1,5)
+               end do
+               write (*,*) '---------------------------------------------------------------'
+            end if
+            !------------------------------------------------------------------------------!
+         
             !----- Age the patch if this is not agriculture. ------------------------------!
             if (csite%dist_type(ipa) /= 1) csite%age(ipa) = csite%age(ipa) + 1.0/12.0
             !------------------------------------------------------------------------------!

@@ -75,7 +75,7 @@ module growth_balive
       real                          :: old_wood_hcap
       real                          :: nitrogen_uptake
       real                          :: N_uptake_pot
-	  !----- DS Additional Vars -----------------------------------------------------------!
+      !----- DS Additional Vars -----------------------------------------------------------!
       real                          :: lh2tc                      !Leaf heavy:total C
       real                          :: rh2tc                      !Root heavy:total C
       real                          :: carbon13_balance
@@ -1161,10 +1161,12 @@ module growth_balive
       use allometry     , only : size2bl                  ! ! function
       use phenology_coms, only : elongf_min               ! ! intent(in)
       !----- DS Addnl Uses ----------------------------------------------------------------!
-      use isotopes       , only : c13af                    & ! intent(in)
-                                , c_alloc_flg              & ! intent(inout)
-                                , close_nonfatalmessage    ! ! intent(inout)
-      use iso_alloc      , only : alloc_c13                ! ! function
+      use isotopes       , only : c13af                   & ! intent(in)
+                                , c_alloc_flg             & ! intent(inout)
+                                , close_nonfatalmessage   ! ! intent(inout)
+      use iso_alloc      , only : alloc_c13               ! ! function
+      use ed_misc_coms   , only : current_time            & ! intent(in)
+                                , igrass                  ! !
 
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -1216,12 +1218,35 @@ module growth_balive
       real                           :: sah2tc           ! SapA pre alloc_c_bal. 13C:12C
       real                           :: sbh2tc           ! SapB pre alloc_c_bal. 13C:12C
       real                           :: sth2tc           ! Stor pre alloc_c_bal. 13C:12C
+      integer                        :: phen_stat_in
+      logical          , parameter   :: printout = .false.
+      character(len=11), parameter   :: fracfile = 'cballoc.txt'
+      !----- Locally saved variables. -----------------------------------------------------!
+      logical          , save        :: first_time = .true.
       !------------------------------------------------------------------------------------!
+
+
+      !----- First time, and the user wants to print the output.  Make a header. ----------!
+      if (first_time) then
+         if (printout) then
+            open (unit=66,file=fracfile,status='replace',action='write')
+            write (unit=66,fmt='(20(a,1x))')                                               &
+              ,'        YEAR','       MONTH','         DAY','         PFT','   PHENOLOGY'  &
+              ,'PHEN_STAT_IN','PHN_STAT_OUT','  FLUSH_TIME',' AVAILABLE_C','      ELONGF'  &
+              ,'  GREEN_LEAF','    ON_ALLOM',' DELTA_BLEAF',' DELTA_BROOT','   DELTA_BSA'  &
+              ,'   DELTA_BSB','    TR_BLEAF','    TR_BROOT','      TR_BSA','      TR_BSB'
+            close (unit=66,status='keep')
+         end if
+         first_time = .false.
+      end if
+      !------------------------------------------------------------------------------------!
+
 
       cpatch => csite%patch(ipa)
       
       ipft = cpatch%pft(ico) 
       
+      phen_stat_in = cpatch%phenology_status(ico)
       !------------------------------------------------------------------------------------!
       ! Remember leaf and storage ratios so we can use them later if need be.              !
       ! This is req. for some 13C schemes that get called at the end of this routine.      !
@@ -1456,8 +1481,9 @@ module growth_balive
             !------------------------------------------------------------------------------!
             !     Check whether we are on allometry or not.                                !
             !------------------------------------------------------------------------------!
-            on_allometry = 2.0 * abs(balive_aim - cpatch%balive(ico))                      &
-                         / (balive_aim + cpatch%balive(ico))          < 1.e-6
+            on_allometry = abs(balive_aim - cpatch%balive(ico))/balive_aim < 0.01
+            !on_allometry = 2.0 * abs(balive_aim - cpatch%balive(ico))                      &
+            !             / (balive_aim + cpatch%balive(ico))          < 1.e-6
             if (cpatch%elongf(ico) == 1.0 .and. on_allometry) then
                !---------------------------------------------------------------------------!
                !     We're back to allometry, change phenology_status.                     !
@@ -1670,6 +1696,17 @@ module growth_balive
                         ,lh2tc,rh2tc,sth2tc,sah2tc,sbh2tc,bleaf_in)                  
       end select
 
+      !------------------------------------------------------------------------------------!
+      if (printout) then
+         open (unit=66,file=fracfile,status='old',position='append',action='write')
+         write(unit=66,fmt='(7(i12,1x),1(11x,l1,1x),3(f12.6,1x),1(11x,l1,1x),8(f12.8,1x))')&
+               current_time%year,current_time%month,current_time%date,ipft,phenology(ipft) &
+              ,phen_stat_in,cpatch%phenology_status(ico),time_to_flush,available_carbon    &
+              ,cpatch%elongf(ico),green_leaf_factor,on_allometry,delta_bleaf,delta_broot   &
+              ,delta_bsapwooda,delta_bsapwoodb,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb 
+         close (unit=66,status='keep')
+      end if
+      !------------------------------------------------------------------------------------!
       
       return
    end subroutine alloc_plant_c_balance
