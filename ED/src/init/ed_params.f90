@@ -5866,26 +5866,46 @@ subroutine ed_params_dependents()
 
 
 
-
+   !---------------------------------------------------------------------------------------!
+   ! Compatability issue with mainline merge resolved below. sla_pft_init is no            !
+   ! longer initialized anywhere so it was causing a catastrophic NaN propagation.         !
    !----- Specific leaf Area --------------------------------------------------------------!
    !      [KIM] - new tropical parameters. ------------------------------------------------!
-   SLA( 1) = sla_pft_init(1)
+   !SLA( 1) = sla_pft_init(1)
+   !SLA( 2) = 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate( 2))) * sla_scale
+   !SLA( 3) = 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate( 3))) * sla_scale
+   !SLA( 4) = 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate( 4))) * sla_scale
+   !SLA( 5) = sla_pft_init(5)
+   !SLA( 6) = sla_pft_init(6)
+   !SLA( 7) = sla_pft_init(7)
+   !SLA( 8) = sla_pft_init(8)
+   !SLA( 9) = sla_pft_init(9)
+   !SLA(10) = sla_pft_init(10)
+   !SLA(11) = sla_pft_init(11)
+   !SLA(12) = sla_pft_init(12)
+   !SLA(13) = sla_pft_init(13)
+   !SLA(14) = sla_pft_init(14)
+   !SLA(15) = sla_pft_init(15)
+   !SLA(16) = sla_pft_init(16)
+   !SLA(17) = sla_pft_init(17)
+   
+   !----- [KIM] - new tropical parameters. ------------------------------------------------!
+   SLA( 1) = 22.7 !--value from Mike Dietze: mean: 22.7, median 19.1, 95% CI: 5.7, 78.6
    SLA( 2) = 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate( 2))) * sla_scale
    SLA( 3) = 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate( 3))) * sla_scale
    SLA( 4) = 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate( 4))) * sla_scale
-   SLA( 5) = sla_pft_init(5)
-   SLA( 6) = sla_pft_init(6)
-   SLA( 7) = sla_pft_init(7)
-   SLA( 8) = sla_pft_init(8)
-   SLA( 9) = sla_pft_init(9)
-   SLA(10) = sla_pft_init(10)
-   SLA(11) = sla_pft_init(11)
-   SLA(12) = sla_pft_init(12)
-   SLA(13) = sla_pft_init(13)
-   SLA(14) = sla_pft_init(14)
-   SLA(15) = sla_pft_init(15)
-   SLA(16) = sla_pft_init(16)
-   SLA(17) = sla_pft_init(17)
+   SLA( 5) = 22.0
+   SLA( 6) =  6.0
+   SLA( 7) =  9.0
+   SLA( 8) = 10.0
+   SLA( 9) = 30.0
+   SLA(10) = 24.2
+   SLA(11) = 60.0
+   SLA(12) = 22.0
+   SLA(13) = 22.0
+   SLA(14) = 22.7 ! 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate(14))) * sla_scale
+   SLA(15) = 22.7 ! 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate(15))) * sla_scale
+   SLA(16) = 22.7 !--value from Mike Dietze: mean: 22.7, median 19.1, 95% CI: 5.7, 78.6
 
 
    !---------------------------------------------------------------------------------------!

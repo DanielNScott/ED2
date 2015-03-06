@@ -81,8 +81,6 @@ subroutine ed_init_atm()
    real                           :: elim_lai
    real                           :: can_exner
    real                           :: rvaux
-   integer                        :: ibuff
-   integer                        :: nbuff
    !----- Add the MPI common block. -------------------------------------------------------!
    include 'mpif.h'
    !---------------------------------------------------------------------------------------!

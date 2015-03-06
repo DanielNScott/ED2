@@ -1165,8 +1165,7 @@ module growth_balive
                                 , c_alloc_flg             & ! intent(inout)
                                 , close_nonfatalmessage   ! ! intent(inout)
       use iso_alloc      , only : alloc_c13               ! ! function
-      use ed_misc_coms   , only : current_time            & ! intent(in)
-                                , igrass                  ! !
+      use ed_misc_coms  , only : current_time             ! ! intent(in)
 
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -1268,6 +1267,7 @@ module growth_balive
             sth2tc = cpatch%bstorage_c13(ico)/cpatch%bstorage(ico)
       end if
 
+      phen_stat_in = cpatch%phenology_status(ico)
       !------------------------------------------------------------------------------------!
       !      When plants transit from dormancy to leaf flushing, it is possible that       !
       ! carbon_balance is negative, but the sum of carbon_balance and bstorage is          !
@@ -1481,9 +1481,7 @@ module growth_balive
             !------------------------------------------------------------------------------!
             !     Check whether we are on allometry or not.                                !
             !------------------------------------------------------------------------------!
-            on_allometry = abs(balive_aim - cpatch%balive(ico))/balive_aim < 0.01
-            !on_allometry = 2.0 * abs(balive_aim - cpatch%balive(ico))                      &
-            !             / (balive_aim + cpatch%balive(ico))          < 1.e-6
+            on_allometry = (balive_aim - cpatch%balive(ico))/balive_aim < 0.000001
             if (cpatch%elongf(ico) == 1.0 .and. on_allometry) then
                !---------------------------------------------------------------------------!
                !     We're back to allometry, change phenology_status.                     !
@@ -1703,11 +1701,11 @@ module growth_balive
                current_time%year,current_time%month,current_time%date,ipft,phenology(ipft) &
               ,phen_stat_in,cpatch%phenology_status(ico),time_to_flush,available_carbon    &
               ,cpatch%elongf(ico),green_leaf_factor,on_allometry,delta_bleaf,delta_broot   &
-              ,delta_bsapwooda,delta_bsapwoodb,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb 
+              ,delta_bsapwooda,delta_bsapwoodb,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb
          close (unit=66,status='keep')
       end if
       !------------------------------------------------------------------------------------!
-      
+
       return
    end subroutine alloc_plant_c_balance
    !=======================================================================================!
