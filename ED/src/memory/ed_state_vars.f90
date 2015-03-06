@@ -13232,6 +13232,15 @@ module ed_state_vars
                            ,'Sub-daily mean - Net Ecosystem productivity'                  &
                            ,'[   kg/m2/yr]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%fmean_nep_c13         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_nep_c13                                       &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_NEP_C13_PY           :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Net Ecosystem productivity'                  &
+                           ,'[   kg/m2/yr]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%fmean_rk4step         )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_rk4step                                       &
@@ -21310,7 +21319,16 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%fmean_rh                                            &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_RH_PA                :31:'//trim(fast_keys)     )
+                           ,'FMEAN_RH_PA            opti:31:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Heterotrophic respiration'                   &
+                           ,'[   kg/m2/yr]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%fmean_rh_c13          )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%fmean_rh_c13                                        &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_RH_C13_PA        opti:31:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Heterotrophic respiration'                   &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -21319,7 +21337,16 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%fmean_cwd_rh                                        &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_CWD_RH_PA            :31:'//trim(fast_keys)     )
+                           ,'FMEAN_CWD_RH_PA        opti:31:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Coarse woody debris respiration'             &
+                           ,'[   kg/m2/yr]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%fmean_cwd_rh_c13      )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%fmean_cwd_rh_c13                                    &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_CWD_RH_C13_PA    opti:31:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Coarse woody debris respiration'             &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -21328,7 +21355,16 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%fmean_nep                                           &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_NEP_PA               :31:'//trim(fast_keys)     )
+                           ,'FMEAN_NEP_PA           opti:31:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Net Ecosystem productivity'                  &
+                           ,'[   kg/m2/yr]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%fmean_nep_c13         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%fmean_nep_c13                                       &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_NEP_C13_PA       opti:31:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Net Ecosystem productivity'                  &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -21878,7 +21914,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%dmean_rh_c13                                        &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'DMEAN_RH_PA_C13            :31:'//trim(dail_keys)     )
+                           ,'DMEAN_RH_C13_PA            :31:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Heterotrophic respiration'                       &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -21887,7 +21923,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%dmean_cwd_rh_c13                                    &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'DMEAN_CWD_RH_PA_C13        :31:'//trim(dail_keys)     )
+                           ,'DMEAN_CWD_RH_C13_PA        :31:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Coarse woody debris respiration'                 &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -22400,7 +22436,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_rh_c13                                        &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'MMEAN_RH_PA_C13            :31:'//trim(eorq_keys))
+                           ,'MMEAN_RH_C13_PA            :31:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Heterotrophic respiration'                     &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -22418,7 +22454,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_cwd_rh_c13                                    &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'MMEAN_CWD_RH_PA_C13        :31:'//trim(eorq_keys))
+                           ,'MMEAN_CWD_RH_C13_PA        :31:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Coarse woody debris respiration'               &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -22436,7 +22472,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_nep_c13                                       &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'MMEAN_NEP_PA_C13           :31:'//trim(eorq_keys))
+                           ,'MMEAN_NEP_C13_PA           :31:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Net Ecosystem productivity'                    &
                            ,'[   kg/m2/yr]','(ipatch)'            )
@@ -25594,7 +25630,7 @@ module ed_state_vars
       if (associated(cpatch%bseeds_c13)) then             
          nvar=nvar+1                                  
            call vtable_edio_r(npts,cpatch%bseeds_c13,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'BSEEDS_CO_C13 :41:hist:dail:mont:dcyc') 
+           var_len,var_len_global,max_ptrs,'BSEEDS_C13_CO :41:hist:dail:mont:dcyc') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if                                          
       
@@ -26183,7 +26219,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_gpp_c13                                      &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_GPP_CO_C13               :41:'//trim(fast_keys)     )
+                           ,'FMEAN_GPP_C13_CO               :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Gross primary productivity'                  &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26192,7 +26228,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_npp_c13                                      &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_NPP_CO_C13               :41:'//trim(fast_keys)     )
+                           ,'FMEAN_NPP_C13_CO               :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Net primary productivity'                    &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26201,7 +26237,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_leaf_resp_c13                                &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_LEAF_RESP_CO_C13         :41:'//trim(fast_keys)     )
+                           ,'FMEAN_LEAF_RESP_C13_CO         :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Leaf respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26219,7 +26255,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_lassim_resp_c13                              &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_LASSIM_RESP_CO_C13         :41:'//trim(fast_keys))
+                           ,'FMEAN_LASSIM_RESP_C13_CO         :41:'//trim(fast_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Leaf respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26228,7 +26264,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_root_resp_c13                                &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_ROOT_RESP_CO_C13         :41:'//trim(fast_keys)     )
+                           ,'FMEAN_ROOT_RESP_C13_CO         :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Root respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26237,7 +26273,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_growth_resp_c13                              &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_GROWTH_RESP_CO_C13       :41:'//trim(fast_keys)     )
+                           ,'FMEAN_GROWTH_RESP_C13_CO       :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Growth respiration'                          &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26246,7 +26282,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_storage_resp_c13                             &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_STORAGE_RESP_CO_C13      :41:'//trim(fast_keys)     )
+                           ,'FMEAN_STORAGE_RESP_C13_CO      :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Storage respiration'                         &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26255,7 +26291,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_vleaf_resp_c13                               &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_VLEAF_RESP_CO_C13        :41:'//trim(fast_keys)     )
+                           ,'FMEAN_VLEAF_RESP_C13_CO        :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Virtual leaf respiration'                    &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26264,7 +26300,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_plresp_c13                                   &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_PLRESP_CO_C13            :41:'//trim(fast_keys)     )
+                           ,'FMEAN_PLRESP_C13_CO            :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Plant respiration'                           &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26831,7 +26867,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_gpp_c13                                      &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_GPP_CO_C13               :41:'//trim(dail_keys)     )
+                           ,'DMEAN_GPP_C13_CO               :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Gross primary productivity'                      &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26840,7 +26876,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_npp_c13                                      &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_NPP_CO_C13               :41:'//trim(dail_keys)     )
+                           ,'DMEAN_NPP_C13_CO               :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Net primary productivity'                        &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26849,7 +26885,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_leaf_resp_c13                                &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_LEAF_RESP_CO_C13         :41:'//trim(dail_keys)     )
+                           ,'DMEAN_LEAF_RESP_C13_CO         :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Leaf respiration'                                &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26867,7 +26903,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_lassim_resp_c13                              &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_LASSIM_RESP_CO_C13         :41:'//trim(dail_keys)     )
+                           ,'DMEAN_LASSIM_RESP_C13_CO         :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Leaf respiration'                                &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26876,7 +26912,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_root_resp_c13                                &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_ROOT_RESP_CO_C13         :41:'//trim(dail_keys)     )
+                           ,'DMEAN_ROOT_RESP_C13_CO         :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Root respiration'                                &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26885,7 +26921,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_growth_resp_c13                              &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_GROWTH_RESP_CO_C13       :41:'//trim(dail_keys)     )
+                           ,'DMEAN_GROWTH_RESP_C13_CO       :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Growth respiration'                              &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26894,7 +26930,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_storage_resp_c13                             &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_STORAGE_RESP_CO_C13      :41:'//trim(dail_keys)     )
+                           ,'DMEAN_STORAGE_RESP_C13_CO      :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Storage respiration'                             &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26903,7 +26939,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_vleaf_resp_c13                               &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_VLEAF_RESP_CO_C13        :41:'//trim(dail_keys)     )
+                           ,'DMEAN_VLEAF_RESP_C13_CO        :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Virtual leaf respiration'                        &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -26912,7 +26948,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_plresp_c13                                   &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_PLRESP_CO_C13            :41:'//trim(dail_keys)     )
+                           ,'DMEAN_PLRESP_C13_CO            :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Plant respiration'                               &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27622,7 +27658,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_gpp_c13                                      &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_GPP_CO_C13               :41:'//trim(eorq_keys))
+                           ,'MMEAN_GPP_C13_CO               :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Gross primary productivity'                    &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27631,7 +27667,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_npp_c13                                      &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_NPP_CO_C13               :41:'//trim(eorq_keys))
+                           ,'MMEAN_NPP_C13_CO               :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Net primary productivity'                      &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27640,7 +27676,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_leaf_resp_c13                                &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_LEAF_RESP_CO_C13         :41:'//trim(eorq_keys))
+                           ,'MMEAN_LEAF_RESP_C13_CO         :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Leaf respiration'                              &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27658,7 +27694,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_lassim_resp_c13                              &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_LASSIM_RESP_CO_C13         :41:'//trim(eorq_keys))
+                           ,'MMEAN_LASSIM_RESP_C13_CO         :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Leaf respiration'                              &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27667,7 +27703,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_root_resp_c13                                &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_ROOT_RESP_CO_C13         :41:'//trim(eorq_keys))
+                           ,'MMEAN_ROOT_RESP_C13_CO         :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Root respiration'                              &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27676,7 +27712,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_growth_resp_c13                              &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_GROWTH_RESP_CO_C13       :41:'//trim(eorq_keys))
+                           ,'MMEAN_GROWTH_RESP_C13_CO       :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Growth respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27685,7 +27721,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_storage_resp_c13                             &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_STORAGE_RESP_CO_C13      :41:'//trim(eorq_keys))
+                           ,'MMEAN_STORAGE_RESP_C13_CO      :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Storage respiration'                           &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27694,7 +27730,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_vleaf_resp_c13                               &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_VLEAF_RESP_CO_C13        :41:'//trim(eorq_keys))
+                           ,'MMEAN_VLEAF_RESP_C13_CO        :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Virtual leaf respiration'                      &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27703,7 +27739,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_plresp_c13                                   &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_PLRESP_CO_C13            :41:'//trim(eorq_keys))
+                           ,'MMEAN_PLRESP_C13_CO            :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Plant respiration'                             &
                            ,'[  kgC/m2/yr]','(icohort)'            )
@@ -27712,7 +27748,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_bleaf_c13                                    &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_BLEAF_CO_C13             :41:'//trim(eorq_keys))
+                           ,'MMEAN_BLEAF_C13_CO             :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Leaf biomass'                                  &
                            ,'[     kgC/pl]','(icohort)'            )
@@ -27721,7 +27757,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_broot_c13                                    &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_BROOT_CO_C13             :41:'//trim(eorq_keys))
+                           ,'MMEAN_BROOT_C13_CO             :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Root biomass'                                  &
                            ,'[     kgC/pl]','(icohort)'            )
@@ -27730,7 +27766,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_bstorage_c13                                 &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_BSTORAGE_CO_C13          :41:'//trim(eorq_keys))
+                           ,'MMEAN_BSTORAGE_C13_CO          :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Storage biomass'                               &
                            ,'[     kgC/pl]','(icohort)'            )
@@ -27739,7 +27775,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_leaf_maintenance_c13                         &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_LEAF_MAINTENANCE_CO_C13     :41:'//trim(eorq_keys))
+                           ,'MMEAN_LEAF_MAINTENANCE_C13_CO     :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Leaf maintenance rate'                         &
                            ,'[  kgC/pl/yr]','(icohort)'            )
@@ -27748,7 +27784,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_root_maintenance_c13                         &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_ROOT_MAINTENANCE_CO_C13     :41:'//trim(eorq_keys))
+                           ,'MMEAN_ROOT_MAINTENANCE_C13_CO     :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Root maintenance rate'                         &
                            ,'[  kgC/pl/yr]','(icohort)'            )
@@ -27757,7 +27793,7 @@ module ed_state_vars
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_leaf_drop_c13                                &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_LEAF_DROP_CO_C13            :41:'//trim(eorq_keys))
+                           ,'MMEAN_LEAF_DROP_C13_CO            :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Leaf drop'                                     &
                            ,'[  kgC/pl/yr]','(icohort)'            )
