@@ -329,6 +329,11 @@ module ed_state_vars
       real, pointer, dimension(:) :: light_level_beam
       real, pointer, dimension(:) :: light_level_diff
 
+      ! PAR flux density centered on cohort, diurnal and monthly means
+      real, pointer, dimension(:) :: par_level_beam    ! beam
+      real, pointer, dimension(:) :: par_level_diffu   ! diffuse down
+      real, pointer, dimension(:) :: par_level_diffd   ! diffuse up
+
       ! Photosynthetically active radiation (PAR) absorbed by the 
       ! cohort leaves(units are W/m2)
       real ,pointer,dimension(:)   :: par_l
@@ -498,6 +503,11 @@ module ed_state_vars
       real,pointer,dimension(:)   :: fmean_light_level      ! Light lev. (Tot.) [       --]
       real,pointer,dimension(:)   :: fmean_light_level_beam ! Light lev. (Beam) [       --]
       real,pointer,dimension(:)   :: fmean_light_level_diff ! Lighy lev. (Diff) [       --]
+
+      real,pointer,dimension(:)   :: fmean_par_level_beam   ! Par lev. (beam)   [ W/m2  --]
+      real,pointer,dimension(:)   :: fmean_par_level_diffu  ! Par lev. (Diff Up) [ W/m2 --]
+      real,pointer,dimension(:)   :: fmean_par_level_diffd  ! Par lev. (Diff Dn) [ W/m2 --]
+      
       real,pointer,dimension(:)   :: fmean_par_l            ! Abs. PAR (Leaf)   [    W/m2g]
       real,pointer,dimension(:)   :: fmean_par_l_beam       ! Abs. Dir. PAR     [    W/m2g]
       real,pointer,dimension(:)   :: fmean_par_l_diff       ! Abs. Diffuse PAR  [    W/m2g]
@@ -565,6 +575,11 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_light_level
       real,pointer,dimension(:)     :: dmean_light_level_beam
       real,pointer,dimension(:)     :: dmean_light_level_diff
+      
+      real,pointer,dimension(:)     :: dmean_par_level_beam
+      real,pointer,dimension(:)     :: dmean_par_level_diffu
+      real,pointer,dimension(:)     :: dmean_par_level_diffd
+      
       real,pointer,dimension(:)     :: dmean_par_l
       real,pointer,dimension(:)     :: dmean_par_l_beam
       real,pointer,dimension(:)     :: dmean_par_l_diff
@@ -614,6 +629,11 @@ module ed_state_vars
       real,pointer,dimension(:)     :: mmean_light_level
       real,pointer,dimension(:)     :: mmean_light_level_beam
       real,pointer,dimension(:)     :: mmean_light_level_diff
+
+      real,pointer,dimension(:)     :: mmean_par_level_beam
+      real,pointer,dimension(:)     :: mmean_par_level_diffu
+      real,pointer,dimension(:)     :: mmean_par_level_diffd
+
       real,pointer,dimension(:)     :: mmean_par_l
       real,pointer,dimension(:)     :: mmean_par_l_beam
       real,pointer,dimension(:)     :: mmean_par_l_diff
@@ -679,6 +699,12 @@ module ed_state_vars
       real,pointer,dimension(:,:)   :: qmean_light_level
       real,pointer,dimension(:,:)   :: qmean_light_level_beam
       real,pointer,dimension(:,:)   :: qmean_light_level_diff
+
+      ! ADDED RGK 11-2014
+      real,pointer,dimension(:,:)   :: qmean_par_level_beam
+      real,pointer,dimension(:,:)   :: qmean_par_level_diffu
+      real,pointer,dimension(:,:)   :: qmean_par_level_diffd
+
       real,pointer,dimension(:,:)   :: qmean_par_l
       real,pointer,dimension(:,:)   :: qmean_par_l_beam
       real,pointer,dimension(:,:)   :: qmean_par_l_diff
@@ -4764,6 +4790,11 @@ module ed_state_vars
       allocate(cpatch%light_level                  (                    ncohorts))
       allocate(cpatch%light_level_beam             (                    ncohorts))
       allocate(cpatch%light_level_diff             (                    ncohorts))
+
+      allocate(cpatch%par_level_beam               (                    ncohorts))
+      allocate(cpatch%par_level_diffu              (                    ncohorts))
+      allocate(cpatch%par_level_diffd              (                    ncohorts))
+
       allocate(cpatch%par_l                        (                    ncohorts))
       allocate(cpatch%par_l_beam                   (                    ncohorts))
       allocate(cpatch%par_l_diffuse                (                    ncohorts))
@@ -4835,6 +4866,11 @@ module ed_state_vars
       allocate(cpatch%fmean_light_level            (                    ncohorts))
       allocate(cpatch%fmean_light_level_beam       (                    ncohorts))
       allocate(cpatch%fmean_light_level_diff       (                    ncohorts))
+
+      allocate(cpatch%fmean_par_level_beam         (                    ncohorts))
+      allocate(cpatch%fmean_par_level_diffu        (                    ncohorts))
+      allocate(cpatch%fmean_par_level_diffd        (                    ncohorts))
+
       allocate(cpatch%fmean_par_l                  (                    ncohorts))
       allocate(cpatch%fmean_par_l_beam             (                    ncohorts))
       allocate(cpatch%fmean_par_l_diff             (                    ncohorts))
@@ -4936,6 +4972,11 @@ module ed_state_vars
          allocate(cpatch%dmean_light_level         (                    ncohorts))
          allocate(cpatch%dmean_light_level_beam    (                    ncohorts))
          allocate(cpatch%dmean_light_level_diff    (                    ncohorts))
+         
+         allocate(cpatch%dmean_par_level_beam      (                    ncohorts))
+         allocate(cpatch%dmean_par_level_diffu     (                    ncohorts))
+         allocate(cpatch%dmean_par_level_diffd     (                    ncohorts))
+
          allocate(cpatch%dmean_par_l               (                    ncohorts))
          allocate(cpatch%dmean_par_l_beam          (                    ncohorts))
          allocate(cpatch%dmean_par_l_diff          (                    ncohorts))
@@ -5013,6 +5054,11 @@ module ed_state_vars
          allocate(cpatch%mmean_light_level         (                    ncohorts))
          allocate(cpatch%mmean_light_level_beam    (                    ncohorts))
          allocate(cpatch%mmean_light_level_diff    (                    ncohorts))
+
+         allocate(cpatch%mmean_par_level_beam      (                    ncohorts))
+         allocate(cpatch%mmean_par_level_diffu     (                    ncohorts))
+         allocate(cpatch%mmean_par_level_diffd     (                    ncohorts))
+
          allocate(cpatch%mmean_par_l               (                    ncohorts))
          allocate(cpatch%mmean_par_l_beam          (                    ncohorts))
          allocate(cpatch%mmean_par_l_diff          (                    ncohorts))
@@ -5102,6 +5148,13 @@ module ed_state_vars
          allocate(cpatch%qmean_light_level         (            ndcycle,ncohorts))
          allocate(cpatch%qmean_light_level_beam    (            ndcycle,ncohorts))
          allocate(cpatch%qmean_light_level_diff    (            ndcycle,ncohorts))
+
+         ! ADDED RGK 11-2014
+         allocate(cpatch%qmean_par_level_beam      (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_par_level_diffu     (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_par_level_diffd     (            ndcycle,ncohorts))        
+
+
          allocate(cpatch%qmean_par_l               (            ndcycle,ncohorts))
          allocate(cpatch%qmean_par_l_beam          (            ndcycle,ncohorts))
          allocate(cpatch%qmean_par_l_diff          (            ndcycle,ncohorts))
@@ -6551,358 +6604,383 @@ module ed_state_vars
       implicit none                                   
                                                       
       !----- Arguments. -------------------------------------------------------------------!
-      type(patchtype), target :: cpatch               
+      type(patchtype), target :: cpatch
       !------------------------------------------------------------------------------------!
-                                                      
-      nullify(cpatch%pft                   )          
-      nullify(cpatch%nplant                )          
-      nullify(cpatch%phenology_status      )          
-      nullify(cpatch%recruit_dbh           )          
-      nullify(cpatch%census_status         )          
-      nullify(cpatch%hite                  )          
-      nullify(cpatch%agb                   )          
-      nullify(cpatch%basarea               )          
-      nullify(cpatch%dagb_dt               )          
-      nullify(cpatch%dlnagb_dt             )          
-      nullify(cpatch%dba_dt                )          
-      nullify(cpatch%dlnba_dt              )          
-      nullify(cpatch%ddbh_dt               )          
-      nullify(cpatch%dlndbh_dt             )          
-      nullify(cpatch%dbh                   )          
-      nullify(cpatch%bdead                 )          
-      nullify(cpatch%bleaf                 )          
-      nullify(cpatch%balive                )          
-      nullify(cpatch%broot                 )          
-      nullify(cpatch%bsapwooda             )          
-      nullify(cpatch%bsapwoodb             )          
-      nullify(cpatch%bstorage              )          
-      nullify(cpatch%bseeds                )          
-      nullify(cpatch%lai                   )          
-      nullify(cpatch%wai                   )          
-      nullify(cpatch%crown_area            )          
-      nullify(cpatch%leaf_resolvable       )          
-      nullify(cpatch%wood_resolvable       )          
-      nullify(cpatch%cb                    )          
-      nullify(cpatch%cb_lightmax           )          
-      nullify(cpatch%cb_moistmax           )          
-      nullify(cpatch%cbr_bar               )          
-      nullify(cpatch%leaf_energy           )          
-      nullify(cpatch%leaf_temp             )          
-      nullify(cpatch%leaf_vpdef            )          
-      nullify(cpatch%leaf_temp_pv          )          
-      nullify(cpatch%leaf_hcap             )          
-      nullify(cpatch%leaf_fliq             )          
-      nullify(cpatch%leaf_water            )          
-      nullify(cpatch%wood_energy           )          
-      nullify(cpatch%wood_temp             )          
-      nullify(cpatch%wood_temp_pv          )          
-      nullify(cpatch%wood_hcap             )          
-      nullify(cpatch%wood_fliq             )          
-      nullify(cpatch%wood_water            )          
-      nullify(cpatch%veg_wind              )          
-      nullify(cpatch%lsfc_shv_open         )          
-      nullify(cpatch%lsfc_shv_closed       )          
-      nullify(cpatch%lsfc_co2_open         )          
-      nullify(cpatch%lsfc_co2_closed       )          
-      nullify(cpatch%lint_shv              )          
-      nullify(cpatch%lint_co2_open         )          
-      nullify(cpatch%lint_co2_closed       )          
-      nullify(cpatch%today_leaf_resp       )          
-      nullify(cpatch%today_root_resp       )          
-      nullify(cpatch%today_gpp             )          
-      nullify(cpatch%today_gpp_pot         )          
-      nullify(cpatch%today_gpp_lightmax    )          
-      nullify(cpatch%today_gpp_moistmax    )          
-      nullify(cpatch%today_nppleaf         )          
-      nullify(cpatch%today_nppfroot        )          
-      nullify(cpatch%today_nppsapwood      )          
-      nullify(cpatch%today_nppcroot        )          
-      nullify(cpatch%today_nppseeds        )          
-      nullify(cpatch%today_nppwood         )          
-      nullify(cpatch%today_nppdaily        )          
-      nullify(cpatch%growth_respiration    )          
-      nullify(cpatch%storage_respiration   )          
-      nullify(cpatch%vleaf_respiration     )          
-      nullify(cpatch%monthly_dndt          )          
-      nullify(cpatch%monthly_dlnndt        )          
-      nullify(cpatch%mort_rate             )          
-      nullify(cpatch%krdepth               )          
-      nullify(cpatch%first_census          )          
-      nullify(cpatch%new_recruit_flag      )          
-      nullify(cpatch%light_level           )          
-      nullify(cpatch%light_level_beam      )          
-      nullify(cpatch%light_level_diff      )          
-      nullify(cpatch%par_l                 )          
-      nullify(cpatch%par_l_beam            )          
-      nullify(cpatch%par_l_diffuse         )          
-      nullify(cpatch%rshort_l              )          
-      nullify(cpatch%rshort_l_beam         )          
-      nullify(cpatch%rshort_l_diffuse      )          
-      nullify(cpatch%rlong_l               )          
-      nullify(cpatch%rshort_w              )          
-      nullify(cpatch%rshort_w_beam         )          
-      nullify(cpatch%rshort_w_diffuse      )          
-      nullify(cpatch%rlong_w               )          
-      nullify(cpatch%rad_profile           )          
-      nullify(cpatch%leaf_gbh              )          
-      nullify(cpatch%leaf_gbw              )          
-      nullify(cpatch%wood_gbh              )          
-      nullify(cpatch%wood_gbw              )          
-      nullify(cpatch%A_open                )          
-      nullify(cpatch%A_closed              )          
-      nullify(cpatch%psi_open              )          
-      nullify(cpatch%psi_closed            )          
-      nullify(cpatch%gsw_open              )          
-      nullify(cpatch%gsw_closed            )          
-      nullify(cpatch%leaf_gsw              )          
-      nullify(cpatch%fsw                   )          
-      nullify(cpatch%fsn                   )          
-      nullify(cpatch%fs_open               )          
-      nullify(cpatch%water_supply          )          
-      nullify(cpatch%leaf_maintenance      )          
-      nullify(cpatch%root_maintenance      )          
-      nullify(cpatch%leaf_drop             )          
-      nullify(cpatch%leaf_respiration      )          
-      nullify(cpatch%root_respiration      )          
-      nullify(cpatch%gpp                   )          
-      nullify(cpatch%paw_avg               )          
-      nullify(cpatch%elongf                )          
-      nullify(cpatch%turnover_amp          )          
-      nullify(cpatch%llspan                )          
-      nullify(cpatch%vm_bar                )          
-      nullify(cpatch%sla                   )          
-      nullify(cpatch%fmean_gpp             )          
-      nullify(cpatch%fmean_npp             )          
-      nullify(cpatch%fmean_leaf_resp       )          
-      nullify(cpatch%fmean_root_resp       )          
-      nullify(cpatch%fmean_growth_resp     )          
-      nullify(cpatch%fmean_storage_resp    )          
-      nullify(cpatch%fmean_vleaf_resp      )          
-      nullify(cpatch%fmean_plresp          )          
-      nullify(cpatch%fmean_leaf_energy     )          
-      nullify(cpatch%fmean_leaf_water      )          
-      nullify(cpatch%fmean_leaf_hcap       )          
-      nullify(cpatch%fmean_leaf_vpdef      )          
-      nullify(cpatch%fmean_leaf_temp       )          
-      nullify(cpatch%fmean_leaf_fliq       )          
-      nullify(cpatch%fmean_leaf_gsw        )          
-      nullify(cpatch%fmean_leaf_gbw        )          
-      nullify(cpatch%fmean_wood_energy     )          
-      nullify(cpatch%fmean_wood_water      )          
-      nullify(cpatch%fmean_wood_hcap       )          
-      nullify(cpatch%fmean_wood_temp       )          
-      nullify(cpatch%fmean_wood_fliq       )          
-      nullify(cpatch%fmean_wood_gbw        )          
-      nullify(cpatch%fmean_fs_open         )          
-      nullify(cpatch%fmean_fsw             )          
-      nullify(cpatch%fmean_fsn             )          
-      nullify(cpatch%fmean_psi_open        )          
-      nullify(cpatch%fmean_psi_closed      )          
-      nullify(cpatch%fmean_water_supply    )          
-      nullify(cpatch%fmean_light_level     )          
-      nullify(cpatch%fmean_light_level_beam)          
-      nullify(cpatch%fmean_light_level_diff)          
-      nullify(cpatch%fmean_par_l           )          
-      nullify(cpatch%fmean_par_l_beam      )          
-      nullify(cpatch%fmean_par_l_diff      )          
-      nullify(cpatch%fmean_rshort_l        )          
-      nullify(cpatch%fmean_rlong_l         )          
-      nullify(cpatch%fmean_sensible_lc     )          
-      nullify(cpatch%fmean_vapor_lc        )          
-      nullify(cpatch%fmean_transp          )          
-      nullify(cpatch%fmean_intercepted_al  )          
-      nullify(cpatch%fmean_wshed_lg        )          
-      nullify(cpatch%fmean_rshort_w        )          
-      nullify(cpatch%fmean_rlong_w         )          
-      nullify(cpatch%fmean_rad_profile     )          
-      nullify(cpatch%fmean_sensible_wc     )          
-      nullify(cpatch%fmean_vapor_wc        )          
-      nullify(cpatch%fmean_intercepted_aw  )          
-      nullify(cpatch%fmean_wshed_wg        )          
-      nullify(cpatch%dmean_nppleaf         )          
-      nullify(cpatch%dmean_nppfroot        )          
-      nullify(cpatch%dmean_nppsapwood      )          
-      nullify(cpatch%dmean_nppcroot        )          
-      nullify(cpatch%dmean_nppseeds        )          
-      nullify(cpatch%dmean_nppwood         )          
-      nullify(cpatch%dmean_nppdaily        )          
-      nullify(cpatch%dmean_gpp             )          
-      nullify(cpatch%dmean_npp             )          
-      nullify(cpatch%dmean_leaf_resp       )          
-      nullify(cpatch%dmean_root_resp       )          
-      nullify(cpatch%dmean_growth_resp     )          
-      nullify(cpatch%dmean_storage_resp    )          
-      nullify(cpatch%dmean_vleaf_resp      )          
-      nullify(cpatch%dmean_plresp          )          
-      nullify(cpatch%dmean_leaf_energy     )          
-      nullify(cpatch%dmean_leaf_water      )          
-      nullify(cpatch%dmean_leaf_hcap       )          
-      nullify(cpatch%dmean_leaf_vpdef      )          
-      nullify(cpatch%dmean_leaf_temp       )          
-      nullify(cpatch%dmean_leaf_fliq       )          
-      nullify(cpatch%dmean_leaf_gsw        )          
-      nullify(cpatch%dmean_leaf_gbw        )          
-      nullify(cpatch%dmean_wood_energy     )          
-      nullify(cpatch%dmean_wood_water      )          
-      nullify(cpatch%dmean_wood_hcap       )          
-      nullify(cpatch%dmean_wood_temp       )          
-      nullify(cpatch%dmean_wood_fliq       )          
-      nullify(cpatch%dmean_wood_gbw        )          
-      nullify(cpatch%dmean_fs_open         )          
-      nullify(cpatch%dmean_fsw             )          
-      nullify(cpatch%dmean_fsn             )          
-      nullify(cpatch%dmean_psi_open        )          
-      nullify(cpatch%dmean_psi_closed      )          
-      nullify(cpatch%dmean_water_supply    )          
-      nullify(cpatch%dmean_light_level     )          
-      nullify(cpatch%dmean_light_level_beam)          
-      nullify(cpatch%dmean_light_level_diff)          
-      nullify(cpatch%dmean_par_l           )          
-      nullify(cpatch%dmean_par_l_beam      )          
-      nullify(cpatch%dmean_par_l_diff      )          
-      nullify(cpatch%dmean_rshort_l        )          
-      nullify(cpatch%dmean_rlong_l         )          
-      nullify(cpatch%dmean_sensible_lc     )          
-      nullify(cpatch%dmean_vapor_lc        )          
-      nullify(cpatch%dmean_transp          )          
-      nullify(cpatch%dmean_intercepted_al  )          
-      nullify(cpatch%dmean_wshed_lg        )          
-      nullify(cpatch%dmean_rshort_w        )          
-      nullify(cpatch%dmean_rlong_w         )          
-      nullify(cpatch%dmean_rad_profile     )          
-      nullify(cpatch%dmean_sensible_wc     )          
-      nullify(cpatch%dmean_vapor_wc        )          
-      nullify(cpatch%dmean_intercepted_aw  )          
-      nullify(cpatch%dmean_wshed_wg        )          
-      nullify(cpatch%mmean_lai             )          
-      nullify(cpatch%mmean_bleaf           )          
-      nullify(cpatch%mmean_broot           )          
-      nullify(cpatch%mmean_bstorage        )          
-      nullify(cpatch%mmean_mort_rate       )          
-      nullify(cpatch%mmean_leaf_maintenance)          
-      nullify(cpatch%mmean_root_maintenance)          
-      nullify(cpatch%mmean_leaf_drop       )          
-      nullify(cpatch%mmean_cb              )          
-      nullify(cpatch%mmean_gpp             )          
-      nullify(cpatch%mmean_npp             )          
-      nullify(cpatch%mmean_leaf_resp       )          
-      nullify(cpatch%mmean_root_resp       )          
-      nullify(cpatch%mmean_growth_resp     )          
-      nullify(cpatch%mmean_storage_resp    )          
-      nullify(cpatch%mmean_vleaf_resp      )          
-      nullify(cpatch%mmean_plresp          )          
-      nullify(cpatch%mmean_leaf_energy     )          
-      nullify(cpatch%mmean_leaf_water      )          
-      nullify(cpatch%mmean_leaf_hcap       )          
-      nullify(cpatch%mmean_leaf_vpdef      )          
-      nullify(cpatch%mmean_leaf_temp       )          
-      nullify(cpatch%mmean_leaf_fliq       )          
-      nullify(cpatch%mmean_leaf_gsw        )          
-      nullify(cpatch%mmean_leaf_gbw        )          
-      nullify(cpatch%mmean_wood_energy     )          
-      nullify(cpatch%mmean_wood_water      )          
-      nullify(cpatch%mmean_wood_hcap       )          
-      nullify(cpatch%mmean_wood_temp       )          
-      nullify(cpatch%mmean_wood_fliq       )          
-      nullify(cpatch%mmean_wood_gbw        )          
-      nullify(cpatch%mmean_fs_open         )          
-      nullify(cpatch%mmean_fsw             )          
-      nullify(cpatch%mmean_fsn             )          
-      nullify(cpatch%mmean_psi_open        )          
-      nullify(cpatch%mmean_psi_closed      )          
-      nullify(cpatch%mmean_water_supply    )          
-      nullify(cpatch%mmean_light_level     )          
-      nullify(cpatch%mmean_light_level_beam)          
-      nullify(cpatch%mmean_light_level_diff)          
-      nullify(cpatch%mmean_par_l           )          
-      nullify(cpatch%mmean_par_l_beam      )          
-      nullify(cpatch%mmean_par_l_diff      )          
-      nullify(cpatch%mmean_rshort_l        )          
-      nullify(cpatch%mmean_rlong_l         )          
-      nullify(cpatch%mmean_sensible_lc     )          
-      nullify(cpatch%mmean_vapor_lc        )          
-      nullify(cpatch%mmean_transp          )          
-      nullify(cpatch%mmean_intercepted_al  )          
-      nullify(cpatch%mmean_wshed_lg        )          
-      nullify(cpatch%mmean_rshort_w        )          
-      nullify(cpatch%mmean_rlong_w         )          
-      nullify(cpatch%mmean_rad_profile     )          
-      nullify(cpatch%mmean_sensible_wc     )          
-      nullify(cpatch%mmean_vapor_wc        )          
-      nullify(cpatch%mmean_intercepted_aw  )          
-      nullify(cpatch%mmean_wshed_wg        )          
-      nullify(cpatch%mmean_nppleaf         )          
-      nullify(cpatch%mmean_nppfroot        )          
-      nullify(cpatch%mmean_nppsapwood      )          
-      nullify(cpatch%mmean_nppcroot        )          
-      nullify(cpatch%mmean_nppseeds        )          
-      nullify(cpatch%mmean_nppwood         )          
-      nullify(cpatch%mmean_nppdaily        )          
-      nullify(cpatch%mmsqu_gpp             )          
-      nullify(cpatch%mmsqu_npp             )          
-      nullify(cpatch%mmsqu_plresp          )          
-      nullify(cpatch%mmsqu_sensible_lc     )          
-      nullify(cpatch%mmsqu_vapor_lc        )          
-      nullify(cpatch%mmsqu_transp          )          
-      nullify(cpatch%mmsqu_sensible_wc     )          
-      nullify(cpatch%mmsqu_vapor_wc        )          
-      nullify(cpatch%qmean_gpp             )          
-      nullify(cpatch%qmean_npp             )          
-      nullify(cpatch%qmean_leaf_resp       )          
-      nullify(cpatch%qmean_root_resp       )          
-      nullify(cpatch%qmean_growth_resp     )          
-      nullify(cpatch%qmean_storage_resp    )          
-      nullify(cpatch%qmean_vleaf_resp      )          
-      nullify(cpatch%qmean_plresp          )          
-      nullify(cpatch%qmean_leaf_energy     )          
-      nullify(cpatch%qmean_leaf_water      )          
-      nullify(cpatch%qmean_leaf_hcap       )          
-      nullify(cpatch%qmean_leaf_vpdef      )          
-      nullify(cpatch%qmean_leaf_temp       )          
-      nullify(cpatch%qmean_leaf_fliq       )          
-      nullify(cpatch%qmean_leaf_gsw        )          
-      nullify(cpatch%qmean_leaf_gbw        )          
-      nullify(cpatch%qmean_wood_energy     )          
-      nullify(cpatch%qmean_wood_water      )          
-      nullify(cpatch%qmean_wood_hcap       )          
-      nullify(cpatch%qmean_wood_temp       )          
-      nullify(cpatch%qmean_wood_fliq       )          
-      nullify(cpatch%qmean_wood_gbw        )          
-      nullify(cpatch%qmean_fs_open         )          
-      nullify(cpatch%qmean_fsw             )          
-      nullify(cpatch%qmean_fsn             )          
-      nullify(cpatch%qmean_psi_open        )          
-      nullify(cpatch%qmean_psi_closed      )          
-      nullify(cpatch%qmean_water_supply    )          
-      nullify(cpatch%qmean_light_level     )          
-      nullify(cpatch%qmean_light_level_beam)          
-      nullify(cpatch%qmean_light_level_diff)          
-      nullify(cpatch%qmean_par_l           )          
-      nullify(cpatch%qmean_par_l_beam      )          
-      nullify(cpatch%qmean_par_l_diff      )          
-      nullify(cpatch%qmean_rshort_l        )          
-      nullify(cpatch%qmean_rlong_l         )          
-      nullify(cpatch%qmean_sensible_lc     )          
-      nullify(cpatch%qmean_vapor_lc        )          
-      nullify(cpatch%qmean_transp          )          
-      nullify(cpatch%qmean_intercepted_al  )          
-      nullify(cpatch%qmean_wshed_lg        )          
-      nullify(cpatch%qmean_rshort_w        )          
-      nullify(cpatch%qmean_rlong_w         )          
-      nullify(cpatch%qmean_rad_profile     )          
-      nullify(cpatch%qmean_sensible_wc     )          
-      nullify(cpatch%qmean_vapor_wc        )          
-      nullify(cpatch%qmean_intercepted_aw  )          
-      nullify(cpatch%qmean_wshed_wg        )          
-      nullify(cpatch%qmsqu_gpp             )          
-      nullify(cpatch%qmsqu_npp             )          
-      nullify(cpatch%qmsqu_plresp          )          
-      nullify(cpatch%qmsqu_sensible_lc     )          
-      nullify(cpatch%qmsqu_vapor_lc        )          
-      nullify(cpatch%qmsqu_transp          )          
-      nullify(cpatch%qmsqu_sensible_wc     )          
-      nullify(cpatch%qmsqu_vapor_wc        ) 
+
+      nullify(cpatch%pft                   )
+      nullify(cpatch%nplant                )
+      nullify(cpatch%phenology_status      )
+      nullify(cpatch%recruit_dbh           )
+      nullify(cpatch%census_status         )
+      nullify(cpatch%hite                  )
+      nullify(cpatch%agb                   )
+      nullify(cpatch%basarea               )
+      nullify(cpatch%dagb_dt               )
+      nullify(cpatch%dlnagb_dt             )
+      nullify(cpatch%dba_dt                )
+      nullify(cpatch%dlnba_dt              )
+      nullify(cpatch%ddbh_dt               )
+      nullify(cpatch%dlndbh_dt             )
+      nullify(cpatch%dbh                   )
+      nullify(cpatch%bdead                 )
+      nullify(cpatch%bleaf                 )
+      nullify(cpatch%balive                )
+      nullify(cpatch%broot                 )
+      nullify(cpatch%bsapwooda             )
+      nullify(cpatch%bsapwoodb             )
+      nullify(cpatch%bstorage              )
+      nullify(cpatch%bseeds                )
+      nullify(cpatch%lai                   )
+      nullify(cpatch%wai                   )
+      nullify(cpatch%crown_area            )
+      nullify(cpatch%leaf_resolvable       )
+      nullify(cpatch%wood_resolvable       )
+      nullify(cpatch%cb                    )
+      nullify(cpatch%cb_lightmax           )
+      nullify(cpatch%cb_moistmax           )
+      nullify(cpatch%cbr_bar               )
+      nullify(cpatch%leaf_energy           )
+      nullify(cpatch%leaf_temp             )
+      nullify(cpatch%leaf_vpdef            )
+      nullify(cpatch%leaf_temp_pv          )
+      nullify(cpatch%leaf_hcap             )
+      nullify(cpatch%leaf_fliq             )
+      nullify(cpatch%leaf_water            )
+      nullify(cpatch%wood_energy           )
+      nullify(cpatch%wood_temp             )
+      nullify(cpatch%wood_temp_pv          )
+      nullify(cpatch%wood_hcap             )
+      nullify(cpatch%wood_fliq             )
+      nullify(cpatch%wood_water            )
+      nullify(cpatch%veg_wind              )
+      nullify(cpatch%lsfc_shv_open         )
+      nullify(cpatch%lsfc_shv_closed       )
+      nullify(cpatch%lsfc_co2_open         )
+      nullify(cpatch%lsfc_co2_closed       )
+      nullify(cpatch%lint_shv              )
+      nullify(cpatch%lint_co2_open         )
+      nullify(cpatch%lint_co2_closed       )
+      nullify(cpatch%today_leaf_resp       )
+      nullify(cpatch%today_root_resp       )
+      nullify(cpatch%today_gpp             )
+      nullify(cpatch%today_gpp_pot         )
+      nullify(cpatch%today_gpp_lightmax    )
+      nullify(cpatch%today_gpp_moistmax    )
+      nullify(cpatch%today_nppleaf         )
+      nullify(cpatch%today_nppfroot        )
+      nullify(cpatch%today_nppsapwood      )
+      nullify(cpatch%today_nppcroot        )
+      nullify(cpatch%today_nppseeds        )
+      nullify(cpatch%today_nppwood         )
+      nullify(cpatch%today_nppdaily        )
+      nullify(cpatch%growth_respiration    )
+      nullify(cpatch%storage_respiration   )
+      nullify(cpatch%vleaf_respiration     )
+      nullify(cpatch%monthly_dndt          )
+      nullify(cpatch%monthly_dlnndt        )
+      nullify(cpatch%mort_rate             )
+      nullify(cpatch%krdepth               )
+      nullify(cpatch%first_census          )
+      nullify(cpatch%new_recruit_flag      )
+      nullify(cpatch%light_level           )
+      nullify(cpatch%light_level_beam      )
+      nullify(cpatch%light_level_diff      )
+
+      nullify(cpatch%par_level_beam        )
+      nullify(cpatch%par_level_diffu       )
+      nullify(cpatch%par_level_diffd       )
+
+      nullify(cpatch%par_l                 )
+      nullify(cpatch%par_l_beam            )
+      nullify(cpatch%par_l_diffuse         )
+      nullify(cpatch%rshort_l              )
+      nullify(cpatch%rshort_l_beam         )
+      nullify(cpatch%rshort_l_diffuse      )
+      nullify(cpatch%rlong_l               )
+      nullify(cpatch%rshort_w              )
+      nullify(cpatch%rshort_w_beam         )
+      nullify(cpatch%rshort_w_diffuse      )
+      nullify(cpatch%rlong_w               )
+      nullify(cpatch%rad_profile           )
+      nullify(cpatch%leaf_gbh              )
+      nullify(cpatch%leaf_gbw              )
+      nullify(cpatch%wood_gbh              )
+      nullify(cpatch%wood_gbw              )
+      nullify(cpatch%A_open                )
+      nullify(cpatch%A_closed              )
+      nullify(cpatch%psi_open              )
+      nullify(cpatch%psi_closed            )
+      nullify(cpatch%gsw_open              )
+      nullify(cpatch%gsw_closed            )
+      nullify(cpatch%leaf_gsw              )
+      nullify(cpatch%fsw                   )
+      nullify(cpatch%fsn                   )
+      nullify(cpatch%fs_open               )
+      nullify(cpatch%water_supply          )
+      nullify(cpatch%leaf_maintenance      )
+      nullify(cpatch%root_maintenance      )
+      nullify(cpatch%leaf_drop             )
+      nullify(cpatch%leaf_respiration      )
+      nullify(cpatch%root_respiration      )
+      nullify(cpatch%gpp                   )
+      nullify(cpatch%paw_avg               )
+      nullify(cpatch%elongf                )
+      nullify(cpatch%turnover_amp          )
+      nullify(cpatch%llspan                )
+      nullify(cpatch%vm_bar                )
+      nullify(cpatch%sla                   )
+      nullify(cpatch%fmean_gpp             )
+      nullify(cpatch%fmean_npp             )
+      nullify(cpatch%fmean_leaf_resp       )
+      nullify(cpatch%fmean_root_resp       )
+      nullify(cpatch%fmean_growth_resp     )
+      nullify(cpatch%fmean_storage_resp    )
+      nullify(cpatch%fmean_vleaf_resp      )
+      nullify(cpatch%fmean_plresp          )
+      nullify(cpatch%fmean_leaf_energy     )
+      nullify(cpatch%fmean_leaf_water      )
+      nullify(cpatch%fmean_leaf_hcap       )
+      nullify(cpatch%fmean_leaf_vpdef      )
+      nullify(cpatch%fmean_leaf_temp       )
+      nullify(cpatch%fmean_leaf_fliq       )
+      nullify(cpatch%fmean_leaf_gsw        )
+      nullify(cpatch%fmean_leaf_gbw        )
+      nullify(cpatch%fmean_wood_energy     )
+      nullify(cpatch%fmean_wood_water      )
+      nullify(cpatch%fmean_wood_hcap       )
+      nullify(cpatch%fmean_wood_temp       )
+      nullify(cpatch%fmean_wood_fliq       )
+      nullify(cpatch%fmean_wood_gbw        )
+      nullify(cpatch%fmean_fs_open         )
+      nullify(cpatch%fmean_fsw             )
+      nullify(cpatch%fmean_fsn             )
+      nullify(cpatch%fmean_psi_open        )
+      nullify(cpatch%fmean_psi_closed      )
+      nullify(cpatch%fmean_water_supply    )
+      nullify(cpatch%fmean_light_level     )
+      nullify(cpatch%fmean_light_level_beam)
+      nullify(cpatch%fmean_light_level_diff)
       
+      nullify(cpatch%fmean_par_level_beam  )
+      nullify(cpatch%fmean_par_level_diffu )
+      nullify(cpatch%fmean_par_level_diffd )
+
+      nullify(cpatch%fmean_par_l           )
+      nullify(cpatch%fmean_par_l_beam      )
+      nullify(cpatch%fmean_par_l_diff      )
+      nullify(cpatch%fmean_rshort_l        )
+      nullify(cpatch%fmean_rlong_l         )
+      nullify(cpatch%fmean_sensible_lc     )
+      nullify(cpatch%fmean_vapor_lc        )
+      nullify(cpatch%fmean_transp          )
+      nullify(cpatch%fmean_intercepted_al  )
+      nullify(cpatch%fmean_wshed_lg        )
+      nullify(cpatch%fmean_rshort_w        )
+      nullify(cpatch%fmean_rlong_w         )
+      nullify(cpatch%fmean_rad_profile     )
+      nullify(cpatch%fmean_sensible_wc     )
+      nullify(cpatch%fmean_vapor_wc        )
+      nullify(cpatch%fmean_intercepted_aw  )
+      nullify(cpatch%fmean_wshed_wg        )
+      nullify(cpatch%dmean_nppleaf         )
+      nullify(cpatch%dmean_nppfroot        )
+      nullify(cpatch%dmean_nppsapwood      )
+      nullify(cpatch%dmean_nppcroot        )
+      nullify(cpatch%dmean_nppseeds        )
+      nullify(cpatch%dmean_nppwood         )
+      nullify(cpatch%dmean_nppdaily        )
+      nullify(cpatch%dmean_gpp             )
+      nullify(cpatch%dmean_npp             )
+      nullify(cpatch%dmean_leaf_resp       )
+      nullify(cpatch%dmean_root_resp       )
+      nullify(cpatch%dmean_growth_resp     )
+      nullify(cpatch%dmean_storage_resp    )
+      nullify(cpatch%dmean_vleaf_resp      )
+      nullify(cpatch%dmean_plresp          )
+      nullify(cpatch%dmean_leaf_energy     )
+      nullify(cpatch%dmean_leaf_water      )
+      nullify(cpatch%dmean_leaf_hcap       )
+      nullify(cpatch%dmean_leaf_vpdef      )
+      nullify(cpatch%dmean_leaf_temp       )
+      nullify(cpatch%dmean_leaf_fliq       )
+      nullify(cpatch%dmean_leaf_gsw        )
+      nullify(cpatch%dmean_leaf_gbw        )
+      nullify(cpatch%dmean_wood_energy     )
+      nullify(cpatch%dmean_wood_water      )
+      nullify(cpatch%dmean_wood_hcap       )
+      nullify(cpatch%dmean_wood_temp       )
+      nullify(cpatch%dmean_wood_fliq       )
+      nullify(cpatch%dmean_wood_gbw        )
+      nullify(cpatch%dmean_fs_open         )
+      nullify(cpatch%dmean_fsw             )
+      nullify(cpatch%dmean_fsn             )
+      nullify(cpatch%dmean_psi_open        )
+      nullify(cpatch%dmean_psi_closed      )
+      nullify(cpatch%dmean_water_supply    )
+      nullify(cpatch%dmean_light_level     )
+      nullify(cpatch%dmean_light_level_beam)
+      nullify(cpatch%dmean_light_level_diff)
+
+      nullify(cpatch%dmean_par_level_beam  )
+      nullify(cpatch%dmean_par_level_diffu )
+      nullify(cpatch%dmean_par_level_diffd )
+
+      nullify(cpatch%dmean_par_l           )
+      nullify(cpatch%dmean_par_l_beam      )
+      nullify(cpatch%dmean_par_l_diff      )
+      nullify(cpatch%dmean_rshort_l        )
+      nullify(cpatch%dmean_rlong_l         )
+      nullify(cpatch%dmean_sensible_lc     )
+      nullify(cpatch%dmean_vapor_lc        )
+      nullify(cpatch%dmean_transp          )
+      nullify(cpatch%dmean_intercepted_al  )
+      nullify(cpatch%dmean_wshed_lg        )
+      nullify(cpatch%dmean_rshort_w        )
+      nullify(cpatch%dmean_rlong_w         )
+      nullify(cpatch%dmean_rad_profile     )
+      nullify(cpatch%dmean_sensible_wc     )
+      nullify(cpatch%dmean_vapor_wc        )
+      nullify(cpatch%dmean_intercepted_aw  )
+      nullify(cpatch%dmean_wshed_wg        )
+      nullify(cpatch%mmean_lai             )
+      nullify(cpatch%mmean_bleaf           )
+      nullify(cpatch%mmean_broot           )
+      nullify(cpatch%mmean_bstorage        )
+      nullify(cpatch%mmean_mort_rate       )
+      nullify(cpatch%mmean_leaf_maintenance)
+      nullify(cpatch%mmean_root_maintenance)
+      nullify(cpatch%mmean_leaf_drop       )
+      nullify(cpatch%mmean_cb              )
+      nullify(cpatch%mmean_gpp             )
+      nullify(cpatch%mmean_npp             )
+      nullify(cpatch%mmean_leaf_resp       )
+      nullify(cpatch%mmean_root_resp       )
+      nullify(cpatch%mmean_growth_resp     )
+      nullify(cpatch%mmean_storage_resp    )
+      nullify(cpatch%mmean_vleaf_resp      )
+      nullify(cpatch%mmean_plresp          )
+      nullify(cpatch%mmean_leaf_energy     )
+      nullify(cpatch%mmean_leaf_water      )
+      nullify(cpatch%mmean_leaf_hcap       )
+      nullify(cpatch%mmean_leaf_vpdef      )
+      nullify(cpatch%mmean_leaf_temp       )
+      nullify(cpatch%mmean_leaf_fliq       )
+      nullify(cpatch%mmean_leaf_gsw        )
+      nullify(cpatch%mmean_leaf_gbw        )
+      nullify(cpatch%mmean_wood_energy     )
+      nullify(cpatch%mmean_wood_water      )
+      nullify(cpatch%mmean_wood_hcap       )
+      nullify(cpatch%mmean_wood_temp       )
+      nullify(cpatch%mmean_wood_fliq       )
+      nullify(cpatch%mmean_wood_gbw        )
+      nullify(cpatch%mmean_fs_open         )
+      nullify(cpatch%mmean_fsw             )
+      nullify(cpatch%mmean_fsn             )
+      nullify(cpatch%mmean_psi_open        )
+      nullify(cpatch%mmean_psi_closed      )
+      nullify(cpatch%mmean_water_supply    )
+      nullify(cpatch%mmean_light_level     )
+      nullify(cpatch%mmean_light_level_beam)
+      nullify(cpatch%mmean_light_level_diff)
+
+      nullify(cpatch%mmean_par_level_beam  )
+      nullify(cpatch%mmean_par_level_diffu )
+      nullify(cpatch%mmean_par_level_diffd )
+
+      nullify(cpatch%mmean_par_l           )
+      nullify(cpatch%mmean_par_l_beam      )
+      nullify(cpatch%mmean_par_l_diff      )
+      nullify(cpatch%mmean_rshort_l        )
+      nullify(cpatch%mmean_rlong_l         )
+      nullify(cpatch%mmean_sensible_lc     )
+      nullify(cpatch%mmean_vapor_lc        )
+      nullify(cpatch%mmean_transp          )
+      nullify(cpatch%mmean_intercepted_al  )
+      nullify(cpatch%mmean_wshed_lg        )
+      nullify(cpatch%mmean_rshort_w        )
+      nullify(cpatch%mmean_rlong_w         )
+      nullify(cpatch%mmean_rad_profile     )
+      nullify(cpatch%mmean_sensible_wc     )
+      nullify(cpatch%mmean_vapor_wc        )
+      nullify(cpatch%mmean_intercepted_aw  )
+      nullify(cpatch%mmean_wshed_wg        )
+      nullify(cpatch%mmean_nppleaf         )
+      nullify(cpatch%mmean_nppfroot        )
+      nullify(cpatch%mmean_nppsapwood      )
+      nullify(cpatch%mmean_nppcroot        )
+      nullify(cpatch%mmean_nppseeds        )
+      nullify(cpatch%mmean_nppwood         )
+      nullify(cpatch%mmean_nppdaily        )
+      nullify(cpatch%mmsqu_gpp             )
+      nullify(cpatch%mmsqu_npp             )
+      nullify(cpatch%mmsqu_plresp          )
+      nullify(cpatch%mmsqu_sensible_lc     )
+      nullify(cpatch%mmsqu_vapor_lc        )
+      nullify(cpatch%mmsqu_transp          )
+      nullify(cpatch%mmsqu_sensible_wc     )
+      nullify(cpatch%mmsqu_vapor_wc        )
+      nullify(cpatch%qmean_gpp             )
+      nullify(cpatch%qmean_npp             )
+      nullify(cpatch%qmean_leaf_resp       )
+      nullify(cpatch%qmean_root_resp       )
+      nullify(cpatch%qmean_growth_resp     )
+      nullify(cpatch%qmean_storage_resp    )
+      nullify(cpatch%qmean_vleaf_resp      )
+      nullify(cpatch%qmean_plresp          )
+      nullify(cpatch%qmean_leaf_energy     )
+      nullify(cpatch%qmean_leaf_water      )
+      nullify(cpatch%qmean_leaf_hcap       )
+      nullify(cpatch%qmean_leaf_vpdef      )
+      nullify(cpatch%qmean_leaf_temp       )
+      nullify(cpatch%qmean_leaf_fliq       )
+      nullify(cpatch%qmean_leaf_gsw        )
+      nullify(cpatch%qmean_leaf_gbw        )
+      nullify(cpatch%qmean_wood_energy     )
+      nullify(cpatch%qmean_wood_water      )
+      nullify(cpatch%qmean_wood_hcap       )
+      nullify(cpatch%qmean_wood_temp       )
+      nullify(cpatch%qmean_wood_fliq       )
+      nullify(cpatch%qmean_wood_gbw        )
+      nullify(cpatch%qmean_fs_open         )
+      nullify(cpatch%qmean_fsw             )
+      nullify(cpatch%qmean_fsn             )
+      nullify(cpatch%qmean_psi_open        )
+      nullify(cpatch%qmean_psi_closed      )
+      nullify(cpatch%qmean_water_supply    )
+      nullify(cpatch%qmean_light_level     )
+      nullify(cpatch%qmean_light_level_beam)
+      nullify(cpatch%qmean_light_level_diff)
+
+      nullify(cpatch%qmean_par_level_beam  )
+      nullify(cpatch%qmean_par_level_diffu )
+      nullify(cpatch%qmean_par_level_diffd )
+
+      nullify(cpatch%qmean_par_l           )
+      nullify(cpatch%qmean_par_l_beam      )
+      nullify(cpatch%qmean_par_l_diff      )
+      nullify(cpatch%qmean_rshort_l        )
+      nullify(cpatch%qmean_rlong_l         )
+      nullify(cpatch%qmean_sensible_lc     )
+      nullify(cpatch%qmean_vapor_lc        )
+      nullify(cpatch%qmean_transp          )
+      nullify(cpatch%qmean_intercepted_al  )
+      nullify(cpatch%qmean_wshed_lg        )
+      nullify(cpatch%qmean_rshort_w        )
+      nullify(cpatch%qmean_rlong_w         )
+      nullify(cpatch%qmean_rad_profile     )
+      nullify(cpatch%qmean_sensible_wc     )
+      nullify(cpatch%qmean_vapor_wc        )
+      nullify(cpatch%qmean_intercepted_aw  )
+      nullify(cpatch%qmean_wshed_wg        )
+      nullify(cpatch%qmsqu_gpp             )
+      nullify(cpatch%qmsqu_npp             )
+      nullify(cpatch%qmsqu_plresp          )
+      nullify(cpatch%qmsqu_sensible_lc     )
+      nullify(cpatch%qmsqu_vapor_lc        )
+      nullify(cpatch%qmsqu_transp          )
+      nullify(cpatch%qmsqu_sensible_wc     )
+      nullify(cpatch%qmsqu_vapor_wc        )
+
       !----- C Isotope Vars --------------------------------------------------!
       nullify(cpatch%lassim_resp               )          
       nullify(cpatch%today_lassim_resp         )                
@@ -6968,9 +7046,9 @@ module ed_state_vars
       nullify(cpatch%mmean_root_resp_c13      )          
       nullify(cpatch%mmean_gpp_c13                   )   
       nullify(cpatch%mmean_plresp_c13                ) 
-      
-      return                                          
-   end subroutine nullify_patchtype                   
+
+      return
+   end subroutine nullify_patchtype
    !=======================================================================================!
    !=======================================================================================!
                                                       
@@ -8513,6 +8591,11 @@ module ed_state_vars
       if(associated(cpatch%light_level         )) deallocate(cpatch%light_level         )
       if(associated(cpatch%light_level_beam    )) deallocate(cpatch%light_level_beam    )
       if(associated(cpatch%light_level_diff    )) deallocate(cpatch%light_level_diff    )
+
+      if(associated(cpatch%par_level_beam      )) deallocate(cpatch%par_level_beam      )
+      if(associated(cpatch%par_level_diffu     )) deallocate(cpatch%par_level_diffu     )
+      if(associated(cpatch%par_level_diffd     )) deallocate(cpatch%par_level_diffd     )
+
       if(associated(cpatch%par_l               )) deallocate(cpatch%par_l               )
       if(associated(cpatch%par_l_beam          )) deallocate(cpatch%par_l_beam          )
       if(associated(cpatch%par_l_diffuse       )) deallocate(cpatch%par_l_diffuse       )
@@ -8585,6 +8668,11 @@ module ed_state_vars
                                                 deallocate(cpatch%fmean_light_level_beam)
       if(associated(cpatch%fmean_light_level_diff))                                        &
                                                 deallocate(cpatch%fmean_light_level_diff)
+
+      if(associated(cpatch%fmean_par_level_beam ))deallocate(cpatch%fmean_par_level_beam )
+      if(associated(cpatch%fmean_par_level_diffu))deallocate(cpatch%fmean_par_level_diffu)
+      if(associated(cpatch%fmean_par_level_diffd))deallocate(cpatch%fmean_par_level_diffd)
+
       if(associated(cpatch%fmean_par_l         )) deallocate(cpatch%fmean_par_l         )
       if(associated(cpatch%fmean_par_l_beam    )) deallocate(cpatch%fmean_par_l_beam    )
       if(associated(cpatch%fmean_par_l_diff    )) deallocate(cpatch%fmean_par_l_diff    )
@@ -8642,6 +8730,11 @@ module ed_state_vars
                                                 deallocate(cpatch%dmean_light_level_beam)
       if(associated(cpatch%dmean_light_level_diff))                                        &
                                                 deallocate(cpatch%dmean_light_level_diff)
+
+      if(associated(cpatch%dmean_par_level_beam ))deallocate(cpatch%dmean_par_level_beam )
+      if(associated(cpatch%dmean_par_level_diffu))deallocate(cpatch%dmean_par_level_diffu)
+      if(associated(cpatch%dmean_par_level_diffd))deallocate(cpatch%dmean_par_level_diffd)
+
       if(associated(cpatch%dmean_par_l         )) deallocate(cpatch%dmean_par_l         )
       if(associated(cpatch%dmean_par_l_beam    )) deallocate(cpatch%dmean_par_l_beam    )
       if(associated(cpatch%dmean_par_l_diff    )) deallocate(cpatch%dmean_par_l_diff    )
@@ -8703,6 +8796,11 @@ module ed_state_vars
                                                 deallocate(cpatch%mmean_light_level_beam)
       if(associated(cpatch%mmean_light_level_diff))                                        &
                                                 deallocate(cpatch%mmean_light_level_diff)
+      
+      if(associated(cpatch%mmean_par_level_beam ))deallocate(cpatch%mmean_par_level_beam )
+      if(associated(cpatch%mmean_par_level_diffu))deallocate(cpatch%mmean_par_level_diffu)
+      if(associated(cpatch%mmean_par_level_diffd))deallocate(cpatch%mmean_par_level_diffd)
+
       if(associated(cpatch%mmean_par_l         )) deallocate(cpatch%mmean_par_l         )
       if(associated(cpatch%mmean_par_l_beam    )) deallocate(cpatch%mmean_par_l_beam    )
       if(associated(cpatch%mmean_par_l_diff    )) deallocate(cpatch%mmean_par_l_diff    )
@@ -8768,6 +8866,11 @@ module ed_state_vars
                                                 deallocate(cpatch%qmean_light_level_beam)
       if(associated(cpatch%qmean_light_level_diff))                                        &
                                                 deallocate(cpatch%qmean_light_level_diff)
+
+      if(associated(cpatch%qmean_par_level_beam ))deallocate(cpatch%qmean_par_level_beam )
+      if(associated(cpatch%qmean_par_level_diffu))deallocate(cpatch%qmean_par_level_diffu)
+      if(associated(cpatch%qmean_par_level_diffd))deallocate(cpatch%qmean_par_level_diffd)
+
       if(associated(cpatch%qmean_par_l         )) deallocate(cpatch%qmean_par_l         )
       if(associated(cpatch%qmean_par_l_beam    )) deallocate(cpatch%qmean_par_l_beam    )
       if(associated(cpatch%qmean_par_l_diff    )) deallocate(cpatch%qmean_par_l_diff    )
@@ -10409,6 +10512,11 @@ module ed_state_vars
          opatch%light_level           (oco) = ipatch%light_level           (ico)
          opatch%light_level_beam      (oco) = ipatch%light_level_beam      (ico)
          opatch%light_level_diff      (oco) = ipatch%light_level_diff      (ico)
+         
+         opatch%par_level_beam        (oco) = ipatch%par_level_beam        (ico)
+         opatch%par_level_diffu       (oco) = ipatch%par_level_diffu       (ico)
+         opatch%par_level_diffd       (oco) = ipatch%par_level_diffd       (ico)
+
          opatch%par_l                 (oco) = ipatch%par_l                 (ico)
          opatch%par_l_beam            (oco) = ipatch%par_l_beam            (ico)
          opatch%par_l_diffuse         (oco) = ipatch%par_l_diffuse         (ico)
@@ -10478,6 +10586,11 @@ module ed_state_vars
          opatch%fmean_light_level     (oco) = ipatch%fmean_light_level     (ico)
          opatch%fmean_light_level_beam(oco) = ipatch%fmean_light_level_beam(ico)
          opatch%fmean_light_level_diff(oco) = ipatch%fmean_light_level_diff(ico)
+         
+         opatch%fmean_par_level_beam  (oco) = ipatch%fmean_par_level_beam  (ico)
+         opatch%fmean_par_level_diffu (oco) = ipatch%fmean_par_level_diffu (ico)
+         opatch%fmean_par_level_diffd (oco) = ipatch%fmean_par_level_diffd (ico)
+
          opatch%fmean_par_l           (oco) = ipatch%fmean_par_l           (ico)
          opatch%fmean_par_l_beam      (oco) = ipatch%fmean_par_l_beam      (ico)
          opatch%fmean_par_l_diff      (oco) = ipatch%fmean_par_l_diff      (ico)
@@ -10565,6 +10678,11 @@ module ed_state_vars
             opatch%dmean_light_level     (oco) = ipatch%dmean_light_level     (ico)
             opatch%dmean_light_level_beam(oco) = ipatch%dmean_light_level_beam(ico)
             opatch%dmean_light_level_diff(oco) = ipatch%dmean_light_level_diff(ico)
+
+            opatch%dmean_par_level_beam  (oco) = ipatch%dmean_par_level_beam  (ico)
+            opatch%dmean_par_level_diffu (oco) = ipatch%dmean_par_level_diffu (ico)
+            opatch%dmean_par_level_diffd (oco) = ipatch%dmean_par_level_diffd (ico)
+
             opatch%dmean_par_l           (oco) = ipatch%dmean_par_l           (ico)
             opatch%dmean_par_l_beam      (oco) = ipatch%dmean_par_l_beam      (ico)
             opatch%dmean_par_l_diff      (oco) = ipatch%dmean_par_l_diff      (ico)
@@ -10638,6 +10756,11 @@ module ed_state_vars
             opatch%mmean_light_level     (oco) = ipatch%mmean_light_level     (ico)
             opatch%mmean_light_level_beam(oco) = ipatch%mmean_light_level_beam(ico)
             opatch%mmean_light_level_diff(oco) = ipatch%mmean_light_level_diff(ico)
+
+            opatch%mmean_par_level_beam  (oco) = ipatch%mmean_par_level_beam  (ico)
+            opatch%mmean_par_level_diffu (oco) = ipatch%mmean_par_level_diffu (ico)
+            opatch%mmean_par_level_diffd (oco) = ipatch%mmean_par_level_diffd (ico)
+
             opatch%mmean_par_l           (oco) = ipatch%mmean_par_l           (ico)
             opatch%mmean_par_l_beam      (oco) = ipatch%mmean_par_l_beam      (ico)
             opatch%mmean_par_l_diff      (oco) = ipatch%mmean_par_l_diff      (ico)
@@ -10722,6 +10845,11 @@ module ed_state_vars
                opatch%qmean_light_level     (n,oco) = ipatch%qmean_light_level     (n,ico)
                opatch%qmean_light_level_beam(n,oco) = ipatch%qmean_light_level_beam(n,ico)
                opatch%qmean_light_level_diff(n,oco) = ipatch%qmean_light_level_diff(n,ico)
+
+               opatch%qmean_par_level_beam  (n,oco) = ipatch%qmean_par_level_beam  (n,ico)
+               opatch%qmean_par_level_diffu (n,oco) = ipatch%qmean_par_level_diffu (n,ico)
+               opatch%qmean_par_level_diffd (n,oco) = ipatch%qmean_par_level_diffd (n,ico)
+
                opatch%qmean_par_l           (n,oco) = ipatch%qmean_par_l           (n,ico)
                opatch%qmean_par_l_beam      (n,oco) = ipatch%qmean_par_l_beam      (n,ico)
                opatch%qmean_par_l_diff      (n,oco) = ipatch%qmean_par_l_diff      (n,ico)
@@ -11013,6 +11141,11 @@ module ed_state_vars
       opatch%light_level           (1:z) = pack(ipatch%light_level               ,lmask)
       opatch%light_level_beam      (1:z) = pack(ipatch%light_level_beam          ,lmask)
       opatch%light_level_diff      (1:z) = pack(ipatch%light_level_diff          ,lmask)
+
+      opatch%par_level_beam        (1:z) = pack(ipatch%par_level_beam            ,lmask)
+      opatch%par_level_diffu       (1:z) = pack(ipatch%par_level_diffu           ,lmask)
+      opatch%par_level_diffd       (1:z) = pack(ipatch%par_level_diffd           ,lmask)
+
       opatch%par_l                 (1:z) = pack(ipatch%par_l                     ,lmask)
       opatch%par_l_beam            (1:z) = pack(ipatch%par_l_beam                ,lmask)
       opatch%par_l_diffuse         (1:z) = pack(ipatch%par_l_diffuse             ,lmask)
@@ -11172,6 +11305,11 @@ module ed_state_vars
       opatch%fmean_light_level     (1:z) = pack(ipatch%fmean_light_level         ,lmask)
       opatch%fmean_light_level_beam(1:z) = pack(ipatch%fmean_light_level_beam    ,lmask)
       opatch%fmean_light_level_diff(1:z) = pack(ipatch%fmean_light_level_diff    ,lmask)
+
+      opatch%fmean_par_level_beam  (1:z) = pack(ipatch%fmean_par_level_beam      ,lmask)
+      opatch%fmean_par_level_diffu (1:z) = pack(ipatch%fmean_par_level_diffu     ,lmask)
+      opatch%fmean_par_level_diffd (1:z) = pack(ipatch%fmean_par_level_diffd     ,lmask)
+
       opatch%fmean_par_l           (1:z) = pack(ipatch%fmean_par_l               ,lmask)
       opatch%fmean_par_l_beam      (1:z) = pack(ipatch%fmean_par_l_beam          ,lmask)
       opatch%fmean_par_l_diff      (1:z) = pack(ipatch%fmean_par_l_diff          ,lmask)
@@ -11285,6 +11423,11 @@ module ed_state_vars
       opatch%dmean_light_level     (1:z) = pack(ipatch%dmean_light_level         ,lmask)
       opatch%dmean_light_level_beam(1:z) = pack(ipatch%dmean_light_level_beam    ,lmask)
       opatch%dmean_light_level_diff(1:z) = pack(ipatch%dmean_light_level_diff    ,lmask)
+
+      opatch%dmean_par_level_beam  (1:z) = pack(ipatch%dmean_par_level_beam      ,lmask)
+      opatch%dmean_par_level_diffu (1:z) = pack(ipatch%dmean_par_level_diffu     ,lmask)
+      opatch%dmean_par_level_diffd (1:z) = pack(ipatch%dmean_par_level_diffd     ,lmask)
+
       opatch%dmean_par_l           (1:z) = pack(ipatch%dmean_par_l               ,lmask)
       opatch%dmean_par_l_beam      (1:z) = pack(ipatch%dmean_par_l_beam          ,lmask)
       opatch%dmean_par_l_diff      (1:z) = pack(ipatch%dmean_par_l_diff          ,lmask)
@@ -11401,6 +11544,11 @@ module ed_state_vars
       opatch%mmean_light_level     (1:z) = pack(ipatch%mmean_light_level         ,lmask)
       opatch%mmean_light_level_beam(1:z) = pack(ipatch%mmean_light_level_beam    ,lmask)
       opatch%mmean_light_level_diff(1:z) = pack(ipatch%mmean_light_level_diff    ,lmask)
+
+      opatch%mmean_par_level_beam  (1:z) = pack(ipatch%mmean_par_level_beam      ,lmask)
+      opatch%mmean_par_level_diffu (1:z) = pack(ipatch%mmean_par_level_diffu     ,lmask)
+      opatch%mmean_par_level_diffd (1:z) = pack(ipatch%mmean_par_level_diffd     ,lmask)
+
       opatch%mmean_par_l           (1:z) = pack(ipatch%mmean_par_l               ,lmask)
       opatch%mmean_par_l_beam      (1:z) = pack(ipatch%mmean_par_l_beam          ,lmask)
       opatch%mmean_par_l_diff      (1:z) = pack(ipatch%mmean_par_l_diff          ,lmask)
@@ -11539,6 +11687,11 @@ module ed_state_vars
                                             pack(ipatch%qmean_light_level_beam(n,:),lmask)
          opatch%qmean_light_level_diff(n,1:z) =                                            &
                                             pack(ipatch%qmean_light_level_diff(n,:),lmask)
+
+         opatch%qmean_par_level_beam  (n,1:z) = pack(ipatch%qmean_par_level_beam(n,:)     ,lmask)
+         opatch%qmean_par_level_diffu (n,1:z) = pack(ipatch%qmean_par_level_diffu(n,:)    ,lmask)
+         opatch%qmean_par_level_diffd (n,1:z) = pack(ipatch%qmean_par_level_diffd(n,:)    ,lmask)
+
          opatch%qmean_par_l         (n,1:z) = pack(ipatch%qmean_par_l         (n,:),lmask)
          opatch%qmean_par_l_beam    (n,1:z) = pack(ipatch%qmean_par_l_beam    (n,:),lmask)
          opatch%qmean_par_l_diff    (n,1:z) = pack(ipatch%qmean_par_l_diff    (n,:),lmask)
@@ -25285,10 +25438,31 @@ module ed_state_vars
            call vtable_edio_r(npts,cpatch%light_level_diff,nvar,igr,init,cpatch%coglob_id, &
            var_len,var_len_global,max_ptrs,'LIGHT_LEVEL_DIFF :41:hist') 
          call metadata_edio(nvar,igr,'Relative light level, diffuse fraction','[NA]','icohort') 
-      end if                                          
-                                                      
-      if (associated(cpatch%par_l)) then              
-         nvar=nvar+1                                  
+      end if
+
+      if (associated(cpatch%par_level_beam)) then
+         nvar=nvar+1
+           call vtable_edio_r(npts,cpatch%par_level_beam,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'PAR_LEVEL_BEAM :41:hist') 
+         call metadata_edio(nvar,igr,'PAR flux density (cohort centered), beam','[W/m2]','icohort') 
+      end if
+      
+      if (associated(cpatch%par_level_diffu)) then
+         nvar=nvar+1
+         call vtable_edio_r(npts,cpatch%par_level_diffu,nvar,igr,init,cpatch%coglob_id, &
+               var_len,var_len_global,max_ptrs,'PAR_LEVEL_DIFFU :41:hist') 
+         call metadata_edio(nvar,igr,'PAR flux density (cohort centered), upward diffuse','[W/m2]','icohort') 
+      end if
+      
+      if (associated(cpatch%par_level_diffd)) then
+         nvar=nvar+1
+         call vtable_edio_r(npts,cpatch%par_level_diffd,nvar,igr,init,cpatch%coglob_id, &
+               var_len,var_len_global,max_ptrs,'PAR_LEVEL_DIFFD :41:hist') 
+         call metadata_edio(nvar,igr,'PAR flux density (cohort centered), downward diffuse','[W/m2]','icohort') 
+      end if
+      
+      if (associated(cpatch%par_l)) then
+         nvar=nvar+1
            call vtable_edio_r(npts,cpatch%par_l,nvar,igr,init,cpatch%coglob_id, &
            var_len,var_len_global,max_ptrs,'PAR_L :41:hist') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
@@ -26066,7 +26240,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Light level (diffuse radiation)'             &
                            ,'[         --]','(icohort)'            )
-      end if                                          
+      end if
+
+      if (associated(cpatch%fmean_par_level_beam)) then
+         nvar=nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_par_level_beam,nvar,igr,init,cpatch%coglob_id, &
+               var_len,var_len_global,max_ptrs,'FMEAN_PAR_LEVEL_BEAM :41:'//trim(fast_keys)) 
+         call metadata_edio(nvar,igr, &
+               'Sub-daily mean PAR flux density (cohort centered), beam','[W/m2]','icohort') 
+      end if
+
+      if (associated(cpatch%fmean_par_level_diffu)) then
+         nvar=nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_par_level_diffu,nvar,igr,init,cpatch%coglob_id, &
+               var_len,var_len_global,max_ptrs,'FMEAN_PAR_LEVEL_DIFFU :41:'//trim(fast_keys)) 
+         call metadata_edio(nvar,igr, &
+               'Sub-daily mean PAR flux density (cohort centered), diff up','[W/m2]','icohort') 
+      end if
+      
+      if (associated(cpatch%fmean_par_level_diffd)) then
+         nvar=nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_par_level_diffd,nvar,igr,init,cpatch%coglob_id, &
+               var_len,var_len_global,max_ptrs,'FMEAN_PAR_LEVEL_DIFFD :41:'//trim(fast_keys)) 
+         call metadata_edio(nvar,igr, &
+               'Sub-daily mean PAR flux density (cohort centered), diff down','[W/m2]','icohort') 
+      end if
+
+
       if (associated(cpatch%fmean_par_l           )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_par_l                                        &
@@ -26715,7 +26915,38 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Light level (diffuse radiation)'                 &
                            ,'[         --]','(icohort)'            )
-      end if                                          
+      end if
+
+      if (associated(cpatch%dmean_par_level_beam)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_par_level_beam                             &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'DMEAN_PAR_LEVEL_BEAM_CO  :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Daily mean - PAR flux density, beam'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
+      if (associated(cpatch%dmean_par_level_diffu)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_par_level_diffu                              &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'DMEAN_PAR_LEVEL_DIFFU_CO  :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Daily mean - PAR flux density, diffuse up'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
+      if (associated(cpatch%dmean_par_level_diffd)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_par_level_diffd                             &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'DMEAN_PAR_LEVEL_DIFFD_CO  :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Daily mean - PAR flux density, diffuse down'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+      
       if (associated(cpatch%dmean_par_l           )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_par_l                                        &
@@ -27299,7 +27530,38 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Light level (diffuse radiation)'               &
                            ,'[         --]','(icohort)'            )
-      end if                                          
+      end if
+
+      if (associated(cpatch%mmean_par_level_beam)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_par_level_beam                             &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'MMEAN_PAR_LEVEL_BEAM_CO  :41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Monthly mean - PAR flux density, beam'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
+      if (associated(cpatch%mmean_par_level_diffu)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_par_level_diffu                              &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'MMEAN_PAR_LEVEL_DIFFU_CO  :41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Monthly mean - PAR flux density, diffuse up'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
+      if (associated(cpatch%mmean_par_level_diffd)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_par_level_diffd                             &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'MMEAN_PAR_LEVEL_DIFFD_CO  :41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Monthly mean - PAR flux density, diffuse down'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
       if (associated(cpatch%mmean_par_l           )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_par_l                                        &
@@ -28139,7 +28401,39 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Mean diel - Light level (diffuse radiation)'                  &
                            ,'[         --]','(ndcycle,icohort)'    )
-      end if                                          
+      end if
+
+      if (associated(cpatch%qmean_par_level_beam)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_par_level_beam                             &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'QMEAN_PAR_LEVEL_BEAM_CO  :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                     &
+               ,'Mean diel - PAR flux density, beam'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
+      if (associated(cpatch%qmean_par_level_diffu)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_par_level_diffu                              &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'QMEAN_PAR_LEVEL_DIFFU_CO  :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Mean diel - PAR flux density, diffuse up'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
+      if (associated(cpatch%qmean_par_level_diffd)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_par_level_diffd                             &
+               ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+               ,'QMEAN_PAR_LEVEL_DIFFD_CO  :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+               ,'Mean diel - PAR flux density, diffuse down'                  &
+               ,'[ W/m2 ]','(icohort)'            )
+      end if
+
+
       if (associated(cpatch%qmean_par_l           )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%qmean_par_l                                        &

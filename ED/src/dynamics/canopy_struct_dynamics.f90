@@ -241,8 +241,9 @@ module canopy_struct_dynamics
       logical        :: dry_grasses  ! Flag to check whether LAI+WAI is zero    [      ---]
       real           :: tai_drygrass ! TAI for when a grass-only patch is dry   [    m2/m2]
       real           :: c3_lad       ! c3 * lad for estimating drag coefficient [      ---]
-      integer        :: ibuff
       real           :: snowfac_can  ! percent vertical canopy covered in snow
+      integer        :: ibuff
+
       !----- External functions. ----------------------------------------------------------!
       real(kind=4), external :: cbrt ! Cubic root that works for negative numbers
       !------------------------------------------------------------------------------------!
@@ -1562,8 +1563,8 @@ module canopy_struct_dynamics
       logical        :: dry_grasses  ! Flag to check whether LAI+WAI is zero    [      ---]
       real(kind=8)   :: tai_drygrass ! TAI for when a grass-only patch is dry   [    m2/m2]
       real(kind=8)   :: c3_lad       ! c3 * lad for estimating drag coefficient [      ---]
-      integer        :: ibuff
       real(kind=8)   :: snowfac_can  ! percent vertical canopy covered in snow
+      integer        :: ibuff
       !------ External procedures ---------------------------------------------------------!
       real(kind=8), external :: cbrt8    ! Cubic root that works for negative numbers
       real(kind=4), external :: sngloff  ! Safe double -> simple precision.
@@ -1576,6 +1577,14 @@ module canopy_struct_dynamics
       cpatch=>csite%patch(ipa)
       !------------------------------------------------------------------------------------!
 
+      !------------------------------------------------------------------------------------!
+      !     Find the fraction of the canopy covered in snow (original snowfac function)    !
+      !     I think canopy roughness may need to be re-thought, but this was necessary     !
+      ! for turbulence & CO2 mixing to not occasionally fail sanity checks in young patches!
+      !------------------------------------------------------------------------------------!
+      snowfac_can     = min(9.9d-1,initp%total_sfcw_depth/initp%veg_height)
+      !------------------------------------------------------------------------------------!
+
       ! Create some aliases
       associate(                               &
          lad8  => canstr(ibuff)%lad8,          &
@@ -1585,14 +1594,6 @@ module canopy_struct_dynamics
          windlyr8  => canstr(ibuff)%windlyr8,  &
          windext_full8 => canstr(ibuff)%windext_full8, &
          windext_half8 => canstr(ibuff)%windext_half8 )
-
-      !------------------------------------------------------------------------------------!
-      !     Find the fraction of the canopy covered in snow (original snowfac function)    !
-      !     I think canopy roughness may need to be re-thought, but this was necessary     !
-      ! for turbulence & CO2 mixing to not occasionally fail sanity checks in young patches!
-      !------------------------------------------------------------------------------------!
-      snowfac_can     = min(9.9d-1,initp%total_sfcw_depth/initp%veg_height)
-      !------------------------------------------------------------------------------------!
 
       !------------------------------------------------------------------------------------!
       !     Find the virtual potential temperatures and decide whether the canopy air is   !

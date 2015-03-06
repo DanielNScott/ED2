@@ -62,21 +62,6 @@ subroutine odeint(h1,csite,ipa,nsteps)
    ibuff = 1
    !$ ibuff = OMP_get_thread_num()+1
 
-!! MOVED TO INITIALIZE_MISC_STEPVARS TO PRESERVE THREADSAFETY (RGK)  
-!!   !-------------------------------------------------------------------------------------!
-!!   !     Check whether we will use runoff or not, and saving this check to save time.    !
-!!   !-------------------------------------------------------------------------------------!
-!!   if (first_time) then
-!!      simplerunoff = useRUNOFF == 0 .and. runoff_time /= 0.
-!!      if (runoff_time /= 0.) then
-!!         runoff_time_i = 1.d0/dble(runoff_time)
-!!      else 
-!!         runoff_time_i = 0.d0
-!!      end if
-!!      first_time   = .false.
-!!   end if
-!!   !-------------------------------------------------------------------------------------!
-
    cpatch => csite%patch(ipa)
 
    !---------------------------------------------------------------------------------------!
@@ -1566,14 +1551,14 @@ subroutine initialize_rk4patches(init)
       allocate(co2lim(nbuff))
       allocate(lightlim(nbuff))
 
-      !------------------------------------------------------------------------------------!
-      ! Initialize the canopy structure arrays
-      !------------------------------------------------------------------------------------!
-      !allocate(canstr(nbuff))
-      !do ibuff=1,nbuff
-      !   call alloc_canopy_layer_mbs(canstr(ibuff))   ! The arrays in this structure DO NOT
-      !                                                ! change in size (currently)
-      !end do
+!      !------------------------------------------------------------------------------------!
+!      ! Initialize the canopy structure arrays
+!      !------------------------------------------------------------------------------------!
+!      allocate(canstr(nbuff))
+!      do ibuff=1,nbuff
+!         call alloc_canopy_layer_mbs(canstr(ibuff))   ! The arrays in this structure DO NOT
+!                                                      ! change in size (currently)
+!      end do
 
       !------------------------------------------------------------------------------------!
       ! Initialize radiation scratch space                                                 !
