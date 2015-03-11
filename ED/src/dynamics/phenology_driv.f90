@@ -436,7 +436,7 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                   if (c13af > 0) then
                      if (abs(cpatch%bleaf(ico)) .gt. tiny(1.0)) then
                         delta_bleaf_c13 =  cpatch%bleaf_c13(ico)                           &
-                                        - (cpatch%bleaf_c13(ico)/cpatch%bleaf(ico)) * bl_max
+                                        -  cpatch%bleaf_c13(ico)*(bl_max/cpatch%bleaf(ico))
                      else 
                         delta_bleaf_c13 = 0.0
                      end if
