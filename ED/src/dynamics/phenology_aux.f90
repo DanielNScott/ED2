@@ -636,14 +636,15 @@ module phenology_aux
       !     Same steps as above, but for c13 pools                                         !
       !------------------------------------------------------------------------------------!
       if (present(bleaf_c13)) then !!!DSC!!
-         !If bleaf_c13 is input and the rest are not, there is some problem and we should
+         !If bleaf_c13 is input and the rest are not, there is some problem and
+         !we should
          !allow the segmentation fault so it's known to the user.
-         bleaf_c13      = cri_bleaf(ipft) * bleaf
-         broot_c13      = cri_broot(ipft) * broot
-         bsapwooda_c13  = cri_bsapwooda(ipft) * bsapwooda
-         bsapwoodb_c13  = cri_bsapwoodb(ipft) * bsapwoodb
+         bleaf_c13      =  bleaf * 0.010931/(1.0 + 0.010931)
+         broot_c13      =  broot * 0.010931/(1.0 + 0.010931)
+         bsapwooda_c13  = bsapwooda * 0.010931/(1.0 + 0.010931)
+         bsapwoodb_c13  = bsapwoodb * 0.010931/(1.0 + 0.010931)
          balive_c13     = bleaf_c13 + broot_c13 + bsapwooda_c13 + bsapwoodb_c13
-         bstorage_c13   = max(0.0, cri_bleaf(ipft) * (bleaf_max - bleaf))
+         bstorage_c13   = max(0.0, (bleaf_max - bleaf) * 0.010931/(1.0 + 0.010931) )
       end if
       !------------------------------------------------------------------------------------!
 

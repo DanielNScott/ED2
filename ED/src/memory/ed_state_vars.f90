@@ -12998,6 +12998,15 @@ module ed_state_vars
                            ,'Sub-daily mean - Root respiration'                            &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%fmean_root_resp_c13   )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_root_resp_c13                                 &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_ROOT_RESP_C13_PY     :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Root respiration'                            &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%fmean_growth_resp     )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_growth_resp                                   &
@@ -13363,6 +13372,15 @@ module ed_state_vars
          call vtable_edio_r(npts,cgrid%fmean_rh                                            &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'FMEAN_RH_PY                :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Heterotrophic respiration'                   &
+                           ,'[   kg/m2/yr]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%fmean_rh_c13          )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_rh_c13                                        &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_RH_C13_PY            :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Heterotrophic respiration'                   &
                            ,'[   kg/m2/yr]','(ipoly)'            )
