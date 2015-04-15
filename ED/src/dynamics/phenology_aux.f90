@@ -356,9 +356,10 @@ module phenology_aux
       use ed_max_dims   , only : n_pft            ! ! intent(in)
       use allometry     , only : area_indices     ! ! subroutine
       use grid_coms     , only : nzg              ! ! intent(in)
-      !----- DS Additional Use Statements -------------------------------------------------!
-	   use isotopes      , only : c13af            ! ! intent(in)	!!!DSC!!!
       use therm_lib     , only : cmtl2uext        ! ! function
+      !----- DS Additional Use Statements -------------------------------------------------!
+	   use isotopes      , only : c13af            ! ! intent(in)
+      use iso_alloc     , only : pheninit_iso     ! ! intent(in)
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       type(edtype)                   , target      :: cgrid       ! Current grid
@@ -396,7 +397,6 @@ module phenology_aux
                   ! factor, then compute the equilibrium biomass of active tissues and     !
                   ! storage.                                                               !
                   !------------------------------------------------------------------------!
-                  if (c13af == 0) then !!!DSC!!!
                   call pheninit_balive_bstorage(nzg,cpatch%pft(ico),cpatch%krdepth(ico)    &
                                                ,cpatch%hite(ico),cpatch%dbh(ico)           &
                                                ,csite%soil_water(:,ipa)                    &
@@ -408,28 +408,14 @@ module phenology_aux
                                                ,cpatch%bsapwooda(ico)                      &
                                                ,cpatch%bsapwoodb(ico)                      &
                                                ,cpatch%balive(ico),cpatch%bstorage(ico))
-                  else if (c13af > 0) then !!!DSC!!!
-                  !------------------------------------------------------------------------!
-                  !This has the appropriate opt. args APPENDED TO THE END of the call.     !
-                  !------------------------------------------------------------------------!
-                     call pheninit_balive_bstorage(nzg,cpatch%pft(ico),cpatch%krdepth(ico) &
-                                                  ,cpatch%hite(ico),cpatch%dbh(ico)        &
-                                                  ,csite%soil_water(:,ipa)                 &
-                                                  ,cpoly%ntext_soil(:,isi)                 &
-                                                  ,cpoly%green_leaf_factor(:,isi)          &
-                                                  ,cpatch%paw_avg(ico),cpatch%elongf(ico)  &
-                                                  ,cpatch%phenology_status(ico)            &
-                                                  ,cpatch%bleaf(ico),cpatch%broot(ico)     &
-                                                  ,cpatch%bsapwooda(ico)                   &
-                                                  ,cpatch%bsapwoodb(ico)                   &
-                                                  ,cpatch%balive(ico),cpatch%bstorage(ico) &
-                                                  ,cpatch%bleaf_c13(ico)                   &
-                                                  ,cpatch%broot_c13(ico)                   &
-                                                  ,cpatch%bsapwooda_c13(ico)               &
-                                                  ,cpatch%bsapwoodb_c13(ico)               &
-                                                  ,cpatch%balive_c13(ico)                  &
-                                                  ,cpatch%bstorage_c13(ico))
-                  end if					   
+                  if (c13af > 0) then
+                     call pheninit_iso(cpatch%bleaf(ico)        ,cpatch%broot(ico)         &
+                                      ,cpatch%bsapwooda(ico)    ,cpatch%bsapwoodb(ico)     &
+                                      ,cpatch%balive(ico)       ,cpatch%bstorage(ico)      &
+                                      ,cpatch%bleaf_c13(ico)    ,cpatch%broot_c13(ico)     &
+                                      ,cpatch%bsapwooda_c13(ico),cpatch%bsapwoodb_c13(ico) &
+                                      ,cpatch%balive_c13(ico)   ,cpatch%bstorage_c13(ico))
+                  end if
                   !------------------------------------------------------------------------!
 
 
@@ -489,9 +475,7 @@ module phenology_aux
    !---------------------------------------------------------------------------------------!
    subroutine pheninit_balive_bstorage(mzg,ipft,kroot,height,dbh,soil_water,ntext_soil     &
                                       ,green_leaf_factor,paw_avg,elongf,phenology_status   &
-                                      ,bleaf,broot,bsapwooda,bsapwoodb,balive,bstorage     &
-                                      ,bleaf_c13,broot_c13,bsapwooda_c13,bsapwoodb_c13     &
-                                      ,balive_c13,bstorage_c13)
+                                      ,bleaf,broot,bsapwooda,bsapwoodb,balive,bstorage)
       use soil_coms     , only : soil                & ! intent(in), look-up table
                                , slz                 & ! intent(in)
                                , slzt                & ! intent(in)
@@ -505,12 +489,6 @@ module phenology_aux
       use ed_max_dims   , only : n_pft               ! ! intent(in)
       use allometry     , only : size2bl             & ! function
                                , h2crownbh           ! ! function
-      !----- DS Additional Use Statements -------------------------------------------------!
-      use isotopes    	, only : c13af               & ! intent(in)	!!!DSC!!!
-                               , cri_bleaf		     & ! intent(in)	!!!DSC!!!
-                               , cri_broot	        & ! intent(in)	!!!DSC!!!
-                               , cri_bsapwooda       & ! intent(in)	!!!DSC!!!
-                               , cri_bsapwoodb       ! ! intent(in)	!!!DSC!!!
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       integer                  , intent(in)  :: mzg               ! # of soil layers
@@ -530,13 +508,6 @@ module phenology_aux
       real                     , intent(out) :: bsapwoodb         ! BG Sapwood biomass 
       real                     , intent(out) :: balive            ! Living tissue biomass
       real                     , intent(out) :: bstorage          ! Storage biomass
-      !----- DS Additional inputs ---------------------------------------------------------!	  
-      real	, optional         , intent(out) :: bleaf_c13         ! Leaf biomass c13	!!!DSC!!!
-      real	, optional         , intent(out) :: broot_c13         ! Root biomass c13	!!!DSC!!!
-      real	, optional         , intent(out) :: bsapwooda_c13     ! AG Sapwood biomass c13 !!!DSC!!!
-      real	, optional         , intent(out) :: bsapwoodb_c13     ! BG Sapwood biomass c13	!!!DSC!!!
-      real	, optional         , intent(out) :: balive_c13        ! Living biomass c13	!!!DSC!!!
-      real	, optional         , intent(out) :: bstorage_c13      ! Storage biomass c13	!!!DSC!!!
       !----- Local variables --------------------------------------------------------------!
       integer                                :: k                 ! Layer counter
       integer                                :: nsoil             ! Soil texture class
@@ -631,22 +602,6 @@ module phenology_aux
       bstorage = max(0.0, bleaf_max - bleaf)
       !------------------------------------------------------------------------------------!
       
-      
-      !------------------------------------------------------------------------------------!
-      !     Same steps as above, but for c13 pools                                         !
-      !------------------------------------------------------------------------------------!
-      if (present(bleaf_c13)) then !!!DSC!!
-         !If bleaf_c13 is input and the rest are not, there is some problem and
-         !we should
-         !allow the segmentation fault so it's known to the user.
-         bleaf_c13      =  bleaf * 0.010931/(1.0 + 0.010931)
-         broot_c13      =  broot * 0.010931/(1.0 + 0.010931)
-         bsapwooda_c13  = bsapwooda * 0.010931/(1.0 + 0.010931)
-         bsapwoodb_c13  = bsapwoodb * 0.010931/(1.0 + 0.010931)
-         balive_c13     = bleaf_c13 + broot_c13 + bsapwooda_c13 + bsapwoodb_c13
-         bstorage_c13   = max(0.0, (bleaf_max - bleaf) * 0.010931/(1.0 + 0.010931) )
-      end if
-      !------------------------------------------------------------------------------------!
 
       return
    end subroutine pheninit_balive_bstorage

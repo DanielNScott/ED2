@@ -586,6 +586,16 @@ subroutine aggregate_polygon_fmean(cgrid)
                cgrid%fmean_can_co2_c13    (ipy) = cgrid%fmean_can_co2_c13 (ipy)            &
                                                 + csite%fmean_can_co2_c13 (ipa)            &
                                                 * patch_wgt                  
+               ! The analogue of this occurs below
+               cgrid%fmean_c13star        (ipy) = cgrid%fmean_c13star     (ipy)            &
+                                                + csite%fmean_c13star     (ipa)            &
+                                                * patch_wgt
+               cgrid%fmean_carbon13_ac    (ipy) = cgrid%fmean_carbon13_ac (ipy)            &
+                                                + csite%fmean_carbon13_ac (ipa)            &
+                                                * patch_wgt
+               cgrid%fmean_carbon13_st    (ipy) = cgrid%fmean_carbon13_st (ipy)            &
+                                                + csite%fmean_carbon13_st (ipa)            &
+                                                * patch_wgt
             end if                                                   
             !----- Temporarily convert pounding internal energy to J/m2. ------------------!
             cgrid%fmean_sfcw_energy    (ipy) = cgrid%fmean_sfcw_energy    (ipy)            &

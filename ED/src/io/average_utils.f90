@@ -520,6 +520,15 @@ module average_utils
                   cgrid%fmean_can_co2_c13 (ipy) = cgrid%fmean_can_co2_c13        (ipy)     &
                                                 + csite%fmean_can_co2_c13        (ipa)     &
                                                 * patch_wgt
+                  cgrid%fmean_c13star     (ipy) = cgrid%fmean_c13star        (ipy)         &
+                                                + csite%fmean_c13star        (ipa)         &
+                                                * patch_wgt
+                  cgrid%fmean_carbon13_ac (ipy) = cgrid%fmean_carbon13_ac    (ipy)         &
+                                                + csite%fmean_carbon13_ac    (ipa)         &
+                                                * patch_wgt
+                  cgrid%fmean_carbon13_st (ipy) = cgrid%fmean_carbon13_st    (ipy)         &
+                                                + csite%fmean_carbon13_st    (ipa)         &
+                                                * patch_wgt
                end if
                !----- Soil (extensive) properties. ----------------------------------------!
                do k=1,nzg
@@ -1003,6 +1012,9 @@ module average_utils
                pss_lai    = 0.0
                if (c13af > 0) then
                   pss_npp_c13 = 0.0
+                  csite%fmean_c13star     (ipa) = csite%fmean_c13star     (ipa) * frqsumi
+                  csite%fmean_carbon13_ac (ipa) = csite%fmean_carbon13_ac (ipa) * frqsumi
+                  csite%fmean_carbon13_st (ipa) = csite%fmean_carbon13_st (ipa) * frqsumi
                end if
                !---------------------------------------------------------------------------!
 
@@ -1451,6 +1463,10 @@ module average_utils
             
             cgrid%fmean_can_co2_c13          (  ipy) = 0.0
             cgrid%fmean_atm_co2_c13         (  ipy) = 0.0
+            
+            cgrid%fmean_c13star           (  ipy) = 0.0
+            cgrid%fmean_carbon13_ac       (  ipy) = 0.0
+            cgrid%fmean_carbon13_st       (  ipy) = 0.0
             if (c_alloc_flg > 0) then
                cgrid%fmean_lassim_resp_c13   (  ipy) = 0.0
             end if
@@ -1578,6 +1594,9 @@ module average_utils
                   csite%fmean_cwd_rh_c13         (  ipa) = 0.0
                   csite%fmean_nep_c13            (  ipa) = 0.0
                   csite%fmean_can_co2_c13        (  ipa) = 0.0
+                  csite%fmean_c13star            (  ipa) = 0.0
+                  csite%fmean_carbon13_ac        (  ipa) = 0.0
+                  csite%fmean_carbon13_st        (  ipa) = 0.0
                end if
                !---------------------------------------------------------------------------!
 
@@ -2115,6 +2134,15 @@ module average_utils
             cgrid%dmean_atm_co2_c13     (ipy) = cgrid%dmean_atm_co2_c13        (ipy)               &
                                               + cgrid%fmean_atm_co2_c13        (ipy)               &
                                               * frqsum_o_daysec
+            cgrid%dmean_c13star         (ipy) = cgrid%dmean_c13star            (ipy)               &
+                                              + cgrid%fmean_c13star            (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_carbon13_ac     (ipy) = cgrid%dmean_carbon13_ac        (ipy)               &
+                                              + cgrid%fmean_carbon13_ac        (ipy)               &
+                                              * frqsum_o_daysec
+            cgrid%dmean_carbon13_st     (ipy) = cgrid%dmean_carbon13_st        (ipy)               &
+                                              + cgrid%fmean_carbon13_st        (ipy)               &
+                                              * frqsum_o_daysec
             if (c_alloc_flg > 0) then
                cgrid%dmean_lassim_resp_c13 (ipy) = cgrid%dmean_lassim_resp_c13 (ipy)               &
                                                  + cgrid%fmean_lassim_resp_c13 (ipy)               &
@@ -2373,6 +2401,15 @@ module average_utils
                                                    * frqsum_o_daysec
                   csite%dmean_can_co2_c13    (ipa) = csite%dmean_can_co2_c13       (ipa)   &
                                                    + csite%fmean_can_co2_c13       (ipa)   &
+                                                   * frqsum_o_daysec
+                  csite%dmean_c13star        (ipa) = csite%dmean_c13star           (ipa)   &
+                                                   + csite%fmean_c13star           (ipa)   &
+                                                   * frqsum_o_daysec
+                  csite%dmean_carbon13_ac    (ipa) = csite%dmean_carbon13_ac      (ipa)   &
+                                                   + csite%fmean_carbon13_ac      (ipa)   &
+                                                   * frqsum_o_daysec
+                  csite%dmean_carbon13_st    (ipa) = csite%dmean_carbon13_st      (ipa)   &
+                                                   + csite%fmean_carbon13_st      (ipa)   &
                                                    * frqsum_o_daysec
                end if
                !---------------------------------------------------------------------------!
@@ -3527,6 +3564,9 @@ module average_utils
             
             cgrid%dmean_can_co2_c13            (ipy) = 0.0
             cgrid%dmean_atm_co2_c13            (ipy) = 0.0
+            cgrid%dmean_c13star                (ipy) = 0.0
+            cgrid%dmean_carbon13_ac            (ipy) = 0.0
+            cgrid%dmean_carbon13_st            (ipy) = 0.0
             if (c_alloc_flg > 0) then
                cgrid%dmean_lassim_resp_c13         (ipy) = 0.0
             end if
@@ -3633,6 +3673,9 @@ module average_utils
                   csite%dmean_cwd_rh_c13           (ipa) = 0.0
                   csite%dmean_nep_c13              (ipa) = 0.0
                   csite%dmean_can_co2_c13          (ipa) = 0.0
+                  csite%dmean_c13star              (ipa) = 0.0
+                  csite%dmean_carbon13_ac          (ipa) = 0.0
+                  csite%dmean_carbon13_st          (ipa) = 0.0
                end if
 
 
@@ -4438,6 +4481,15 @@ module average_utils
             cgrid%mmean_atm_co2_c13      (ipy) = cgrid%mmean_atm_co2_c13          (ipy)           &
                                                + cgrid%dmean_atm_co2_c13          (ipy)           &
                                                * ndaysi
+            cgrid%mmean_c13star          (ipy) = cgrid%mmean_c13star              (ipy)           &
+                                               + cgrid%dmean_c13star              (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_carbon13_ac      (ipy) = cgrid%mmean_carbon13_ac          (ipy)           &
+                                               + cgrid%dmean_carbon13_ac          (ipy)           &
+                                               * ndaysi
+            cgrid%mmean_carbon13_st      (ipy) = cgrid%mmean_carbon13_st          (ipy)           &
+                                               + cgrid%dmean_carbon13_st          (ipy)           &
+                                               * ndaysi
             if (c_alloc_flg > 0) then
                cgrid%mmean_lassim_resp_c13(ipy) = cgrid%mmean_lassim_resp_c13      (ipy)          &
                                                 + cgrid%dmean_lassim_resp_c13      (ipy)          &
@@ -4622,17 +4674,26 @@ module average_utils
                                                   + csite%dmean_sfcw_depth       (ipa)     &
                                                   * ndaysi
                if (c13af > 0) then
-                  csite%mmean_rh_c13           (ipa) = csite%mmean_rh_c13               (ipa)     &
-                                                     + csite%dmean_rh_c13               (ipa)     &
+                  csite%mmean_rh_c13           (ipa) = csite%mmean_rh_c13        (ipa)     &
+                                                     + csite%dmean_rh_c13        (ipa)     &
                                                      * ndaysi
-                  csite%mmean_cwd_rh_c13       (ipa) = csite%mmean_cwd_rh_c13           (ipa)     &
-                                                     + csite%dmean_cwd_rh_c13           (ipa)     &
+                  csite%mmean_cwd_rh_c13       (ipa) = csite%mmean_cwd_rh_c13    (ipa)     &
+                                                     + csite%dmean_cwd_rh_c13    (ipa)     &
                                                      * ndaysi
-                  csite%mmean_nep_c13          (ipa) = csite%mmean_nep_c13              (ipa)     &
-                                                     + csite%dmean_nep_c13              (ipa)     &
+                  csite%mmean_nep_c13          (ipa) = csite%mmean_nep_c13       (ipa)     &
+                                                     + csite%dmean_nep_c13       (ipa)     &
                                                      * ndaysi
-                  csite%mmean_can_co2_c13      (ipa) = csite%mmean_can_co2_c13          (ipa)     &
-                                                     + csite%dmean_can_co2_c13          (ipa)     &
+                  csite%mmean_can_co2_c13      (ipa) = csite%mmean_can_co2_c13   (ipa)     &
+                                                     + csite%dmean_can_co2_c13   (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_c13star          (ipa) = csite%mmean_c13star       (ipa)     &
+                                                     + csite%dmean_c13star       (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_carbon13_ac      (ipa) = csite%mmean_carbon13_ac   (ipa)     &
+                                                     + csite%dmean_carbon13_ac   (ipa)     &
+                                                     * ndaysi
+                  csite%mmean_carbon13_st      (ipa) = csite%mmean_carbon13_st   (ipa)     &
+                                                     + csite%dmean_carbon13_st   (ipa)     &
                                                      * ndaysi
                end if               
                !----- Temporarily make pounding energy extensive [J/m2]. ------------------!
@@ -5735,6 +5796,9 @@ module average_utils
             cgrid%mmean_nep_c13                 (ipy) = 0.0
             cgrid%mmean_can_co2_c13             (ipy) = 0.0 
             cgrid%mmean_atm_co2_c13             (ipy) = 0.0 
+            cgrid%mmean_c13star                 (ipy) = 0.0 
+            cgrid%mmean_carbon13_ac             (ipy) = 0.0 
+            cgrid%mmean_carbon13_st             (ipy) = 0.0 
             if (c_alloc_flg > 0) then
                cgrid%mmean_lassim_resp_c13           (ipy) = 0.0 
             end if
@@ -5871,6 +5935,9 @@ module average_utils
                   csite%mmean_cwd_rh_c13           (ipa) = 0.0
                   csite%mmean_nep_c13              (ipa) = 0.0
                   csite%mmean_can_co2_c13          (ipa) = 0.0
+                  csite%mmean_c13star              (ipa) = 0.0
+                  csite%mmean_carbon13_ac          (ipa) = 0.0
+                  csite%mmean_carbon13_st          (ipa) = 0.0
                end if
                                             
                                             

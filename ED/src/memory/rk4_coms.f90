@@ -35,6 +35,7 @@ module rk4_coms
       real(kind=8)                        :: can_prss     ! Pressure             [      Pa]
       real(kind=8)                        :: can_exner    ! Exner function       [  J/kg/K]
       real(kind=8)                        :: can_cp       ! Specific heat        [  J/kg/K]
+      real(kind=8)                        :: can_co2_c13  ! CO_2 C-13            [µmol/mol]
       !-----------------------------------------------------------------------------------!
 
       !------ Above Canopy Air Variables -------------------------------------------------!
@@ -130,6 +131,7 @@ module rk4_coms
       real(kind=8)                        :: estar  ! Eq. potential temperature   [      K]
       real(kind=8)                        :: zeta   ! z / Obukhov length          [    ---]
       real(kind=8)                        :: ribulk ! Bulk Richardson number      [    ---]
+      real(kind=8)                        :: c13star! Carbon mixing ratio         [µmol/m³]
       !------------------------------------------------------------------------------------!
 
 
@@ -154,6 +156,8 @@ module rk4_coms
       !----- Heterotrophic respiration.[µmol/m²/s] ----------------------------------------!
       real(kind=8)                        :: cwd_rh
       real(kind=8)                        :: rh
+      real(kind=8)                        :: cwd_rh_c13
+      real(kind=8)                        :: rh_c13
       !------------------------------------------------------------------------------------!
 
 
@@ -224,6 +228,12 @@ module rk4_coms
       real(kind=8), pointer, dimension(:) :: growth_resp  ! Growth respiration  [µmol/m²/s]
       real(kind=8), pointer, dimension(:) :: storage_resp ! Storage respiration [µmol/m²/s]
       real(kind=8), pointer, dimension(:) :: vleaf_resp   ! Virtual leaf resp.  [µmol/m²/s]
+      real(kind=8), pointer, dimension(:) :: gpp_c13      ! Gross primary prod. [µmol/m²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_resp_c13    ! Isotopologue    [µmol/m²/s]
+      real(kind=8), pointer, dimension(:) :: root_resp_c13    ! Isotopologue    [µmol/m²/s]
+      real(kind=8), pointer, dimension(:) :: growth_resp_c13  ! Isotopologue    [µmol/m²/s]
+      real(kind=8), pointer, dimension(:) :: storage_resp_c13 ! Isotopologue    [µmol/m²/s]
+      real(kind=8), pointer, dimension(:) :: vleaf_resp_c13   ! Isotopologue    [µmol/m²/s]
 
 
       !------ Variables used for hybrid stepping -----------------------------------------!
@@ -263,11 +273,14 @@ module rk4_coms
       !----- Carbon flux ------------------------------------------------------------------!
       real(kind=8) :: avg_carbon_ac     ! Free atm. -> canopy air
       real(kind=8) :: avg_carbon_st     ! Canopy air storage flux
+      real(kind=8) :: avg_carbon13_ac   ! Free atm. -> canopy air C-13
+      real(kind=8) :: avg_carbon13_st   ! Canopy air storage flux C-13
       !----- Characteristic gradient scales (stars). --------------------------------------!
       real(kind=8) :: avg_ustar         ! Friction velocity
       real(kind=8) :: avg_tstar         ! Temperature
       real(kind=8) :: avg_qstar         ! Specific humidity
       real(kind=8) :: avg_cstar         ! CO2 mixing ratio
+      real(kind=8) :: avg_c13star       ! CO2 mixing ratio
       !----- Soil fluxes ------------------------------------------------------------------!
       real(kind=8),pointer,dimension(:) :: avg_smoist_gg     ! Moisture flux between layers
       real(kind=8),pointer,dimension(:) :: avg_transloss     ! Transpired soil moisture sink
@@ -317,6 +330,8 @@ module rk4_coms
       !----- Carbon flux ------------------------------------------------------------------!
       real(kind=8) :: flx_carbon_ac     ! Free atm. -> canopy air
       real(kind=8) :: flx_carbon_st     ! Canopy CO2 storage flux
+      real(kind=8) :: flx_carbon13_ac   ! Free atm. -> canopy air
+      real(kind=8) :: flx_carbon13_st   ! Canopy CO2 storage flux
       !----- Soil fluxes ------------------------------------------------------------------!
       real(kind=8),pointer,dimension(:) :: flx_smoist_gg     ! Moisture flux between layers
       real(kind=8),pointer,dimension(:) :: flx_transloss     ! Transpired soil moisture sink
@@ -334,6 +349,8 @@ module rk4_coms
       !----- Full budget variables --------------------------------------------------------!
       real(kind=8) :: co2budget_storage
       real(kind=8) :: co2budget_loss2atm
+      real(kind=8) :: co2budget_storage_c13
+      real(kind=8) :: co2budget_loss2atm_c13
       real(kind=8) :: ebudget_storage
       real(kind=8) :: ebudget_netrad
       real(kind=8) :: ebudget_loss2atm
@@ -392,6 +409,7 @@ module rk4_coms
       real(kind=8)                    :: lon
       real(kind=8)                    :: lat
       real(kind=8)                    :: cosz
+      real(kind=8)                    :: atm_co2_c13
    end type rk4sitetype
    !---------------------------------------------------------------------------------------!
 
@@ -441,6 +459,8 @@ module rk4_coms
       real(kind=8) :: wcapcani ! Inverse of water capacity                  [  m²gnd/kg_air]
       real(kind=8) :: hcapcani ! Inverse of enthalpy capacity               [  m²gnd/kg_air]
       real(kind=8) :: ccapcani ! Inverse of CO2 capacity                    [ m²gnd/mol_air]
+      real(kind=8) :: c13capcan  ! 13CO2 capacity                           [ mol_air/m²gnd]
+      real(kind=8) :: c13capcani ! Inverse of 13CO2 capacity                [ m²gnd/mol_air]
 
 
       
@@ -1024,6 +1044,9 @@ module rk4_coms
       y%wbudget_loss2atm               = 0.d0
       y%wbudget_loss2drainage          = 0.d0
       y%wbudget_loss2runoff            = 0.d0
+      
+      y%co2budget_storage_c13          = 0.d0
+      y%co2budget_loss2atm_c13         = 0.d0
      
       y%can_temp                       = 0.d0
       y%can_shv                        = 0.d0
@@ -1039,6 +1062,7 @@ module rk4_coms
       y%can_cp                         = 0.d0
       y%veg_height                     = 0.d0
 
+      y%can_co2_c13                    = 0.d0
 !      y%vels                           = 0.d0
 !      y%atm_enthalpy                   = 0.d0
 
@@ -1073,6 +1097,7 @@ module rk4_coms
       y%tstar                          = 0.d0
       y%qstar                          = 0.d0
       y%estar                          = 0.d0
+      y%c13star                        = 0.d0
 
       y%zeta                           = 0.d0
       y%ribulk                         = 0.d0
@@ -1081,6 +1106,8 @@ module rk4_coms
       y%root_res_fac                   = 0.d0
       y%cwd_rh                         = 0.d0
       y%rh                             = 0.d0
+      y%cwd_rh_c13                     = 0.d0
+      y%rh_c13                         = 0.d0
 
       y%upwp                           = 0.d0
       y%wpwp                           = 0.d0
@@ -1094,6 +1121,7 @@ module rk4_coms
       y%avg_tstar                      = 0.d0
       y%avg_qstar                      = 0.d0
       y%avg_cstar                      = 0.d0
+      y%avg_c13star                    = 0.d0
 
       y%avg_carbon_ac                  = 0.d0
       y%avg_carbon_st                  = 0.d0
@@ -1107,6 +1135,8 @@ module rk4_coms
       y%avg_sensible_gc                = 0.d0
       y%avg_sensible_ac                = 0.d0
       y%avg_heatstor_veg               = 0.d0
+      y%avg_carbon13_ac                = 0.d0
+      y%avg_carbon13_st               = 0.d0
 
       y%avg_drainage                   = 0.d0
       y%avg_qdrainage                  = 0.d0
@@ -1134,6 +1164,8 @@ module rk4_coms
       y%flx_sensible_gc                = 0.d0
       y%flx_sensible_ac                = 0.d0
       y%flx_heatstor_veg               = 0.d0
+      y%flx_carbon13_ac                = 0.d0
+      y%flx_carbon13_st                = 0.d0
 
       y%hflxgc                         = 0.d0
       y%hflxsc                         = 0.d0
@@ -1283,6 +1315,12 @@ module rk4_coms
       allocate(y%growth_resp      (maxcohort))
       allocate(y%storage_resp     (maxcohort))
       allocate(y%vleaf_resp       (maxcohort))
+      allocate(y%gpp_c13          (maxcohort))
+      allocate(y%leaf_resp_c13    (maxcohort))
+      allocate(y%root_resp_c13    (maxcohort))
+      allocate(y%growth_resp_c13  (maxcohort))
+      allocate(y%storage_resp_c13 (maxcohort))
+      allocate(y%vleaf_resp_c13   (maxcohort))
 
       allocate(y%wflxlc           (maxcohort))
       allocate(y%wflxwc           (maxcohort))
@@ -1382,6 +1420,12 @@ module rk4_coms
       nullify(y%growth_resp      )
       nullify(y%storage_resp     )
       nullify(y%vleaf_resp       )
+      nullify(y%gpp_c13          )
+      nullify(y%leaf_resp_c13    )
+      nullify(y%root_resp_c13    )
+      nullify(y%growth_resp_c13  )
+      nullify(y%storage_resp_c13 )
+      nullify(y%vleaf_resp_c13   )
 
       nullify(y%wflxlc           )
       nullify(y%wflxwc           )
@@ -1480,6 +1524,12 @@ module rk4_coms
       if (associated(y%growth_resp      )) y%growth_resp      = 0.d0
       if (associated(y%storage_resp     )) y%storage_resp     = 0.d0
       if (associated(y%vleaf_resp       )) y%vleaf_resp       = 0.d0
+      if (associated(y%gpp_c13          )) y%gpp_c13          = 0.d0
+      if (associated(y%leaf_resp_c13    )) y%leaf_resp_c13    = 0.d0
+      if (associated(y%root_resp_c13    )) y%root_resp_c13    = 0.d0
+      if (associated(y%growth_resp_c13  )) y%growth_resp_c13  = 0.d0
+      if (associated(y%storage_resp_c13 )) y%storage_resp_c13 = 0.d0
+      if (associated(y%vleaf_resp_c13   )) y%vleaf_resp_c13   = 0.d0
 
       if (associated(y%wflxlc           )) y%wflxlc           = 0.d0
       if (associated(y%wflxwc           )) y%wflxwc           = 0.d0
@@ -1577,6 +1627,12 @@ module rk4_coms
       if (associated(y%growth_resp      )) deallocate(y%growth_resp       )
       if (associated(y%storage_resp     )) deallocate(y%storage_resp      )
       if (associated(y%vleaf_resp       )) deallocate(y%vleaf_resp        )
+      if (associated(y%gpp_c13          )) deallocate(y%gpp_c13           )
+      if (associated(y%leaf_resp_c13    )) deallocate(y%leaf_resp_c13     )
+      if (associated(y%root_resp_c13    )) deallocate(y%root_resp_c13     )
+      if (associated(y%growth_resp_c13  )) deallocate(y%growth_resp_c13   )
+      if (associated(y%storage_resp_c13 )) deallocate(y%storage_resp_c13  )
+      if (associated(y%vleaf_resp_c13   )) deallocate(y%vleaf_resp_c13    )
 
       if (associated(y%wflxlc           )) deallocate(y%wflxlc            )
       if (associated(y%wflxwc           )) deallocate(y%wflxwc            )
@@ -1646,6 +1702,7 @@ module rk4_coms
       y%flx_sensible_gc                = 0.d0
       y%flx_sensible_ac                = 0.d0
       y%flx_heatstor_veg               = 0.d0
+      y%flx_carbon13_ac                = 0.d0
 
       y%flx_drainage                   = 0.d0
       y%flx_qdrainage                  = 0.d0
@@ -1711,6 +1768,7 @@ module rk4_coms
       y%flx_sensible_gc   = y%flx_sensible_gc   * hdidi
       y%flx_sensible_ac   = y%flx_sensible_ac   * hdidi
       y%flx_heatstor_veg  = y%flx_heatstor_veg  * hdidi
+      y%flx_carbon13_ac   = y%flx_carbon13_ac   * hdidi
 
       y%flx_drainage      = y%flx_drainage      * hdidi
       y%flx_qdrainage     = y%flx_qdrainage     * hdidi

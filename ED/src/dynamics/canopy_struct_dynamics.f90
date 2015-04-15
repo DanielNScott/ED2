@@ -325,7 +325,8 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
-                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
+                      ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
          !---------------------------------------------------------------------------------!
 
 
@@ -407,7 +408,8 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
-                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
+                      ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
          !---------------------------------------------------------------------------------!
 
 
@@ -613,7 +615,8 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
-                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
+                      ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
          !---------------------------------------------------------------------------------!
 
 
@@ -1024,7 +1027,8 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
-                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
+                      ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
          !---------------------------------------------------------------------------------!
 
 
@@ -1603,7 +1607,8 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
-                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
+                       ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
          !---------------------------------------------------------------------------------!
 
 
@@ -1677,7 +1682,8 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
-                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
+                       ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
          !---------------------------------------------------------------------------------!
 
 
@@ -1884,7 +1890,8 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
-                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
+                       ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
          !---------------------------------------------------------------------------------!
 
 
@@ -2296,7 +2303,8 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
-                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
+                       ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
          !---------------------------------------------------------------------------------!
 
 
@@ -2677,7 +2685,7 @@ module canopy_struct_dynamics
    !---------------------------------------------------------------------------------------!
    subroutine ed_stars(theta_atm,enthalpy_atm,shv_atm,co2_atm,theta_can,enthalpy_can       &
                       ,shv_can,co2_can,zref,dheight,atm_ustar,uref,rough,ustar,tstar,estar &
-                      ,qstar,cstar,zeta,rib,ggbare)
+                      ,qstar,cstar,zeta,rib,ggbare,co2_atm_c13,co2_can_c13,c13star)
       use consts_coms     , only : grav            & ! intent(in)
                                  , vonk            & ! intent(in)
                                  , epim1           & ! intent(in)
@@ -2720,6 +2728,9 @@ module canopy_struct_dynamics
       real(kind=4), intent(out) :: zeta         ! z/(Obukhov length).           [    -----]
       real(kind=4), intent(out) :: rib          ! Bulk richardson number.       [    -----]
       real(kind=4), intent(out) :: ggbare       ! Ground conductance            [      m/s]
+      real(kind=4), intent(in)  :: co2_atm_c13  ! CO2 mixing ratio              [ µmol/mol]
+      real(kind=4), intent(in)  :: co2_can_c13  ! Canopy air CO2 mixing ratio   [ µmol/mol]
+      real(kind=4), intent(out) :: c13star      ! 13CO2 mixing turb. scale      [ µmol/mol]
       !----- Local variables. -------------------------------------------------------------!
       logical                   :: stable       ! Stable state                  [      T|F]
       real(kind=4)              :: zoz0m        ! zref/rough(momentum)          [    -----]
@@ -2977,6 +2988,7 @@ module canopy_struct_dynamics
       tstar = c3 * (theta_atm    - theta_can    )
       estar = c3 * (enthalpy_atm - enthalpy_can )
       cstar = c3 * (co2_atm      - co2_can      )
+      c13star = c3*(co2_atm_c13  - co2_can_c13  )
       !------------------------------------------------------------------------------------!
 
 
@@ -3037,7 +3049,7 @@ module canopy_struct_dynamics
    subroutine ed_stars8(theta_atm,enthalpy_atm,shv_atm,co2_atm                             &
                        ,theta_can,enthalpy_can,shv_can,co2_can                             &
                        ,zref,dheight,atm_ustar,uref,rough,ustar,tstar,estar,qstar,cstar    &
-                       ,zeta,rib,ggbare)
+                       ,zeta,rib,ggbare,co2_atm_c13,co2_can_c13,c13star)
       use consts_coms     , only : grav8            & ! intent(in)
                                  , vonk8            & ! intent(in)
                                  , epim18           & ! intent(in)
@@ -3080,6 +3092,9 @@ module canopy_struct_dynamics
       real(kind=8), intent(out) :: zeta         ! z/(Obukhov length).           [    -----]
       real(kind=8), intent(out) :: rib          ! Bulk richardson number.       [    -----]
       real(kind=8), intent(out) :: ggbare       ! Ground conductance            [      m/s]
+      real(kind=8), intent(in)  :: co2_atm_c13  ! CO2 mixing ratio              [ µmol/mol]
+      real(kind=8), intent(in)  :: co2_can_c13  ! Canopy air CO2 mixing ratio   [ µmol/mol]
+      real(kind=8), intent(out) :: c13star      ! 13CO2 mixing turb. scale      [ µmol/mol]
       !----- Local variables --------------------------------------------------------------!
       logical                   :: stable       ! Stable state                  [      T|F]
       real(kind=8)              :: zoz0m        ! zref/rough(momentum)          [    -----]
@@ -3344,6 +3359,7 @@ module canopy_struct_dynamics
       tstar = c3 * (theta_atm    - theta_can    )
       estar = c3 * (enthalpy_atm - enthalpy_can )
       cstar = c3 * (co2_atm      - co2_can      )
+      c13star = c3*(co2_atm_c13  - co2_can_c13  )
       !------------------------------------------------------------------------------------!
 
 

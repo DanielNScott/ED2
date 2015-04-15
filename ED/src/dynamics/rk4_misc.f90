@@ -43,6 +43,7 @@ subroutine copy_patch_init(sourcesite,ipa,targetp,vels)
    use ed_therm_lib          , only : ed_grndvap8            ! ! subroutine
    use canopy_air_coms       , only : ubmin8
    use canopy_struct_dynamics, only : canopy_turbulence8     ! ! subroutine
+   use isotopes              , only : c13af                  ! ! intent(in)
    !$ use omp_lib
    implicit none
 
@@ -83,6 +84,10 @@ subroutine copy_patch_init(sourcesite,ipa,targetp,vels)
    targetp%can_shv      = dble(sourcesite%can_shv(ipa))
    targetp%can_co2      = dble(sourcesite%can_co2(ipa))
    targetp%can_depth    = dble(sourcesite%can_depth(ipa))
+
+   if (c13af > 0) then
+      targetp%can_co2_c13 = dble(sourcesite%can_co2_c13(ipa))
+   end if
    !---------------------------------------------------------------------------------------!
 
    !----- Update the vegetation properties used for roughness. ----------------------------!
@@ -417,6 +422,10 @@ subroutine copy_patch_init(sourcesite,ipa,targetp,vels)
       targetp%avg_qthroughfall   = dble(sourcesite%fmean_qthroughfall  (ipa))
       targetp%avg_sensible_gc    = dble(sourcesite%fmean_sensible_gc   (ipa))
       targetp%avg_sensible_ac    = dble(sourcesite%fmean_sensible_ac   (ipa))
+      
+      targetp%avg_c13star        = dble(sourcesite%fmean_c13star       (ipa))
+      targetp%avg_carbon13_ac    = dble(sourcesite%fmean_carbon13_ac   (ipa))
+      targetp%avg_carbon13_st    = dble(sourcesite%fmean_carbon13_st   (ipa))
 
       do k = rk4site%lsl, nzg
          targetp%avg_sensible_gg(k) = dble(sourcesite%fmean_sensible_gg(k,ipa))
@@ -479,6 +488,7 @@ subroutine copy_patch_init_carbon(sourcesite,ipa,targetp)
    use consts_coms          , only : day_sec8              & ! intent(in)
                                    , umol_2_kgC8           ! ! intent(in)
    use rk4_coms             , only : rk4patchtype          ! ! structure
+   use isotopes             , only : c13af                 ! ! intent(in)
    implicit none
 
    !----- Arguments -----------------------------------------------------------------------!
@@ -511,11 +521,29 @@ subroutine copy_patch_init_carbon(sourcesite,ipa,targetp)
                                 * targetp%nplant(ico) / (day_sec8 * umol_2_kgC8)
       targetp%vleaf_resp  (ico) = dble(cpatch%vleaf_respiration  (ico))                    &
                                 * targetp%nplant(ico) / (day_sec8 * umol_2_kgC8)
+
+      if (c13af > 0) then
+         targetp%gpp_c13      (ico) = dble(cpatch%gpp_c13             (ico))
+         targetp%leaf_resp_c13(ico) = dble(cpatch%leaf_respiration_c13(ico))
+         targetp%root_resp_c13(ico) = dble(cpatch%root_respiration_c13(ico))
+
+         targetp%growth_resp_c13 (ico) = dble(cpatch%growth_respiration_c13 (ico))         &
+                                       * targetp%nplant(ico) / (day_sec8 * umol_2_kgC8)
+         targetp%storage_resp_c13(ico) = dble(cpatch%storage_respiration_c13(ico))         &
+                                       * targetp%nplant(ico) / (day_sec8 * umol_2_kgC8)
+         targetp%vleaf_resp_c13  (ico) = dble(cpatch%vleaf_respiration_c13  (ico))         &
+                                       * targetp%nplant(ico) / (day_sec8 * umol_2_kgC8)
+      end if
    end do
 
    !----- Heterotrophic respiration terms. ------------------------------------------------!
    targetp%cwd_rh = dble(sourcesite%cwd_rh(ipa))
    targetp%rh     = dble(sourcesite%rh    (ipa))
+
+   if (c13af > 0) then
+      targetp%cwd_rh_c13 = dble(sourcesite%cwd_rh_c13(ipa))
+      targetp%rh_c13     = dble(sourcesite%rh_c13    (ipa))
+   end if
 
    return
 end subroutine copy_patch_init_carbon

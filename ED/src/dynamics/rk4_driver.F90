@@ -30,6 +30,7 @@ module rk4_driver
       use therm_lib              , only : tq2enthalpy          ! ! function
       use budget_utils           , only : update_budget        & ! function
                                         , compute_budget       ! ! function
+      use isotopes               , only : c13af                ! ! intent(in)
       !$ use omp_lib
       implicit none
 
@@ -80,6 +81,8 @@ module rk4_driver
       real                                    :: old_can_depth
       real                                    :: patch_vels
       integer                                 :: ibuff
+      !----- DS Addnl Vars ----------------------------------------------------------------!
+      real                                    :: old_can_co2_c13
       !----- Functions --------------------------------------------------------------------!
       real                      , external    :: walltime
       !------------------------------------------------------------------------------------!
@@ -113,7 +116,7 @@ module rk4_driver
                   cmet%par_diffuse,cmet%nir_beam,cmet%nir_diffuse,     &
                   cmet%geoht,cpoly%lsl(isi),cpoly%ntext_soil(:,isi),   &
                   cpoly%green_leaf_factor(:,isi),cgrid%lon(ipy),       &
-                  cgrid%lat(ipy),cgrid%cosz(ipy))
+                  cgrid%lat(ipy),cgrid%cosz(ipy),cmet%atm_co2_c13)
             !---------------------------------------------------------------------------!
 
             !$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(      &
@@ -125,7 +128,8 @@ module rk4_driver
             !$OMP wcurr_loss2atm,ecurr_loss2atm,            &
             !$OMP co2curr_loss2atm,                         &
             !$OMP wcurr_loss2drainage,ecurr_loss2drainage,  &
-            !$OMP wcurr_loss2runoff,ecurr_loss2runoff,nsteps )
+            !$OMP wcurr_loss2runoff,ecurr_loss2runoff,      &
+            !$OMP nsteps,old_can_co2_c13 )
 
             patchloop: do ipa = 1,csite%npatches
                cpatch => csite%patch(ipa)
@@ -198,6 +202,9 @@ module rk4_driver
                old_can_temp     = csite%can_temp (ipa)
                old_can_prss     = csite%can_prss (ipa)
                old_can_enthalpy = tq2enthalpy(csite%can_temp(ipa),csite%can_shv(ipa),.true.)
+               if (c13af > 0) then
+                  old_can_co2_c13 = csite%can_co2_c13(ipa)
+               end if
                !---------------------------------------------------------------------------!
 
                !----- Compute current storage terms. --------------------------------------!
@@ -431,6 +438,7 @@ module rk4_driver
       use allometry            , only : h2crownbh            ! ! function
       use disturb_coms         , only : include_fire         & ! intent(in)
                                       , k_fire_first         ! ! intent(in)
+      use isotopes             , only : c13af                ! ! intent(in)
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       type(rk4patchtype), target      :: initp
@@ -506,6 +514,17 @@ module rk4_driver
       csite%snowfac(ipa)          = sngloff(initp%snowfac         ,tiny_offset)
       csite%total_sfcw_depth(ipa) = sngloff(initp%total_sfcw_depth,tiny_offset)
 
+      if (c13af > 0) then
+         csite%can_co2_c13(ipa)   = sngloff(initp%can_co2_c13     ,tiny_offset)
+         
+         ! The analogues of these is done just below.
+         csite%c13star (ipa)      = sngloff(initp%c13star         ,tiny_offset)
+         if (fast_diagnostics) then
+            csite%fmean_c13star      (ipa) = sngloff(initp%avg_c13star       ,tiny_offset)
+            csite%fmean_carbon13_ac  (ipa) = sngloff(initp%avg_carbon13_ac   ,tiny_offset)
+            csite%fmean_carbon13_st  (ipa) = sngloff(initp%avg_carbon13_st   ,tiny_offset)
+         end if
+      end if
       !------------------------------------------------------------------------------------!
       !    Find the ice-vapour equivalent potential temperature.  This is done outside the !
       ! integrator because it is an iterative method and currently we are not using it as  !
@@ -552,7 +571,7 @@ module rk4_driver
       csite%tpwp  (ipa)           = sngloff(initp%tpwp            ,tiny_offset)
       csite%qpwp  (ipa)           = sngloff(initp%qpwp            ,tiny_offset)
       csite%cpwp  (ipa)           = sngloff(initp%cpwp            ,tiny_offset)
-
+      
       !------------------------------------------------------------------------------------!
       !    These variables are fast scale fluxes, and they may not be allocated, so just   !
       ! check this before copying.                                                         !
@@ -1428,6 +1447,10 @@ module rk4_driver
                                    + csite%ground_shv       (ipa) * dtlsm_o_frqsum
       csite%fmean_can_ggnd   (ipa) = csite%fmean_can_ggnd   (ipa)                          &
                                    + csite%ggnet            (ipa) * dtlsm_o_frqsum
+      if (c13af > 0) then
+         csite%fmean_can_co2_c13(ipa) = csite%fmean_can_co2_c13(ipa)                       &
+                                      + csite%can_co2_c13      (ipa) * dtlsm_o_frqsum
+      end if
       !------------------------------------------------------------------------------------!
       !       Snow/pounding layers.  We keep track of the total, not individual layers.    !
       ! Energy will be integrated as an extensive variable, we will convert it by the      !

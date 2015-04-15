@@ -4647,6 +4647,11 @@ module fuse_fiss_utils
          csite%repro(iii,recp)           = newareai *                                      &
                                          ( csite%repro(iii,donp)      * csite%area(donp)   &
                                          + csite%repro(iii,recp)      * csite%area(recp) )
+         if (c13af > 0) then
+            csite%repro_c13(iii,recp)    = newareai *                                      &
+                                        ( csite%repro_c13(iii,donp)   * csite%area(donp)   &
+                                        + csite%repro_c13(iii,recp)   * csite%area(recp) )
+         end if
       end do
       !------------------------------------------------------------------------------------!
 
@@ -5023,6 +5028,21 @@ module fuse_fiss_utils
                                                       + csite%fmean_can_co2_c13       (donp)  &
                                                       * csite%area                    (donp)) &
                                                     *   newareai
+            csite%fmean_c13star             (recp) = ( csite%fmean_c13star         (recp)  &
+                                                   * csite%area                    (recp)  &
+                                                   + csite%fmean_c13star           (donp)  &
+                                                   * csite%area                    (donp)) &
+                                                 *   newareai
+            csite%fmean_carbon13_ac       (recp) = ( csite%fmean_carbon13_ac       (recp)  &
+                                                   * csite%area                    (recp)  &
+                                                   + csite%fmean_carbon13_ac       (donp)  &
+                                                   * csite%area                    (donp)) &
+                                                 *   newareai
+            csite%fmean_carbon13_st       (recp) = ( csite%fmean_carbon13_st       (recp)  &
+                                                   * csite%area                    (recp)  &
+                                                   + csite%fmean_carbon13_st       (donp)  &
+                                                   * csite%area                    (donp)) &
+                                                 *   newareai
          end if
          !---------------------------------------------------------------------------------!
 
@@ -5377,6 +5397,21 @@ module fuse_fiss_utils
                                                       + csite%dmean_can_co2_c13       (donp)  &
                                                       * csite%area                    (donp)) &
                                                     *   newareai
+         csite%dmean_c13star              (recp) = ( csite%dmean_c13star          (recp)   &
+                                                 * csite%area                     (recp)   &
+                                                 + csite%dmean_c13star            (donp)   &
+                                                 * csite%area                     (donp) ) &
+                                               *   newareai
+         csite%dmean_carbon13_ac        (recp) = ( csite%dmean_carbon13_ac        (recp)   &
+                                                 * csite%area                     (recp)   &
+                                                 + csite%dmean_carbon13_ac        (donp)   &
+                                                 * csite%area                     (donp) ) &
+                                               *   newareai
+         csite%dmean_carbon13_st        (recp) = ( csite%dmean_carbon13_st        (recp)   &
+                                                 * csite%area                     (recp)   &
+                                                 + csite%dmean_carbon13_st        (donp)   &
+                                                 * csite%area                     (donp) ) &
+                                               *   newareai
          end if
          !---------------------------------------------------------------------------------!
 
@@ -5901,6 +5936,21 @@ module fuse_fiss_utils
                                                     + csite%mmean_struct_soil_l_c13  (donp)   &
                                                     * csite%area                     (donp) ) &
                                                   *  newareai
+         csite%mmean_c13star            (recp) = ( csite%mmean_c13star            (recp)   &
+                                                 * csite%area                     (recp)   &
+                                                 + csite%mmean_c13star            (donp)   &
+                                                 * csite%area                     (donp) ) &
+                                               *   newareai
+         csite%mmean_carbon13_ac        (recp) = ( csite%mmean_carbon13_ac        (recp)   &
+                                                 * csite%area                     (recp)   &
+                                                 + csite%mmean_carbon13_ac        (donp)   &
+                                                 * csite%area                     (donp) ) &
+                                               *   newareai
+         csite%mmean_carbon13_st        (recp) = ( csite%mmean_carbon13_st        (recp)   &
+                                                 * csite%area                     (recp)   &
+                                                 + csite%mmean_carbon13_st        (donp)   &
+                                                 * csite%area                     (donp) ) &
+                                               *   newareai
          end if
          !---------------------------------------------------------------------------------!
 

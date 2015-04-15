@@ -1456,6 +1456,9 @@ module disturbance_utils
          csite%fmean_nep_c13        (ipa) = csite%fmean_nep_c13        (ipa) * area_fac
 
          csite%fmean_can_co2_c13    (ipa) = csite%fmean_can_co2_c13    (ipa) * area_fac
+         csite%fmean_c13star        (ipa) = csite%fmean_c13star        (ipa) * area_fac
+         csite%fmean_carbon13_ac    (ipa) = csite%fmean_carbon13_ac    (ipa) * area_fac
+         csite%fmean_carbon13_st    (ipa) = csite%fmean_carbon13_st    (ipa) * area_fac
       end if
       !------------------------------------------------------------------------------------!
       
@@ -1816,6 +1819,15 @@ module disturbance_utils
          csite%fmean_can_co2_c13    (    np) = csite%dmean_can_co2_c13        (    np)     &
                                              + csite%dmean_can_co2_c13        (    cp)     &
                                              * area_fac
+         csite%fmean_c13star        (    np) = csite%fmean_c13star          (np)           &
+                                             + csite%fmean_c13star          (cp)           &
+                                             * area_fac 
+         csite%fmean_carbon13_ac        (np) = csite%fmean_carbon13_ac      (np)           &
+                                             + csite%fmean_carbon13_ac      (cp)           &
+                                             * area_fac 
+         csite%fmean_carbon13_st        (np) = csite%fmean_carbon13_st      (np)           &
+                                             + csite%fmean_carbon13_st      (cp)           &
+                                             * area_fac 
       end if
       !------------------------------------------------------------------------------------!
 
@@ -2025,6 +2037,15 @@ module disturbance_utils
                                                 * area_fac
             csite%dmean_can_co2_c13    (    np) = csite%dmean_can_co2_c13        (    np)  &
                                                 + csite%dmean_can_co2_c13        (    cp)  &
+                                                * area_fac
+            csite%dmean_c13star        (    np) = csite%dmean_c13star            (    np)  &
+                                                + csite%dmean_c13star            (    cp)  &
+                                                * area_fac
+            csite%dmean_carbon13_ac    (    np) = csite%dmean_carbon13_ac        (    np)  &
+                                                + csite%dmean_carbon13_ac        (    cp)  &
+                                                * area_fac
+            csite%dmean_carbon13_st    (    np) = csite%dmean_carbon13_st        (    np)  &
+                                                + csite%dmean_carbon13_st        (    cp)  &
                                                 * area_fac
          end if
          !---------------------------------------------------------------------------------!
@@ -2331,6 +2352,15 @@ module disturbance_utils
             csite%mmean_can_co2_c13       (   np) = csite%mmean_can_co2_c13      (    np)  &
                                                   + csite%mmean_can_co2_c13      (    cp)  &
                                                   * area_fac
+            csite%mmean_c13star          (    np) = csite%mmean_c13star          (    np)  &
+                                                  + csite%mmean_c13star          (    cp)  &
+                                                  * area_fac
+            csite%mmean_carbon13_ac      (    np) = csite%mmean_carbon13_ac      (    np)  &
+                                                + csite%mmean_carbon13_ac        (    cp)  &
+                                                * area_fac
+            csite%mmean_carbon13_st      (    np) = csite%mmean_carbon13_st      (    np)  &
+                                                + csite%mmean_carbon13_st        (    cp)  &
+                                                * area_fac
          end if
          !---------------------------------------------------------------------------------!
       end if

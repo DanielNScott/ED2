@@ -231,7 +231,8 @@ subroutine copy_met_2_rk4site(mzg,                                            &
                               green_leaf_factor,                              &
                               lon,                                            &
                               lat,                                            &
-                              cosz)
+                              cosz,                                           &
+                              atm_co2_c13)
 
 
 
@@ -276,6 +277,7 @@ subroutine copy_met_2_rk4site(mzg,                                            &
    real                     , intent(in) :: lon
    real                     , intent(in) :: lat
    real                     , intent(in) :: cosz
+   real                     , intent(in) :: atm_co2_c13
    !----- Local variables. ----------------------------------------------------------------!
    integer                               :: ipft
    real(kind=8)                          :: can_theta8
@@ -315,6 +317,7 @@ subroutine copy_met_2_rk4site(mzg,                                            &
    rk4site%lat                   = dble(lat                 )
    rk4site%cosz                  = dble(cosz                )
    rk4site%green_leaf_factor(:)  = dble(green_leaf_factor(:))
+   rk4site%atm_co2_c13           = dble(atm_co2_c13         )
    !---------------------------------------------------------------------------------------!
 
 
@@ -374,6 +377,7 @@ subroutine inc_rk4_patch(rkp, inc, fac, cpatch)
    use grid_coms     , only : nzg                & ! intent(in)
                             , nzs                ! ! intent(in)
    use ed_misc_coms  , only : fast_diagnostics   ! ! intent(in)
+   use isotopes      , only : c13af              ! ! intent(in)
    implicit none
 
    !----- Arguments -----------------------------------------------------------------------!
@@ -389,6 +393,8 @@ subroutine inc_rk4_patch(rkp, inc, fac, cpatch)
    rkp%can_enthalpy = rkp%can_enthalpy + fac * inc%can_enthalpy
    rkp%can_shv      = rkp%can_shv      + fac * inc%can_shv
    rkp%can_co2      = rkp%can_co2      + fac * inc%can_co2
+
+   rkp%can_co2_c13  = rkp%can_co2_c13  + fac * inc%can_co2_c13
 
    do k=rk4site%lsl,nzg
       rkp%soil_water(k)       = rkp%soil_water(k)  + fac * inc%soil_water(k)
@@ -446,10 +452,14 @@ subroutine inc_rk4_patch(rkp, inc, fac, cpatch)
       rkp%avg_tstar          = rkp%avg_tstar          + fac * inc%avg_tstar
       rkp%avg_qstar          = rkp%avg_qstar          + fac * inc%avg_qstar
       rkp%avg_cstar          = rkp%avg_cstar          + fac * inc%avg_cstar
+      rkp%avg_c13star        = rkp%avg_c13star        + fac * inc%avg_c13star
 
 
       rkp%avg_carbon_ac      = rkp%avg_carbon_ac      + fac * inc%avg_carbon_ac
       rkp%avg_carbon_st      = rkp%avg_carbon_st      + fac * inc%avg_carbon_st
+      
+      rkp%avg_carbon13_ac    = rkp%avg_carbon13_ac    + fac * inc%avg_carbon13_ac
+      rkp%avg_carbon13_st    = rkp%avg_carbon13_st    + fac * inc%avg_carbon13_st
 
       rkp%avg_throughfall    = rkp%avg_throughfall    + fac * inc%avg_throughfall
       rkp%avg_vapor_ac       = rkp%avg_vapor_ac       + fac * inc%avg_vapor_ac
@@ -498,6 +508,8 @@ subroutine inc_rk4_patch(rkp, inc, fac, cpatch)
    if (print_detailed) then
       rkp%flx_carbon_ac      = rkp%flx_carbon_ac      + fac * inc%avg_carbon_ac
       rkp%flx_carbon_st      = rkp%flx_carbon_st      + fac * inc%avg_carbon_st
+      rkp%flx_carbon13_ac    = rkp%flx_carbon13_ac    + fac * inc%avg_carbon13_ac
+      rkp%flx_carbon13_st    = rkp%flx_carbon13_st    + fac * inc%avg_carbon13_st
 
       rkp%flx_vapor_gc       = rkp%flx_vapor_gc       + fac * inc%avg_vapor_gc
       rkp%flx_throughfall    = rkp%flx_throughfall    + fac * inc%avg_throughfall
@@ -583,6 +595,7 @@ subroutine get_yscal(y,dy,htry,yscal,cpatch)
    use consts_coms          , only : wdnsi8                ! ! intent(in)
    use soil_coms            , only : isoilbc               & ! intent(in)
                                    , dslzi8                ! ! intent(in)
+   use isotopes             , only : c13af                 ! ! intent(in)
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(rk4patchtype), target     :: y                     ! Struct. with the guesses
@@ -602,6 +615,9 @@ subroutine get_yscal(y,dy,htry,yscal,cpatch)
    yscal%can_shv      =  abs(y%can_shv     ) + abs(dy%can_shv      * htry)
    yscal%can_co2      =  abs(y%can_co2     ) + abs(dy%can_co2      * htry)
 
+   if (c13af > 0) then
+      yscal%can_co2_c13  =  abs(y%can_co2_c13) + abs(dy%can_co2_c13* htry)
+   end if
    !---------------------------------------------------------------------------------------!
    !     We don't solve pressure prognostically, so the scale cannot be computed based on  !
    ! the derivative.  Also, pressure is a variable with a large absolute variable and tiny !
@@ -1216,6 +1232,7 @@ subroutine copy_rk4_patch(sourcep, targetp, cpatch)
                             , nzs               ! ! intent(in)
    use ed_max_dims   , only : n_pft             ! ! intent(in)
    use ed_misc_coms  , only : fast_diagnostics  ! ! intent(in)
+   use isotopes      , only : c13af             ! ! intent(in)
 
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
@@ -1245,6 +1262,8 @@ subroutine copy_rk4_patch(sourcep, targetp, cpatch)
    targetp%total_sfcw_depth = sourcep%total_sfcw_depth
    targetp%total_sfcw_mass  = sourcep%total_sfcw_mass
    targetp%snowfac          = sourcep%snowfac
+
+   targetp%can_co2_c13      = sourcep%can_co2_c13
 
 !  These are not incremented
    targetp%vels             = sourcep%vels
@@ -1287,6 +1306,10 @@ subroutine copy_rk4_patch(sourcep, targetp, cpatch)
 
    targetp%cwd_rh           = sourcep%cwd_rh
    targetp%rh               = sourcep%rh
+   
+   targetp%c13star          = sourcep%c13star
+   targetp%cwd_rh_c13       = sourcep%cwd_rh_c13
+   targetp%rh_c13           = sourcep%rh_c13
 
    targetp%water_deficit    = sourcep%water_deficit
 
@@ -1364,6 +1387,13 @@ subroutine copy_rk4_patch(sourcep, targetp, cpatch)
       targetp%growth_resp     (k) = sourcep%growth_resp     (k)
       targetp%storage_resp    (k) = sourcep%storage_resp    (k)
       targetp%vleaf_resp      (k) = sourcep%vleaf_resp      (k)
+
+      targetp%gpp_c13         (k) = sourcep%gpp_c13         (k)
+      targetp%leaf_resp_c13   (k) = sourcep%leaf_resp_c13   (k)
+      targetp%root_resp_c13   (k) = sourcep%root_resp_c13   (k)
+      targetp%growth_resp_c13 (k) = sourcep%growth_resp_c13 (k)
+      targetp%storage_resp_c13(k) = sourcep%storage_resp_c13(k)
+      targetp%vleaf_resp_c13  (k) = sourcep%vleaf_resp_c13  (k)
    end do
 
    if (checkbudget) then
@@ -1394,6 +1424,10 @@ subroutine copy_rk4_patch(sourcep, targetp, cpatch)
       targetp%avg_sensible_ac        = sourcep%avg_sensible_ac
       targetp%avg_drainage           = sourcep%avg_drainage
       targetp%avg_qdrainage          = sourcep%avg_qdrainage
+      
+      targetp%avg_c13star            = sourcep%avg_c13star
+      targetp%avg_carbon13_ac        = sourcep%avg_carbon13_ac
+      targetp%avg_carbon13_st        = sourcep%avg_carbon13_st
 
       do k=rk4site%lsl,nzg
          targetp%avg_sensible_gg(k) = sourcep%avg_sensible_gg(k)
@@ -1438,6 +1472,9 @@ subroutine copy_rk4_patch(sourcep, targetp, cpatch)
       targetp%flx_sensible_ac        = sourcep%flx_sensible_ac
       targetp%flx_drainage           = sourcep%flx_drainage
       targetp%flx_qdrainage          = sourcep%flx_qdrainage
+      
+      targetp%flx_carbon13_ac        = sourcep%flx_carbon13_ac
+      targetp%flx_carbon13_st        = sourcep%flx_carbon13_st
 
       do k=rk4site%lsl,nzg
          targetp%flx_sensible_gg(k) = sourcep%flx_sensible_gg(k)

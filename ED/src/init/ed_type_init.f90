@@ -725,6 +725,9 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
    csite%avg_monthly_gndwater            (ipaa:ipaz) = 0.0
    csite%avg_monthly_waterdef            (ipaa:ipaz) = 0.0
    csite%plant_ag_biomass                (ipaa:ipaz) = 0.0
+   if (c13af > 0) then
+      csite%repro_c13            (1:n_pft,ipaa:ipaz) = 0.0
+   end if
    !---------------------------------------------------------------------------------------!
 
 
@@ -819,6 +822,7 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
       csite%fsc13_in                     (ipaa:ipaz) = 0.0
       csite%ssc13_in                     (ipaa:ipaz) = 0.0
       csite%ssl_c13_in                   (ipaa:ipaz) = 0.0
+      csite%c13star                      (ipaa:ipaz) = 0.0
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -890,6 +894,9 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
       csite%fmean_cwd_rh_c13             (ipaa:ipaz) = 0.0
       csite%fmean_nep_c13                (ipaa:ipaz) = 0.0
       csite%fmean_can_co2_c13            (ipaa:ipaz) = 0.0
+      csite%fmean_c13star                (ipaa:ipaz) = 0.0
+      csite%fmean_carbon13_ac            (ipaa:ipaz) = 0.0
+      csite%fmean_carbon13_st            (ipaa:ipaz) = 0.0
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -967,6 +974,9 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
          csite%dmean_cwd_rh_c13             (ipaa:ipaz) = 0.0
          csite%dmean_nep_c13                (ipaa:ipaz) = 0.0
          csite%dmean_can_co2_c13            (ipaa:ipaz) = 0.0
+         csite%dmean_c13star                (ipaa:ipaz) = 0.0
+         csite%dmean_carbon13_ac            (ipaa:ipaz) = 0.0
+         csite%dmean_carbon13_st            (ipaa:ipaz) = 0.0
       end if
    end if
    !---------------------------------------------------------------------------------------!
@@ -1072,6 +1082,9 @@ subroutine init_ed_patch_vars(csite,ipaa,ipaz,lsl)
          csite%mmean_slow_soil_c13          (ipaa:ipaz) = 0.0
          csite%mmean_struct_soil_c13        (ipaa:ipaz) = 0.0
          csite%mmean_struct_soil_l_c13      (ipaa:ipaz) = 0.0
+         csite%mmean_c13star                (ipaa:ipaz) = 0.0
+         csite%mmean_carbon13_ac            (ipaa:ipaz) = 0.0
+         csite%mmean_carbon13_st            (ipaa:ipaz) = 0.0
       end if
       !------------------------------------------------------------------------------------!
    end if
@@ -1716,6 +1729,9 @@ subroutine init_ed_poly_vars(cgrid)
          cgrid%fmean_nep_c13                  (ipy) = 0.0
          cgrid%fmean_can_co2_c13              (ipy) = 0.0
          cgrid%fmean_atm_co2_c13              (ipy) = 0.0
+         cgrid%fmean_c13star                  (ipy) = 0.0
+         cgrid%fmean_carbon13_ac              (ipy) = 0.0
+         cgrid%fmean_carbon13_st              (ipy) = 0.0
       end if
       !------------------------------------------------------------------------------------!
 
@@ -1870,6 +1886,9 @@ subroutine init_ed_poly_vars(cgrid)
             cgrid%dmean_nep_c13                  (ipy) = 0.0
             cgrid%dmean_can_co2_c13              (ipy) = 0.0
             cgrid%dmean_atm_co2_c13              (ipy) = 0.0
+            cgrid%dmean_c13star                  (ipy) = 0.0
+            cgrid%dmean_carbon13_ac              (ipy) = 0.0
+            cgrid%dmean_carbon13_st              (ipy) = 0.0
          end if
       end if
       !------------------------------------------------------------------------------------!
@@ -2079,6 +2098,9 @@ subroutine init_ed_poly_vars(cgrid)
             cgrid%mmean_struct_soil_c13          (ipy) = 0.0
             cgrid%mmean_struct_soil_l_c13        (ipy) = 0.0
             cgrid%mmean_cwd_c13                  (ipy) = 0.0
+            cgrid%mmean_c13star                  (ipy) = 0.0
+            cgrid%mmean_carbon13_ac              (ipy) = 0.0
+            cgrid%mmean_carbon13_st              (ipy) = 0.0
          end if                         
          !---------------------------------------------------------------------------------!
       end if

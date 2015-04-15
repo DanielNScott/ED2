@@ -144,10 +144,10 @@ module growth_balive
                   !      In the old scheme this is where we used to calculate growth and   !
                   ! vleaf resp, so we do so if c_alloc_flg == 0.                           !
                   !------------------------------------------------------------------------!
-                  if (c_alloc_flg == 0) then
+                  !if (c_alloc_flg == 0) then
                      call gvl_resp(cpatch,ico,ipft,daily_C_gain,daily_c13_gain,salloci     &
                                   ,tfact,cpoly%green_leaf_factor(ipft,isi))
-                  end if
+                  !end if
                   !------------------------------------------------------------------------!
                                 
                                 
@@ -876,8 +876,8 @@ module growth_balive
          !   We compute growth & vleaf resp here rather than after plant_carbon_balances.  !
          ! See the desc. of c_alloc_flg in ED2IN for more info                             !
          !---------------------------------------------------------------------------------!
-         call gvl_resp(cpatch,ico,ipft,daily_C_gain,daily_c13_gain,salloci                 &
-                      ,tfact,green_leaf_factor)
+         !call gvl_resp(cpatch,ico,ipft,daily_C_gain,daily_c13_gain,salloci                 &
+         !             ,tfact,green_leaf_factor)
          !---------------------------------------------------------------------------------!
          cb_decrement = 0.0
          
@@ -1276,10 +1276,10 @@ module growth_balive
       available_carbon = cpatch%bstorage(ico) + carbon_balance
       time_to_flush    = carbon_balance > 0.0 .or.                                         &
                          ( available_carbon > 0.0 .and. cpatch%phenology_status(ico) == 1 )
-      if (c_alloc_flg > 0) then
-         time_to_flush = carbon_balance >= 0.0 .or.                                        &
-                          ( available_carbon >= 0.0 .and. cpatch%phenology_status(ico) == 1)
-      end if
+      !if (c_alloc_flg > 0) then
+      !   time_to_flush = carbon_balance >= 0.0 .or.                                        &
+      !                    ( available_carbon >= 0.0 .and. cpatch%phenology_status(ico) == 1)
+      !end if
       !if (carbon_balance == 0.0 .or.                                                       &
       !   (available_carbon == 0.0 .and. cpatch%phenology_status(ico) == 1)) then
       !      write (*,*) 'time_to_flush boundary case achieved'
@@ -1297,13 +1297,13 @@ module growth_balive
       ! match the phenology induced curve expressed when c_alloc_flg == 0. Hence, we       !
       ! include c_alloc_flg in the selector below.                                         !
       !------------------------------------------------------------------------------------!
-      if (.not. time_to_flush .and. c_alloc_flg > 0) then
-         write (*,*) '---------------------------------------------------------------------'
-         write (*,*) 'Time_to_flush is (erroneously?) false...'
-         write (*,*) 'time_to_flush,   c_alloc_flg   :', time_to_flush, c_alloc_flg 
-         write (*,*) 'carbon_balance,  available_c.  :', carbon_balance, available_carbon 
-         write (*,*) 'phenol._status                 :', cpatch%phenology_status(ico) 
-      end if
+      !if (.not. time_to_flush .and. c_alloc_flg > 0) then
+      !   write (*,*) '---------------------------------------------------------------------'
+      !   write (*,*) 'Time_to_flush is (erroneously?) false...'
+      !   write (*,*) 'time_to_flush,   c_alloc_flg   :', time_to_flush, c_alloc_flg 
+      !   write (*,*) 'carbon_balance,  available_c.  :', carbon_balance, available_carbon 
+      !   write (*,*) 'phenol._status                 :', cpatch%phenology_status(ico) 
+      !end if
       if (time_to_flush) then 
          if (cpatch%phenology_status(ico) == 0 .or. cpatch%phenology_status(ico) == 1 .or. c_alloc_flg == 2) then
             !------------------------------------------------------------------------------!
@@ -2460,12 +2460,11 @@ module growth_balive
       if (c_alloc_flg > 0) then
          !cpatch%vleaf_respiration(ico) = min(cpatch%vleaf_respiration(ico)                 &
          !                                   ,cpatch%bstorage(ico))
-         cpatch%vleaf_respiration(ico) = 0.0
-         
+         cpatch%vleaf_respiration(ico) = 0
          if (c13af > 0) then
             !cpatch%vleaf_respiration_c13(ico) = min(cpatch%vleaf_respiration_c13(ico)      &
             !                                       ,cpatch%bstorage_c13(ico))
-            cpatch%vleaf_respiration_c13(ico) = 0.0
+            cpatch%vleaf_respiration_c13(ico) = 0
          end if
       end if
 
@@ -2494,7 +2493,7 @@ module growth_balive
       !----- Local variables. -------------------------------------------------------------!
       logical        :: warning  = .false.   ! Warning flag.
       logical        :: error    = .false.   ! Error flag.
-      character(60)  :: reason               ! Reason for warning or error.
+      character(80)  :: reason               ! Reason for warning or error.
       character(17)  :: Cfmt                 ! Character format, for strings
       character(37)  :: Rfmt                 ! Real format, for reals.
       !------------------------------------------------------------------------------------!
@@ -2505,14 +2504,14 @@ module growth_balive
          ! Check carbon balance and C-13 balance. These throw warnings.
          if (carbon_balance   < 0.0 .and. abs(carbon_balance  ) > 0.0) then
             reason  = 'Carbon balance is negative.'
-            warning = .true.
+            !warning = .true.
          end if
          if (carbon13_balance < 0.0 .and. abs(carbon13_balance) > 0.0) then
             reason  = 'Carbon-13 balance is negative.'
-            warning = .true. 
+            !warning = .true. 
          end if
-         if (carbon13_balance > carbon_balance) then
-            reason  = 'Carbon-13 balance is greater than carbon balance.'
+         if (abs(carbon13_balance) > abs(carbon_balance)) then
+            reason  = 'Carbon-13 balance is greater in magnitude than carbon balance.'
             warning = .true.
          end if
 
@@ -2522,7 +2521,7 @@ module growth_balive
             error = .true.
          end if
          if (daily_c13_gain < 0.0 .and. abs(daily_c13_gain) > 0.0) then
-            reason  = 'Daily C-13 balance is negative.'
+            reason  = 'Daily C-13 gain is negative.'
             error = .true. 
          end if
          if (daily_c13_gain > daily_C_gain) then

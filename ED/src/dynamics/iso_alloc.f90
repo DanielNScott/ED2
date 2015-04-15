@@ -41,22 +41,25 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
    real           :: pre_sa  , post_sa       ! SapA C-13 content before & after allocation
    real           :: pre_sb  , post_sb       ! SapB C-13 content before & after allocation
    real           :: pre_st  , post_st       ! Stor C-13 content before & after allocation
-   integer        :: diagnostic    = 0       ! Tells us where a problem was if encountered.
-   integer        :: print_details = 0
+   integer        :: diagnostic              ! Tells us where a problem was if encountered.
+   integer        :: print_details           !
    logical        :: check_erythang          ! Sanity check everything this routine sees?
    character(70)  :: diagnostic_msg
    character(20)  :: reason
-   
+  
+   diagnostic    = 0
+   print_details = 0
+ 
    check_erythang = .true.
    !---------------------------------------------------------------------------------------!
    ! Check that some of the input stuff even makes sense...                                !
    !---------------------------------------------------------------------------------------!
-   if (carbon13_balance > carbon_balance .and. check_erythang) then
+   if (abs(carbon13_balance) > abs(carbon_balance) .and. check_erythang) then
       write (*,*) '------------------------------------------------------------------------'
-      write (*,*) 'Whoa! Is it really cool to have greater c-13 balance than c bal?       !'
+      write (*,*) 'Input check in alloc_c13: abs(carbon13_balance) > abs(carbon_balance)   !'
       write (*,*) '------------------------------------------------------------------------'
       write (*,'(A13, I4, I3)') 'Cohort, PFT: ', ico, cpatch%pft(ico)
-      write (*,*) 'Carbon_balance, carbon_13_balance : ', carbon_balance, carbon13_balance
+      write (*,*) 'carbon13_balance, carbon_balance : ', carbon13_balance, carbon_balance
       write (*,*) ''
    end if
    
@@ -1457,6 +1460,50 @@ subroutine get_lhc_target(ipft,bleaf,bleaf_c13,today_gpp,today_gpp_c13,lh2tc_in,
    !(*) NOTE:
    
 end subroutine get_lhc_target
+!==========================================================================================!
+
+
+
+
+
+!==========================================================================================!
+subroutine pheninit_iso(bleaf, broot, bsapwooda, bsapwoodb, balive, bstorage     &
+                       ,bleaf_c13, broot_c13, bsapwooda_c13, bsapwoodb_c13       &
+                       ,balive_c13, bstorage_c13)
+   use isotopes    	, only : cri_bleaf		     & ! intent(in)
+                            , cri_broot	        & ! intent(in)
+                            , cri_bsapwooda       & ! intent(in)
+                            , cri_bsapwoodb       ! ! intent(in)
+   implicit none
+   !----- Arguments --------------------------------------------------------------------!
+   real                     , intent(in)  :: bleaf             ! Leaf biomass
+   real                     , intent(in)  :: broot             ! Root biomass
+   real                     , intent(in)  :: bsapwooda         ! AG Sapwood biomass 
+   real                     , intent(in)  :: bsapwoodb         ! BG Sapwood biomass 
+   real                     , intent(in)  :: balive            ! Living tissue biomass
+   real                     , intent(in)  :: bstorage          ! Storage biomass
+   
+   real                     , intent(out) :: bleaf_c13         ! Carbon-13 Analogues
+   real                     , intent(out) :: broot_c13         !
+   real                     , intent(out) :: bsapwooda_c13     !
+   real                     , intent(out) :: bsapwoodb_c13     !
+   real                     , intent(out) :: balive_c13        !
+   real                     , intent(out) :: bstorage_c13      !
+   !------------------------------------------------------------------------------------!
+
+   !------------------------------------------------------------------------------------!
+   !  Apply -27 permil ratio to everything. Recruits are small so even if this is not   !
+   ! an ideal initialization it will change quickly.                                    !
+   !------------------------------------------------------------------------------------!
+      bleaf_c13      = bleaf     * 0.010931/(1.0 + 0.010931)
+      broot_c13      = broot     * 0.010931/(1.0 + 0.010931)
+      bsapwooda_c13  = bsapwooda * 0.010931/(1.0 + 0.010931)
+      bsapwoodb_c13  = bsapwoodb * 0.010931/(1.0 + 0.010931)
+      balive_c13     = balive    * 0.010931/(1.0 + 0.010931)
+      bstorage_c13   = bstorage  * 0.010931/(1.0 + 0.010931)
+   !------------------------------------------------------------------------------------!
+
+end subroutine pheninit_iso
 !==========================================================================================!
 
 

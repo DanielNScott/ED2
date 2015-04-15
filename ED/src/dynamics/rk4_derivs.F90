@@ -878,6 +878,8 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
    use canopy_struct_dynamics, only : vertical_vel_flux8   ! ! function
    use pft_coms              , only : water_conductance    ! ! intent(in)
    use budget_utils          , only : compute_netrad       ! ! function
+   !----- DS Addnl Uses -------------------------------------------------------------------!
+   use isotopes              , only : c13af                ! ! intent(in)
    !$ use omp_lib
 
    implicit none
@@ -977,6 +979,12 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
                                                          ! the CO2 ODE
    real(kind=8)                     :: max_dwdt,dwdt     ! Used for capping leaf evap 
    integer                          :: ibuff
+   !----- DS Addnl. Vars  -----------------------------------------------------------------!
+   real(kind=8)                     :: leaf_flux_c13     !
+   real(kind=8)                     :: c13flxac          ! Atm->canopy carbon-13 flux
+   real(kind=8)                     :: c13flxgc          ! Atm->canopy carbon-13 flux
+   real(kind=8)                     :: c13flxlc_tot      ! Total leaf -> CAS 13CO2 flux
+   real(kind=8)                     :: c13flxwc_tot      ! Total wood -> CAS 13CO2 flux
    !----- Functions -----------------------------------------------------------------------!
    real(kind=4), external           :: sngloff           ! Safe dble 2 single precision
    !---------------------------------------------------------------------------------------!
@@ -995,6 +1003,9 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
    wflxac    = rho_ustar      * initp%qstar                   ! Water flux
    eflxac    = rho_ustar      * initp%estar                   ! Enthalpy flux
    cflxac    = rho_ustar      * initp%cstar * mmdryi8         ! CO2 flux [umol/m2/s]
+   if (c13af > 0) then
+      c13flxac = rho_ustar * initp%c13star * mmdryi8          ! CO2 flux [umol/m2/s]
+   end if
    !------ Sensible heat flux. ------------------------------------------------------------!
    hflxac    = eflxac + wflxac * cph2o8 * tsupercool_vap8
    !---------------------------------------------------------------------------------------!
@@ -1274,11 +1285,19 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
    cflxlc_tot       = 0.d0
    cflxwc_tot       = initp%cwd_rh
    cflxgc           = initp%rh - initp%cwd_rh
+   if (c13af > 0) then
+      c13flxlc_tot  = 0.d0
+      c13flxwc_tot  = initp%cwd_rh_c13
+      c13flxgc      = initp%rh_c13 - initp%cwd_rh_c13
+   end if
    !---------------------------------------------------------------------------------------!
   
    cohortloop: do ico = 1,cpatch%ncohorts
 
       cflxgc = cflxgc + initp%root_resp(ico)
+      if (c13af > 0) then
+         c13flxgc = c13flxgc + initp%root_resp_c13(ico)
+      end if 
 
       !------------------------------------------------------------------------------------!
       !    Add the respiration terms according to their "source".                          !
@@ -1289,6 +1308,10 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
       !------------------------------------------------------------------------------------!
       cflxlc_tot    = cflxlc_tot + initp%vleaf_resp(ico)
       cflxwc_tot    = cflxwc_tot + initp%growth_resp(ico) + initp%storage_resp(ico)
+      if (c13af > 0) then
+         c13flxlc_tot = c13flxlc_tot + initp%vleaf_resp_c13(ico)
+         c13flxwc_tot = c13flxwc_tot + initp%growth_resp_c13(ico) + initp%storage_resp_c13(ico)
+      end if 
       !------------------------------------------------------------------------------------!
 
 
@@ -1336,6 +1359,11 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
 
          !------ Update CO2 flux from vegetation to canopy air space. ---------------------!
          cflxlc_tot = cflxlc_tot - leaf_flux
+
+         if (c13af > 0) then
+            leaf_flux_c13 = initp%gpp_c13(ico) - initp%leaf_resp_c13(ico)
+            c13flxlc_tot  = c13flxlc_tot - leaf_flux_c13
+         end if
 
          !---------------------------------------------------------------------------------!
          !     Define the minimum leaf water to be considered, and the maximum amount      !
@@ -1882,6 +1910,7 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
       dinitp%veg_energy(ico) = dinitp%leaf_energy(ico) + dinitp%wood_energy(ico)
       dinitp%veg_water (ico) = dinitp%leaf_water (ico) + dinitp%wood_water (ico)
       !------------------------------------------------------------------------------------!
+
    end do cohortloop
    !---------------------------------------------------------------------------------------!
 
@@ -1905,6 +1934,11 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
                          + wflxac                                  )*rk4aux(ibuff)%wcapcani
    dinitp%can_co2      = ( cflxgc      + cflxlc_tot  + cflxwc_tot                          &
                          + cflxac                                  )*rk4aux(ibuff)%ccapcani
+   
+   if (c13af > 0) then
+      dinitp%can_co2_c13  = ( c13flxgc + c13flxlc_tot + c13flxwc_tot                       &
+                            + c13flxac                             )*rk4aux(ibuff)%ccapcani
+   end if
    !---------------------------------------------------------------------------------------!
 
    !---------------------------------------------------------------------------------------!
@@ -1960,6 +1994,12 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
 
       dinitp%avg_throughfall  = throughfall_tot             ! Throughfall,   Atmo->Grnd
       dinitp%avg_qthroughfall = qthroughfall_tot            ! Throughfall,   Atmo->Grnd
+
+      if (c13af > 0) then
+         dinitp%avg_carbon13_ac   = c13flxac                    ! Carbon flx,  Atmo->Canopy
+         dinitp%avg_carbon13_st   = c13flxgc     + c13flxwc_tot                            &
+                                  + c13flxlc_tot + c13flxac     ! Carbon storage flux
+      end if
       !------------------------------------------------------------------------------------!
 
       !------ These are used to compute the averages of the star terms. -------------------!
@@ -1967,6 +2007,7 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
       dinitp%avg_tstar = initp%tstar
       dinitp%avg_qstar = initp%qstar
       dinitp%avg_cstar = initp%cstar
+      dinitp%avg_c13star = initp%c13star
       !------------------------------------------------------------------------------------!
 
    end if

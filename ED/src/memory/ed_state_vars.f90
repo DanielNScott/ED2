@@ -1639,6 +1639,8 @@ module ed_state_vars
       !====================================================================================!
       
       !-------- C Isotope Vars ------------------------------------------------------------!
+      real , pointer,dimension(:,:) :: repro_c13               !(n_pft,npatches)  
+
       real , pointer,dimension(:) :: fast_soil_c13             ! (kg/m2)
       real , pointer,dimension(:) :: slow_soil_c13             ! (kg/m2)
       real , pointer,dimension(:) :: structural_soil_c13       ! (kg/m2)
@@ -1652,8 +1654,18 @@ module ed_state_vars
       real , pointer,dimension(:) :: cwd_rh_c13                ! (umol/m2/s)     
 
       real , pointer,dimension(:) :: can_co2_c13               ! [umol/mol] (mixing ratio)
+      real , pointer,dimension(:) :: c13star                   ! []
       
-      real , pointer,dimension(:) :: co2budget_rh_c13          ![umol_CO2/m2/s]
+      real,pointer,dimension(:)   :: fmean_carbon13_ac         ! CO2 flux, ATM->CAS    [umol/m2/s]
+      real,pointer,dimension(:)   :: fmean_carbon13_st         ! CO2 storage           [umol/m2/s]
+      
+      real,pointer,dimension(:)   :: dmean_carbon13_ac         ! CO2 flux, ATM->CAS    [umol/m2/s]
+      real,pointer,dimension(:)   :: dmean_carbon13_st         ! CO2 flux, ATM->CAS    [umol/m2/s]
+      
+      real,pointer,dimension(:)   :: mmean_carbon13_ac         ! CO2 storage           [umol/m2/s]
+      real,pointer,dimension(:)   :: mmean_carbon13_st         ! CO2 storage           [umol/m2/s]
+      
+      real , pointer,dimension(:) :: co2budget_rh_c13           ![umol_CO2/m2/s]
       real , pointer,dimension(:) :: co2budget_cwd_rh_c13       ![umol_CO2/m2/s]
            
       !----- Photosynthesis/Decomposition. ------------------------------------------------!
@@ -1662,6 +1674,7 @@ module ed_state_vars
       real,pointer,dimension(:)   :: fmean_nep_c13             ! Net Ecosyst. Prod. [umol/m2/s]
       !----- State variables. -------------------------------------------------------------!
       real,pointer,dimension(:)   :: fmean_can_co2_c13         ! CAS CO2 mix. ratio [ umol/mol]
+      real,pointer,dimension(:)   :: fmean_c13star          ! CO2 scale             [ umol/mol]
       !----- Variables that are updated once a day. ---------------------------------------!
       real,pointer,dimension(:) :: mmean_fast_soil_c13      ! Fast soil carbon      [   kgC/m2]
       real,pointer,dimension(:) :: mmean_slow_soil_c13      ! Slow soil carbon      [   kgC/m2]
@@ -1672,11 +1685,13 @@ module ed_state_vars
       real,pointer,dimension(:) :: dmean_cwd_rh_c13
       real,pointer,dimension(:) :: dmean_nep_c13
       real,pointer,dimension(:) :: dmean_can_co2_c13
+      real,pointer,dimension(:) :: dmean_c13star
       !----- Monthly means.  Units are the same as the "avg" variables. --------------------!
       real,pointer,dimension(:) :: mmean_rh_c13
       real,pointer,dimension(:) :: mmean_cwd_rh_c13
       real,pointer,dimension(:) :: mmean_nep_c13
       real,pointer,dimension(:) :: mmean_can_co2_c13
+      real,pointer,dimension(:) :: mmean_c13star
       !-------------------------------------------------------------------------------------!
      
 
@@ -2915,7 +2930,10 @@ module ed_state_vars
       real,pointer,dimension(:)   :: fmean_cwd_rh_c13          ! CWD respiration    [kgC/m2/yr]
       real,pointer,dimension(:)   :: fmean_nep_c13             ! Net Ecosyst. Prod. [kgC/m2/yr]
       !----- State variables. -------------------------------------------------------------!
-      real,pointer,dimension(:)   :: fmean_can_co2_c13         ! CAS CO2 mix. ratio [ umol/mol]
+      real,pointer,dimension(:)   :: fmean_can_co2_c13      ! CAS CO2 mix. ratio    [ umol/mol]
+      real,pointer,dimension(:)   :: fmean_c13star          ! CO2 scale             [ umol/mol]
+      real,pointer,dimension(:)   :: fmean_carbon13_ac      ! CO2 flux, ATM->CAS    [umol/m2/s]
+      real,pointer,dimension(:)   :: fmean_carbon13_st      ! CO2 flux, ATM->CAS    [umol/m2/s]
       !------ Met driver. -----------------------------------------------------------------!
       real,pointer,dimension(:)   :: fmean_atm_co2_c13         ! Air CO2               [umol/mol]
       !----- Variables that are updated once a day. ---------------------------------------!
@@ -2944,6 +2962,9 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_nep_c13      
       real,pointer,dimension(:)     :: dmean_atm_co2_c13
       real,pointer,dimension(:)     :: dmean_can_co2_c13
+      real,pointer,dimension(:)     :: dmean_c13star          ! CO2 scale             [ umol/mol]
+      real,pointer,dimension(:)     :: dmean_carbon13_ac      ! CO2 flux, ATM->CAS    [umol/m2/s]
+      real,pointer,dimension(:)     :: dmean_carbon13_st      ! CO2 flux, ATM->CAS    [umol/m2/s]
       !----- Monthly mean (same units as fast mean). --------------------------------------!
       real,pointer,dimension(:)     :: mmean_gpp_c13      
       real,pointer,dimension(:)     :: mmean_npp_c13      
@@ -2958,6 +2979,9 @@ module ed_state_vars
       real,pointer,dimension(:)     :: mmean_nep_c13      
       real,pointer,dimension(:)     :: mmean_atm_co2_c13  
       real,pointer,dimension(:)     :: mmean_can_co2_c13
+      real,pointer,dimension(:)     :: mmean_c13star          ! CO2 scale             [ umol/mol]
+      real,pointer,dimension(:)     :: mmean_carbon13_ac      ! CO2 flux, ATM->CAS    [umol/m2/s]
+      real,pointer,dimension(:)     :: mmean_carbon13_st      ! CO2 flux, ATM->CAS    [umol/m2/s]
                                                       
    end type edtype                                    
    !=======================================================================================!
@@ -3374,6 +3398,9 @@ module ed_state_vars
          allocate(cgrid%struct_soil_c13         (                    npolygons))
          allocate(cgrid%struct_soil_l_c13       (                    npolygons))
          allocate(cgrid%cwd_c13                 (                    npolygons))
+         allocate(cgrid%fmean_c13star           (                    npolygons))
+         allocate(cgrid%fmean_carbon13_ac       (                    npolygons))
+         allocate(cgrid%fmean_carbon13_st       (                    npolygons))
          !----- Fast averages. ---------------------------------------------------------------!
          allocate(cgrid%fmean_gpp_c13                 (                    npolygons))
          allocate(cgrid%fmean_npp_c13                 (                    npolygons))
@@ -3554,6 +3581,9 @@ module ed_state_vars
             allocate(cgrid%dmean_nep_c13                 (                    npolygons))
             !----- State variables. -------------------------------------------------------------!
             allocate(cgrid%dmean_can_co2_c13             (                    npolygons))
+            allocate(cgrid%dmean_c13star                 (                    npolygons))
+            allocate(cgrid%dmean_carbon13_ac             (                    npolygons))
+            allocate(cgrid%dmean_carbon13_st             (                    npolygons))
             !------ Met driver. -----------------------------------------------------------------!
             allocate(cgrid%dmean_atm_co2_c13             (                    npolygons))
             if (c_alloc_flg > 0) then
@@ -3773,6 +3803,9 @@ module ed_state_vars
             allocate(cgrid%mmean_nep_c13                 (                     npolygons))
             allocate(cgrid%mmean_can_co2_c13             (                     npolygons))
             allocate(cgrid%mmean_atm_co2_c13             (                     npolygons))
+            allocate(cgrid%mmean_c13star                 (                     npolygons)) 
+            allocate(cgrid%mmean_carbon13_ac             (                     npolygons))
+            allocate(cgrid%mmean_carbon13_st             (                     npolygons))
             if (c_alloc_flg > 0) then
                allocate(cgrid%mmean_lassim_resp_c13      (                     npolygons))
             end if
@@ -4412,12 +4445,17 @@ module ed_state_vars
          allocate(csite%rh_c13                           (              npatches))
          allocate(csite%cwd_rh_c13                       (              npatches))    
          allocate(csite%can_co2_c13                      (              npatches))
+         allocate(csite%c13star                          (              npatches))
          allocate(csite%co2budget_rh_c13                 (              npatches))
          allocate(csite%co2budget_cwd_rh_c13             (              npatches))
          allocate(csite%fmean_rh_c13                     (              npatches))
          allocate(csite%fmean_cwd_rh_c13                 (              npatches))
          allocate(csite%fmean_nep_c13                    (              npatches))
          allocate(csite%fmean_can_co2_c13                (              npatches))
+         allocate(csite%fmean_c13star                    (              npatches))
+         allocate(csite%fmean_carbon13_ac                (              npatches))
+         allocate(csite%fmean_carbon13_st                (              npatches))
+         allocate(csite%repro_c13                        (        n_pft,npatches))
       end if
                                                       
       if (writing_long) then                          
@@ -4489,6 +4527,9 @@ module ed_state_vars
             allocate(csite%dmean_cwd_rh_c13                 (              npatches))
             allocate(csite%dmean_nep_c13                    (              npatches))
             allocate(csite%dmean_can_co2_c13                (              npatches))
+            allocate(csite%dmean_c13star                    (              npatches))
+            allocate(csite%dmean_carbon13_ac                (              npatches))
+            allocate(csite%dmean_carbon13_st                (              npatches))
          end if
       end if                                          
       if (writing_eorq) then                          
@@ -4591,6 +4632,9 @@ module ed_state_vars
             allocate(csite%mmean_cwd_rh_c13              (              npatches))
             allocate(csite%mmean_nep_c13                 (              npatches))
             allocate(csite%mmean_can_co2_c13             (              npatches))
+            allocate(csite%mmean_c13star                 (              npatches))
+            allocate(csite%mmean_carbon13_ac             (              npatches))
+            allocate(csite%mmean_carbon13_st             (              npatches))
          end if
       end if                                          
       if (writing_dcyc) then                          
@@ -5896,6 +5940,9 @@ module ed_state_vars
       nullify(cgrid%fmean_can_co2_c13             )
       nullify(cgrid%fmean_atm_co2_c13             )
       nullify(cgrid%fmean_lassim_resp_c13         )
+      nullify(cgrid%fmean_c13star                 )         
+      nullify(cgrid%fmean_carbon13_ac             )         
+      nullify(cgrid%fmean_carbon13_st             )         
       
       nullify(cgrid%dmean_lassim_resp             )
       nullify(cgrid%dmean_gpp_c13                 )
@@ -5912,6 +5959,9 @@ module ed_state_vars
       nullify(cgrid%dmean_can_co2_c13             )
       nullify(cgrid%dmean_atm_co2_c13             )
       nullify(cgrid%dmean_lassim_resp_c13         )
+      nullify(cgrid%dmean_c13star                 )         
+      nullify(cgrid%dmean_carbon13_ac             )         
+      nullify(cgrid%dmean_carbon13_st             )         
       
       nullify(cgrid%mmean_lassim_resp             )
       nullify(cgrid%mmean_bleaf_c13               )
@@ -5939,6 +5989,9 @@ module ed_state_vars
       nullify(cgrid%mmean_can_co2_c13             )
       nullify(cgrid%mmean_atm_co2_c13             )
       nullify(cgrid%mmean_lassim_resp_c13         )
+      nullify(cgrid%mmean_c13star                 )         
+      nullify(cgrid%mmean_carbon13_ac             )         
+      nullify(cgrid%mmean_carbon13_st             )         
 
       return                                          
    end subroutine nullify_edtype                      
@@ -6565,16 +6618,24 @@ module ed_state_vars
       nullify(csite%ssl_c13_in                 )      
       nullify(csite%rh_c13                     )      
       nullify(csite%cwd_rh_c13                 )
+      nullify(csite%c13star                    )      
+      nullify(csite%fmean_carbon13_ac          )      
+      nullify(csite%fmean_carbon13_st          )      
+      nullify(csite%repro_c13                  )      
       
       nullify(csite%fmean_can_co2_c13          )
       nullify(csite%fmean_rh_c13               )      
       nullify(csite%fmean_cwd_rh_c13           )
       nullify(csite%fmean_nep_c13              )      
+      nullify(csite%fmean_c13star              )      
 
       nullify(csite%dmean_can_co2_c13          )
       nullify(csite%dmean_rh_c13               )      
       nullify(csite%dmean_cwd_rh_c13           )
       nullify(csite%dmean_nep_c13              )      
+      nullify(csite%dmean_c13star              )      
+      nullify(csite%dmean_carbon13_ac          )      
+      nullify(csite%dmean_carbon13_st          )      
 
       nullify(csite%mmean_fast_soil_c13              )      
       nullify(csite%mmean_slow_soil_c13              )      
@@ -6584,6 +6645,9 @@ module ed_state_vars
       nullify(csite%mmean_rh_c13                     )      
       nullify(csite%mmean_cwd_rh_c13                 ) 
       nullify(csite%mmean_nep_c13                    )      
+      nullify(csite%mmean_c13star              )      
+      nullify(csite%mmean_carbon13_ac          )      
+      nullify(csite%mmean_carbon13_st          )      
 
       
       return                                          
@@ -7773,6 +7837,9 @@ module ed_state_vars
       if(associated(cgrid%fmean_can_co2_c13             )) deallocate(cgrid%fmean_can_co2_c13             )
       if(associated(cgrid%fmean_atm_co2_c13             )) deallocate(cgrid%fmean_atm_co2_c13             )
       if(associated(cgrid%fmean_lassim_resp_c13         )) deallocate(cgrid%fmean_lassim_resp_c13         )
+      if(associated(cgrid%fmean_c13star                 )) deallocate(cgrid%fmean_c13star                 )
+      if(associated(cgrid%fmean_carbon13_ac       )) deallocate(cgrid%fmean_carbon13_ac       )
+      if(associated(cgrid%fmean_carbon13_st       )) deallocate(cgrid%fmean_carbon13_st       )
       
       if(associated(cgrid%dmean_lassim_resp             )) deallocate(cgrid%dmean_lassim_resp             )
       if(associated(cgrid%dmean_gpp_c13                 )) deallocate(cgrid%dmean_gpp_c13                 )
@@ -7789,6 +7856,9 @@ module ed_state_vars
       if(associated(cgrid%dmean_can_co2_c13             )) deallocate(cgrid%dmean_can_co2_c13             )
       if(associated(cgrid%dmean_atm_co2_c13             )) deallocate(cgrid%dmean_atm_co2_c13             )
       if(associated(cgrid%dmean_lassim_resp_c13         )) deallocate(cgrid%dmean_lassim_resp_c13         )
+      if(associated(cgrid%dmean_c13star                 )) deallocate(cgrid%dmean_c13star                 )
+      if(associated(cgrid%dmean_carbon13_ac       )) deallocate(cgrid%dmean_carbon13_ac       )
+      if(associated(cgrid%dmean_carbon13_st       )) deallocate(cgrid%dmean_carbon13_st       )
       
       if(associated(cgrid%mmean_lassim_resp             )) deallocate(cgrid%mmean_lassim_resp             )
       if(associated(cgrid%mmean_bleaf_c13               )) deallocate(cgrid%mmean_bleaf_c13               )
@@ -7816,6 +7886,9 @@ module ed_state_vars
       if(associated(cgrid%mmean_can_co2_c13             )) deallocate(cgrid%mmean_can_co2_c13             )
       if(associated(cgrid%mmean_atm_co2_c13             )) deallocate(cgrid%mmean_atm_co2_c13             )
       if(associated(cgrid%mmean_lassim_resp_c13         )) deallocate(cgrid%mmean_lassim_resp_c13         )
+      if(associated(cgrid%mmean_c13star                 )) deallocate(cgrid%mmean_c13star                 )
+      if(associated(cgrid%mmean_carbon13_ac       )) deallocate(cgrid%mmean_carbon13_ac       )
+      if(associated(cgrid%mmean_carbon13_st       )) deallocate(cgrid%mmean_carbon13_st       )
                                                       
                                                       
       return                                          
@@ -8469,25 +8542,36 @@ module ed_state_vars
       if(associated(csite%ssl_c13_in                 )) deallocate(csite%ssl_c13_in                 )      
       if(associated(csite%rh_c13                     )) deallocate(csite%rh_c13                     )      
       if(associated(csite%cwd_rh_c13                 )) deallocate(csite%cwd_rh_c13                 )
+      if(associated(csite%c13star                    )) deallocate(csite%c13star                    )
+      if(associated(csite%repro_c13                  )) deallocate(csite%repro_c13                  )
       
       if(associated(csite%fmean_can_co2_c13          )) deallocate(csite%fmean_can_co2_c13          )
       if(associated(csite%fmean_rh_c13               )) deallocate(csite%fmean_rh_c13               )      
       if(associated(csite%fmean_cwd_rh_c13           )) deallocate(csite%fmean_cwd_rh_c13           )
       if(associated(csite%fmean_nep_c13              )) deallocate(csite%fmean_nep_c13              )      
+      if(associated(csite%fmean_c13star              )) deallocate(csite%fmean_c13star              )
+      if(associated(csite%fmean_carbon13_ac       )) deallocate(csite%fmean_carbon13_ac       )
+      if(associated(csite%fmean_carbon13_st       )) deallocate(csite%fmean_carbon13_st       )
 
       if(associated(csite%dmean_can_co2_c13          )) deallocate(csite%dmean_can_co2_c13          )
       if(associated(csite%dmean_rh_c13               )) deallocate(csite%dmean_rh_c13               )      
       if(associated(csite%dmean_cwd_rh_c13           )) deallocate(csite%dmean_cwd_rh_c13           )
       if(associated(csite%dmean_nep_c13              )) deallocate(csite%dmean_nep_c13              )      
+      if(associated(csite%dmean_c13star              )) deallocate(csite%dmean_c13star              )
+      if(associated(csite%dmean_carbon13_ac       )) deallocate(csite%dmean_carbon13_ac       )
+      if(associated(csite%dmean_carbon13_st       )) deallocate(csite%dmean_carbon13_st       )
 
-      if(associated(csite%mmean_fast_soil_c13              )) deallocate(csite%mmean_fast_soil_c13              )      
-      if(associated(csite%mmean_slow_soil_c13              )) deallocate(csite%mmean_slow_soil_c13              )      
-      if(associated(csite%mmean_struct_soil_c13        )) deallocate(csite%mmean_struct_soil_c13        )      
-      if(associated(csite%mmean_struct_soil_L_c13      )) deallocate(csite%mmean_struct_soil_L_c13      )      
-      if(associated(csite%mmean_can_co2_c13                )) deallocate(csite%mmean_can_co2_c13                )
-      if(associated(csite%mmean_rh_c13                     )) deallocate(csite%mmean_rh_c13                     )      
-      if(associated(csite%mmean_cwd_rh_c13                 )) deallocate(csite%mmean_cwd_rh_c13                 ) 
-      if(associated(csite%mmean_nep_c13                    )) deallocate(csite%mmean_nep_c13                    )      
+      if(associated(csite%mmean_fast_soil_c13        )) deallocate(csite%mmean_fast_soil_c13        )      
+      if(associated(csite%mmean_slow_soil_c13        )) deallocate(csite%mmean_slow_soil_c13        )      
+      if(associated(csite%mmean_struct_soil_c13      )) deallocate(csite%mmean_struct_soil_c13      )      
+      if(associated(csite%mmean_struct_soil_L_c13    )) deallocate(csite%mmean_struct_soil_L_c13    )      
+      if(associated(csite%mmean_can_co2_c13          )) deallocate(csite%mmean_can_co2_c13          )
+      if(associated(csite%mmean_rh_c13               )) deallocate(csite%mmean_rh_c13               )      
+      if(associated(csite%mmean_cwd_rh_c13           )) deallocate(csite%mmean_cwd_rh_c13           ) 
+      if(associated(csite%mmean_nep_c13              )) deallocate(csite%mmean_nep_c13              )      
+      if(associated(csite%mmean_c13star              )) deallocate(csite%mmean_c13star              )
+      if(associated(csite%mmean_carbon13_ac       )) deallocate(csite%mmean_carbon13_ac       )
+      if(associated(csite%mmean_carbon13_st       )) deallocate(csite%mmean_carbon13_st       )
                                                       
       return                                          
    end subroutine deallocate_sitetype                 
@@ -9544,8 +9628,14 @@ module ed_state_vars
          end if                                       
          !---------------------------------------------------------------------------------!
          
-         !----- C Isotope Vars --------------------------------------------------!
+         !----- C Isotope Vars ------------------------------------------------------------!
          if (c13af > 0) then
+            !----- PFT variables. ---------------------------------------------------------!
+            do m=1,n_pft
+               osite%repro_c13           (  m,opa) = isite%repro_c13         (  m,ipa)   
+            end do                                       
+            !------------------------------------------------------------------------------!
+         
             osite%fast_soil_c13              (opa) = isite%fast_soil_c13              (ipa)      
             osite%slow_soil_c13              (opa) = isite%slow_soil_c13              (ipa)      
             osite%structural_soil_c13        (opa) = isite%structural_soil_c13        (ipa)      
@@ -9559,17 +9649,24 @@ module ed_state_vars
             osite%ssl_c13_in                 (opa) = isite%ssl_c13_in                 (ipa)      
             osite%rh_c13                     (opa) = isite%rh_c13                     (ipa)      
             osite%cwd_rh_c13                 (opa) = isite%cwd_rh_c13                 (ipa)
+            osite%c13star                    (opa) = isite%c13star                    (ipa)
             
             osite%fmean_can_co2_c13          (opa) = isite%fmean_can_co2_c13          (ipa)
             osite%fmean_rh_c13               (opa) = isite%fmean_rh_c13               (ipa)      
             osite%fmean_cwd_rh_c13           (opa) = isite%fmean_cwd_rh_c13           (ipa)
             osite%fmean_nep_c13              (opa) = isite%fmean_nep_c13              (ipa)  
+            osite%fmean_c13star              (opa) = isite%fmean_c13star              (ipa)
+            osite%fmean_carbon13_ac          (opa) = isite%fmean_carbon13_ac          (ipa)
+            osite%fmean_carbon13_st          (opa) = isite%fmean_carbon13_st          (ipa)
             
             if (writing_long) then                       
                osite%dmean_can_co2_c13          (opa) = isite%dmean_can_co2_c13          (ipa)
                osite%dmean_rh_c13               (opa) = isite%dmean_rh_c13               (ipa)      
                osite%dmean_cwd_rh_c13           (opa) = isite%dmean_cwd_rh_c13           (ipa)
                osite%dmean_nep_c13              (opa) = isite%dmean_nep_c13              (ipa)
+               osite%dmean_c13star              (opa) = isite%dmean_c13star              (ipa)
+               osite%dmean_carbon13_ac          (opa) = isite%dmean_carbon13_ac          (ipa)
+               osite%dmean_carbon13_st          (opa) = isite%dmean_carbon13_st          (ipa)
             end if            
 
             if (writing_eorq) then
@@ -9581,6 +9678,9 @@ module ed_state_vars
                osite%mmean_rh_c13                     (opa) = isite%mmean_rh_c13                     (ipa)      
                osite%mmean_cwd_rh_c13                 (opa) = isite%mmean_cwd_rh_c13                 (ipa) 
                osite%mmean_nep_c13                    (opa) = isite%mmean_nep_c13                    (ipa)
+               osite%mmean_c13star                    (opa) = isite%mmean_c13star                    (ipa)
+               osite%mmean_carbon13_ac                (opa) = isite%mmean_carbon13_ac          (ipa)
+               osite%mmean_carbon13_st                (opa) = isite%mmean_carbon13_st          (ipa)
             end if
          end if
       end do opaloop                                  
@@ -9887,6 +9987,11 @@ module ed_state_vars
       !------------------------------------------------------------------------------------!
                                                       
       if (c13af > 0) then
+         !----- PFT variables. ------------------------------------------------------------!
+         do m=1,n_pft
+            osite%repro_c13      (  m,1:z) = pack(isite%repro_c13         (  m,:),lmask)                  
+         end do                                          
+         !--------------------------------------------------------------------------------!
          osite%fast_soil_c13         (1:z) = pack(isite%fast_soil_c13             ,lmask)
          osite%slow_soil_c13         (1:z) = pack(isite%slow_soil_c13             ,lmask)
          osite%structural_soil_c13   (1:z) = pack(isite%structural_soil_c13       ,lmask)
@@ -9897,6 +10002,7 @@ module ed_state_vars
          osite%fsc13_in              (1:z) = pack(isite%fsc13_in                  ,lmask)
          osite%ssc13_in              (1:z) = pack(isite%ssc13_in                  ,lmask)
          osite%ssl_c13_in            (1:z) = pack(isite%ssl_c13_in                ,lmask)
+         osite%c13star               (1:z) = pack(isite%c13star                   ,lmask)
       end if
                                                       
       return                                          
@@ -10001,6 +10107,9 @@ module ed_state_vars
          osite%fmean_cwd_rh_c13        (1:z) = pack(isite%fmean_cwd_rh_c13         (:),lmask)
          osite%fmean_nep_c13           (1:z) = pack(isite%fmean_nep_c13            (:),lmask)
          osite%fmean_can_co2_c13       (1:z) = pack(isite%fmean_can_co2_c13        (:),lmask)
+         osite%fmean_c13star           (1:z) = pack(isite%fmean_c13star               ,lmask)
+         osite%fmean_carbon13_ac       (1:z) = pack(isite%fmean_carbon13_ac           ,lmask)
+         osite%fmean_carbon13_st       (1:z) = pack(isite%fmean_carbon13_st           ,lmask)
       end if
       
       return                                          
@@ -10114,6 +10223,9 @@ module ed_state_vars
          osite%dmean_cwd_rh_c13     (1:z) = pack(isite%dmean_cwd_rh_c13         (:),lmask)
          osite%dmean_nep_c13        (1:z) = pack(isite%dmean_nep_c13            (:),lmask)
          osite%dmean_can_co2_c13    (1:z) = pack(isite%dmean_can_co2_c13        (:),lmask)
+         osite%dmean_c13star        (1:z) = pack(isite%dmean_c13star            (:),lmask)
+         osite%dmean_carbon13_ac    (1:z) = pack(isite%dmean_carbon13_ac      (:),lmask)
+         osite%dmean_carbon13_st    (1:z) = pack(isite%dmean_carbon13_st      (:),lmask)
       end if
 
       return                                          
@@ -10259,6 +10371,9 @@ module ed_state_vars
          osite%mmean_cwd_rh_c13        (1:z) = pack(isite%mmean_cwd_rh_c13         (:),lmask)
          osite%mmean_nep_c13           (1:z) = pack(isite%mmean_nep_c13            (:),lmask)
          osite%mmean_can_co2_c13       (1:z) = pack(isite%mmean_can_co2_c13        (:),lmask)
+         osite%mmean_c13star           (1:z) = pack(isite%mmean_c13star            (:),lmask)
+         osite%mmean_carbon13_ac       (1:z) = pack(isite%mmean_carbon13_ac        (:),lmask)
+         osite%mmean_carbon13_st       (1:z) = pack(isite%mmean_carbon13_st        (:),lmask)
       end if
 
       return                                          
@@ -13725,6 +13840,15 @@ module ed_state_vars
                            ,'Sub-daily mean - Gradient scale for CO2 mixing ratio'         &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%fmean_c13star         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_c13star                                       &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_C13STAR_PY           :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Gradient scale for CO2 mixing ratio'         &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%fmean_carbon_ac       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_carbon_ac                                     &
@@ -13734,11 +13858,29 @@ module ed_state_vars
                            ,'Sub-daily mean - CO2 flux: atmosphere -> CAS'                 &
                            ,'[  umol/m2/s]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%fmean_carbon13_ac       )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_carbon13_ac                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_CARBON13_AC_PY       :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 flux: atmosphere -> CAS'                 &
+                           ,'[  umol/m2/s]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%fmean_carbon_st       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_carbon_st                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'FMEAN_CARBON_ST_PY         :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 storage at CAS'                          &
+                           ,'[  umol/m2/s]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%fmean_carbon13_st       )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_carbon13_st                                     &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_CARBON13_ST_PY         :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - CO2 storage at CAS'                          &
                            ,'[  umol/m2/s]','(ipoly)'            )
@@ -14916,6 +15058,15 @@ module ed_state_vars
                            ,'Daily mean - Gradient scale for CO2 mixing ratio'             &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%dmean_c13star         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%dmean_c13star                                       &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_C13STAR_PY           :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Gradient scale for CO2 mixing ratio'             &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%dmean_carbon_ac       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%dmean_carbon_ac                                     &
@@ -14930,6 +15081,24 @@ module ed_state_vars
          call vtable_edio_r(npts,cgrid%dmean_carbon_st                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'DMEAN_CARBON_ST_PY         :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 storage at CAS'                              &
+                           ,'[  umol/m2/s]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%dmean_carbon13_ac     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%dmean_carbon13_ac                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_CARBON13_AC_PY       :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 flux: atmosphere -> CAS'                     &
+                           ,'[  umol/m2/s]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%dmean_carbon13_st     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%dmean_carbon13_st                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_CARBON13_ST_PY       :11:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - CO2 storage at CAS'                              &
                            ,'[  umol/m2/s]','(ipoly)'            )
@@ -15981,6 +16150,15 @@ module ed_state_vars
                            ,'Monthly mean - Gradient scale for CO2 mixing ratio'           &
                            ,'[   umol/mol]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%mmean_c13star         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_c13star                                       &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_C13STAR_PY           :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Gradient scale for CO2 mixing ratio'           &
+                           ,'[   umol/mol]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%mmean_carbon_ac       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%mmean_carbon_ac                                     &
@@ -15990,11 +16168,29 @@ module ed_state_vars
                            ,'Monthly mean - CO2 flux: atmosphere -> CAS'                   &
                            ,'[  umol/m2/s]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%mmean_carbon13_ac     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_carbon13_ac                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CARBON13_AC_PY       :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 flux: atmosphere -> CAS'                   &
+                           ,'[  umol/m2/s]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%mmean_carbon_st       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%mmean_carbon_st                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'MMEAN_CARBON_ST_PY         :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 storage at CAS'                            &
+                           ,'[  umol/m2/s]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%mmean_carbon13_st     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_carbon13_st                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CARBON13_ST_PY       :11:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - CO2 storage at CAS'                            &
                            ,'[  umol/m2/s]','(ipoly)'            )
@@ -21349,6 +21545,14 @@ module ed_state_vars
            var_len,var_len_global,max_ptrs,'CSTAR :31:hist') 
          call metadata_edio(nvar,igr,'patch level co2 transfer atm->canopy','[ppm?]','ipatch') 
       end if                                          
+      
+      if (associated(csite%c13star)) then               
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,csite%c13star,nvar,igr,init,csite%paglob_id, &
+           var_len,var_len_global,max_ptrs,'C13STAR :31:hist') 
+         call metadata_edio(nvar,igr,'patch level co2 transfer atm->canopy','[ppm?]','ipatch') 
+      end if                                          
+                                                      
                                                       
       if (associated(csite%zeta)) then                
          nvar=nvar+1                                  
@@ -21853,6 +22057,15 @@ module ed_state_vars
                            ,'Sub-daily mean - Gradient scale for CO2 mixing ratio'         &
                            ,'[   umol/mol]','(ipatch)'            )
       end if                                          
+      if (associated(csite%fmean_c13star         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%fmean_c13star                                       &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_C13STAR_PA           :31:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Gradient scale for CO2 mixing ratio'         &
+                           ,'[   umol/mol]','(ipatch)'            )
+      end if                                          
       if (associated(csite%fmean_carbon_ac       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%fmean_carbon_ac                                     &
@@ -21862,11 +22075,29 @@ module ed_state_vars
                            ,'Sub-daily mean - CO2 flux: atmosphere -> CAS'                 &
                            ,'[  umol/m2/s]','(ipatch)'            )
       end if                                          
+      if (associated(csite%fmean_carbon13_ac     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%fmean_carbon13_ac                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_CARBON13_AC_PA       :31:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 flux: atmosphere -> CAS'                 &
+                           ,'[  umol/m2/s]','(ipatch)'            )
+      end if                                          
       if (associated(csite%fmean_carbon_st       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%fmean_carbon_st                                     &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
                            ,'FMEAN_CARBON_ST_PA         :31:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - CO2 storage at CAS'                          &
+                           ,'[  umol/m2/s]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%fmean_carbon13_st     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%fmean_carbon13_st                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_CARBON13_ST_PA       :31:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - CO2 storage at CAS'                          &
                            ,'[  umol/m2/s]','(ipatch)'            )
@@ -22421,6 +22652,15 @@ module ed_state_vars
                            ,'Daily mean - Gradient scale for CO2 mixing ratio'             &
                            ,'[   umol/mol]','(ipatch)'            )
       end if                                          
+      if (associated(csite%dmean_c13star         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%dmean_c13star                                       &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_C13STAR_PA           :31:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Gradient scale for CO2 mixing ratio'             &
+                           ,'[   umol/mol]','(ipatch)'            )
+      end if                                          
       if (associated(csite%dmean_carbon_ac       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%dmean_carbon_ac                                     &
@@ -22430,11 +22670,29 @@ module ed_state_vars
                            ,'Daily mean - CO2 flux: atmosphere -> CAS'                     &
                            ,'[  umol/m2/s]','(ipatch)'            )
       end if                                          
+      if (associated(csite%dmean_carbon13_ac     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%dmean_carbon13_ac                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_CARBON13_AC_PA       :31:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 flux: atmosphere -> CAS'                     &
+                           ,'[  umol/m2/s]','(ipatch)'            )
+      end if                                          
       if (associated(csite%dmean_carbon_st       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%dmean_carbon_st                                     &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
                            ,'DMEAN_CARBON_ST_PA         :31:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - CO2 storage at CAS'                              &
+                           ,'[  umol/m2/s]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%dmean_carbon13_st     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%dmean_carbon13_st                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_CARBON13_ST_PA       :31:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - CO2 storage at CAS'                              &
                            ,'[  umol/m2/s]','(ipatch)'            )
@@ -22961,6 +23219,15 @@ module ed_state_vars
                            ,'Monthly mean - Gradient scale for CO2 mixing ratio'           &
                            ,'[   umol/mol]','(ipatch)'            )
       end if                                          
+      if (associated(csite%mmean_c13star         )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_c13star                                       &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CSTAR_PA             :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Gradient scale for CO2 mixing ratio'           &
+                           ,'[   umol/mol]','(ipatch)'            )
+      end if                                          
       if (associated(csite%mmean_carbon_ac       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_carbon_ac                                     &
@@ -22970,11 +23237,29 @@ module ed_state_vars
                            ,'Monthly mean - CO2 flux: atmosphere -> CAS'                   &
                            ,'[  umol/m2/s]','(ipatch)'            )
       end if                                          
+      if (associated(csite%mmean_carbon13_ac     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_carbon13_ac                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CARBON13_AC_PA         :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 flux: atmosphere -> CAS'                   &
+                           ,'[  umol/m2/s]','(ipatch)'            )
+      end if                                          
       if (associated(csite%mmean_carbon_st       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,csite%mmean_carbon_st                                     &
                            ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
                            ,'MMEAN_CARBON_ST_PA         :31:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - CO2 storage at CAS'                            &
+                           ,'[  umol/m2/s]','(ipatch)'            )
+      end if                                          
+      if (associated(csite%mmean_carbon13_st     )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,csite%mmean_carbon13_st                                   &
+                           ,nvar,igr,init,csite%paglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CARBON13_ST_PA       :31:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - CO2 storage at CAS'                            &
                            ,'[  umol/m2/s]','(ipatch)'            )
@@ -24671,6 +24956,12 @@ module ed_state_vars
          nvar=nvar+1                                  
            call vtable_edio_r(npts,csite%repro,nvar,igr,init,csite%paglob_id, &
            var_len,var_len_global,max_ptrs,'REPRO_PA :34:hist:mont:dcyc') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if                                          
+      if (associated(csite%repro_c13)) then               
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,csite%repro_c13,nvar,igr,init,csite%paglob_id, &
+           var_len,var_len_global,max_ptrs,'REPRO_C13_PA :34:hist:mont:dcyc') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if                                          
       !------------------------------------------------------------------------------------!

@@ -53,7 +53,7 @@ subroutine reproduction(cgrid, month)
    use phenology_aux      , only : pheninit_balive_bstorage ! ! intent(in)
    use budget_utils       , only : update_budget            ! ! sub-routine
    use therm_lib          , only : cmtl2uext                ! ! function
-   !----- DS Additional Use Statements -----------------------------------------------------------------------!
+   !----- DS Additional Use Statements ----------------------------------------------------!
    use isotopes           , only : c13af                    & ! intent(in)
                                  , cri_broot                & ! intent(in)
                                  , cri_bleaf                & ! intent(in)
@@ -327,29 +327,34 @@ subroutine reproduction(cgrid, month)
                      !---------------------------------------------------------------------!
                      
                      !---------------------------------------------------------------------!
-                     !----- Carry out standard initialization. !!!DSC!!! ------------------!
+                     ! Initialize Carbon-13 fields. We'll distribute reproduction C-13     !
+                     ! evenly across plant parts, which may mess with ecosystem heavy C    !
+                     ! distribution a little bit but should be insignificant since carbon  !
+                     ! is mostly in big trees. This will need to be reconsidered if        !
+                     ! simulations with a high proportion of C in recruits are being run.  !
                      !---------------------------------------------------------------------!
-                     ! This is a temporary situation: At some point these variables should !
-                     ! really be assigned based on actual c13 information of parents.      !
-                     !---------------------------------------------------------------------!
-                     if (c13af > 0) then !!!DSC!!!
-                        cpatch%bleaf_c13     (ico) = cri_bleaf(recruit(inew)%pft)          &
-                                                   * recruit(inew)%bleaf
-                        cpatch%bdead_c13     (ico) = cri_bdead(recruit(inew)%pft)          &
-                                                   * recruit(inew)%bdead
-                        cpatch%broot_c13     (ico) = cri_broot(recruit(inew)%pft)          &
-                                                   * recruit(inew)%broot
-                        cpatch%bsapwooda_c13 (ico) = cri_bsapwooda(recruit(inew)%pft)      &
-                                                   * recruit(inew)%bsapwooda
-                        cpatch%bsapwoodb_c13 (ico) = cri_bsapwoodb(recruit(inew)%pft)      &
-                                                   * recruit(inew)%bsapwoodb
-                                                   
-                        cpatch%bstorage_c13  (ico) = cri_bstorage(recruit(inew)%pft)       &
-                                                   * recruit(inew)%bstorage
-                                                   
+                     if (c13af > 0) then
+                        ipft        =  cpatch%pft(ico)
+                        rec_biomass = (cpatch%balive(ico) + cpatch%bstorage(ico)           &
+                                       + cpatch%bdead(ico)) * cpatch%nplant(ico)
+
+                        cpatch%bleaf_c13     (ico) = cpatch%bleaf(ico)                     &
+                                                   /rec_biomass * csite%repro_c13(ipft,ipa)
+                        cpatch%broot_c13     (ico) = cpatch%broot(ico)                     &
+                                                   /rec_biomass * csite%repro_c13(ipft,ipa)
+                        cpatch%bdead_c13     (ico) = cpatch%bdead(ico)                     &
+                                                   /rec_biomass * csite%repro_c13(ipft,ipa)
+                        cpatch%bsapwooda_c13 (ico) = cpatch%bsapwooda(ico)                 &
+                                                   /rec_biomass * csite%repro_c13(ipft,ipa)
+                        cpatch%bsapwoodb_c13 (ico) = cpatch%bsapwoodb(ico)                 &
+                                                   /rec_biomass * csite%repro_c13(ipft,ipa)
+                        cpatch%bstorage_c13  (ico) = cpatch%bstorage(ico)                  &
+                                                   /rec_biomass * csite%repro_c13(ipft,ipa)
                         cpatch%balive_c13    (ico) =                                       &
-                                 cpatch%bleaf_c13(ico) + cpatch%broot_c13(ico)             &
+                                   cpatch%bleaf_c13(ico)     + cpatch%broot_c13(ico)       &
                                  + cpatch%bsapwooda_c13(ico) + cpatch%bsapwoodb_c13(ico)
+
+                        csite%repro_c13(ipft,ipa)  = 0.0
                      end if
                      !---------------------------------------------------------------------!
 
@@ -714,6 +719,8 @@ subroutine seed_dispersal(cpoly,late_spring)
                                  , seedling_mortality    & ! intent(in)
                                  , phenology             ! ! intent(in)
    use ed_misc_coms       , only : ibigleaf              ! ! intent(in)
+   !----- DS Addnl. Uses ------------------------------------------------------------------!
+   use isotopes           , only : c13af                 ! ! intent(in)
 
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
@@ -734,6 +741,9 @@ subroutine seed_dispersal(cpoly,late_spring)
    real                          :: nseedling   ! Total surviving seedling dens.[ plant/m²]
    real                          :: nseed_stays ! Seedling density that stays   [ plant/m²]
    real                          :: nseed_maygo ! Seedling density that may go  [ plant/m²]
+   real                          :: nseedling_c13   ! Carbon-13 analogues...
+   real                          :: nseed_stays_c13 !
+   real                          :: nseed_maygo_c13 !
    !---------------------------------------------------------------------------------------!
 
 
@@ -787,6 +797,34 @@ subroutine seed_dispersal(cpoly,late_spring)
                   nseed_maygo   = 0.
                end if
                !---------------------------------------------------------------------------!
+               
+               
+               !---------------------------------------------------------------------------!
+               !    Replicate the above considerations for carbon-13.                      !
+               !---------------------------------------------------------------------------!
+               if (c13af > 0) then
+                  if (phenology(donpft) /= 2 .or. late_spring) then
+                     nseedling_c13 = donpatch%nplant(donco) * donpatch%bseeds_c13(donco)   &
+                                 * (1.0 - seedling_mortality(donpft))
+                     select case (ibigleaf)
+                     case (0)
+                        nseed_stays_c13 = nseedling_c13 * (1.0 - nonlocal_dispersal(donpft))
+                        nseed_maygo_c13 = nseedling_c13 * nonlocal_dispersal(donpft)
+                     case (1)
+                        !---- if bigleaf cannot disperse seedlings to other patches -------!
+                        nseed_stays_c13 = nseedling_c13
+                        nseed_maygo_c13 = 0.
+                     end select
+
+                  else
+                     !----- Not a good time for reproduction.  No seedlings. --------------!
+                     nseedling_c13     = 0.
+                     nseed_stays_c13   = 0.
+                     nseed_maygo_c13   = 0.
+                  end if
+               end if
+               !---------------------------------------------------------------------------!
+               
 
                !---------------------------------------------------------------------------!
                !   Spread the seedlings across all patches in this site.                   !
@@ -802,9 +840,6 @@ subroutine seed_dispersal(cpoly,late_spring)
                                             + nseed_maygo * csite%area(donpa)
                   !------------------------------------------------------------------------!
 
-
-
-
                   !------------------------------------------------------------------------!
                   !      Include the local dispersal if this is the donor patch.           !
                   !------------------------------------------------------------------------!
@@ -813,7 +848,21 @@ subroutine seed_dispersal(cpoly,late_spring)
                   end if
                   !------------------------------------------------------------------------!
 
-               end do recpaloop1
+                  
+                  !------------------------------------------------------------------------!
+                  !    Replicate the above considerations for carbon-13.                   !
+                  !------------------------------------------------------------------------!
+                  if (c13af > 0) then
+                     csite%repro_c13(donpft,recpa) = csite%repro_c13(donpft,recpa)         &
+                                                   + nseed_maygo_c13 * csite%area(donpa)
+                     if (recpa == donpa) then
+                        csite%repro_c13(donpft,recpa) = csite%repro_c13(donpft,recpa)      &
+                                                      + nseed_stays
+                     end if
+                  end if
+                  !------------------------------------------------------------------------!
+
+                  end do recpaloop1
                !---------------------------------------------------------------------------!
             end do doncoloop1
             !------------------------------------------------------------------------------!
@@ -867,6 +916,32 @@ subroutine seed_dispersal(cpoly,late_spring)
                   nseed_maygo = 0.
                end if
                !---------------------------------------------------------------------------!
+
+               
+               !---------------------------------------------------------------------------!
+               !     Replicate above for carbon-13.                                        !
+               !---------------------------------------------------------------------------!
+               if (phenology(donpft) /= 2 .or. late_spring) then
+                  nseedling_c13   = donpatch%nplant(donco) * donpatch%bseeds_c13(donco)    &
+                              * (1.0 - seedling_mortality(donpft))
+
+                  select case (ibigleaf)
+                  case (0)
+                     nseed_stays_c13 = nseedling_c13 * (1.0 - nonlocal_dispersal(donpft))
+                     nseed_maygo_c13 = nseedling_c13 * nonlocal_dispersal(donpft)
+                  case (1)
+                     !---- if bigleaf cannot disperse seedlings to other patches ----------!
+                     nseed_stays_c13 = nseedling_c13
+                     nseed_maygo_c13 = 0.
+                  end select
+               else
+                  !----- Not a good time for reproduction.  No seedlings. -----------------!
+                  nseedling_c13   = 0.
+                  nseed_stays_c13 = 0.
+                  nseed_maygo_c13 = 0.
+               end if
+               !---------------------------------------------------------------------------!
+               
                
                !---------------------------------------------------------------------------!
                !   Spread the seedlings across all patches in this polygon.                !
@@ -892,6 +967,22 @@ subroutine seed_dispersal(cpoly,late_spring)
                      if (recpa == donpa .and. recsi == donsi) then
                         recsite%repro(donpft,recpa) = recsite%repro(donpft,recpa)          &
                                                     + nseed_stays
+                     end if
+                     !---------------------------------------------------------------------!
+
+
+                     !---------------------------------------------------------------------!
+                     !     Replicate for carbon-13.                                        !
+                     !---------------------------------------------------------------------!
+                     if (c13af > 0) then
+                        recsite%repro_c13(donpft,recpa) = recsite%repro_c13(donpft,recpa)  &
+                                                    + nseed_maygo_c13 * recsite%area(donpa)&
+                                                    * cpoly%area(donsi)
+                                                    
+                        if (recpa == donpa .and. recsi == donsi) then
+                          recsite%repro_c13(donpft,recpa) = recsite%repro_c13(donpft,recpa)&
+                                                          + nseed_stays_c13
+                        end if
                      end if
                      !---------------------------------------------------------------------!
                      

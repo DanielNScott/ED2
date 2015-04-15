@@ -92,6 +92,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
    real                                    :: can_ssh
    integer, dimension(n_pft)               :: tuco_pft
    !----- DS Additional Local Vars --------------------------------------------------------!
+   real                                    :: can_co2_d13C  ! Canopy delta C-13
    real                                    :: assim         ! assimilate
    real                                    :: assim_h2tc    ! assim. heavy 2 total carbon
    real                                    :: lr_h2tc       ! leaf resp heavy 2 total carbon
@@ -610,7 +611,8 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                !---------------------------------------------------------------------------!
                ! Compute ratio of assimilated C-13 to total C, and get gpp terms.          !
                !---------------------------------------------------------------------------!
-               assim_h2tc  = photo_h2tc   (-8.1                                            &
+               can_co2_d13C = htIsoDelta(csite%can_co2_c13(ipa),csite%can_co2(ipa))
+               assim_h2tc  = photo_h2tc   (can_co2_d13C                                    &
                                           ,csite%can_co2(ipa)                              &
                                           ,cpatch%fs_open(ico)                             &
                                           ,cpatch%lsfc_co2_open(ico)                       &
