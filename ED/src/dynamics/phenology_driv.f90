@@ -393,6 +393,11 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                                             - cpatch%leaf_drop      (ico)
                cpatch%cb_moistmax (13,ico)  = cpatch%cb_moistmax (13,ico)                  &
                                             - cpatch%leaf_drop      (ico)
+               cpatch%cb_mlmax (13,ico)     = cpatch%cb_mlmax (13,ico)                     &
+                                            - cpatch%leaf_drop (ico)
+               
+
+
                !---------------------------------------------------------------------------!
 
             elseif(elongf_try > 1.0 .and. cpatch%phenology_status(ico) == -2) then
@@ -507,6 +512,10 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                                               - cpatch%leaf_drop     (ico)
                   cpatch%cb_moistmax (13,ico) = cpatch%cb_moistmax(13,ico)                 &
                                               - cpatch%leaf_drop     (ico)
+                  cpatch%cb_mlmax (13,ico)    = cpatch%cb_mlmax (13,ico) &
+                                              - cpatch%leaf_drop (ico)
+
+
                   !------------------------------------------------------------------------!
                end if
 
@@ -651,6 +660,9 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                                            - cpatch%leaf_drop      (ico)
                cpatch%cb_moistmax (13,ico) = cpatch%cb_moistmax (13,ico)                   &
                                            - cpatch%leaf_drop      (ico)
+               cpatch%cb_mlmax (13,ico)    = cpatch%cb_mlmax    (13,ico)                   &
+                                           - cpatch%leaf_drop      (ico)
+
                !---------------------------------------------------------------------------!
             elseif (cpatch%phenology_status(ico) /= 0) then
                !---------------------------------------------------------------------------!
@@ -886,6 +898,8 @@ subroutine update_phenology_eq_0(doy, cpoly, isi, lat)
                                                    - cpatch%leaf_drop       (ico)
                   cpatch%cb_moistmax      (13,ico) = cpatch%cb_moistmax  (13,ico)          &
                                                    - cpatch%leaf_drop       (ico)
+                  cpatch%cb_mlmax         (13,ico) = cpatch%cb_mlmax     (13,ico)          &
+                                                   - cpatch%leaf_drop       (ico)
                   !------------------------------------------------------------------------!
                end if
                
@@ -949,6 +963,8 @@ subroutine update_phenology_eq_0(doy, cpoly, isi, lat)
                   cpatch%cb_lightmax (13,ico) = cpatch%cb_lightmax (13,ico)                &
                                               - cpatch%leaf_drop      (ico)
                   cpatch%cb_moistmax (13,ico) = cpatch%cb_moistmax (13,ico)                &
+                                              - cpatch%leaf_drop      (ico)
+                  cpatch%cb_mlmax    (13,ico) = cpatch%cb_mlmax    (13,ico)                &
                                               - cpatch%leaf_drop      (ico)
                   !------------------------------------------------------------------------!
                end if
@@ -1032,6 +1048,8 @@ subroutine update_phenology_eq_0(doy, cpoly, isi, lat)
                cpatch%cb_lightmax (13,ico) = cpatch%cb_lightmax (13,ico)                   &
                                            - cpatch%leaf_drop      (ico)
                cpatch%cb_moistmax (13,ico) = cpatch%cb_moistmax (13,ico)                   &
+                                           - cpatch%leaf_drop      (ico)
+               cpatch%cb_mlmax    (13,ico) = cpatch%cb_mlmax    (13,ico)                   &
                                            - cpatch%leaf_drop      (ico)
                !---------------------------------------------------------------------------!
             elseif (cpatch%phenology_status(ico) /= 0) then

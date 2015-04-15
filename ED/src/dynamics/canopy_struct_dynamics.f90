@@ -152,6 +152,7 @@ module canopy_struct_dynamics
                                   , size2bl              ! ! function
       use ed_misc_coms     , only : igrass               ! ! intent(in)
       use phenology_coms   , only : elongf_min           ! ! intent(in)
+      use isotopes         , only : c13af                ! ! intent(in)
       !$ use omp_lib
 
       implicit none
@@ -241,7 +242,7 @@ module canopy_struct_dynamics
       logical        :: dry_grasses  ! Flag to check whether LAI+WAI is zero    [      ---]
       real           :: tai_drygrass ! TAI for when a grass-only patch is dry   [    m2/m2]
       real           :: c3_lad       ! c3 * lad for estimating drag coefficient [      ---]
-      real           :: snowfac_can  ! percent vertical canopy covered in snow
+      real           :: snowfac_can  ! fraction of canopy covered in snow
       integer        :: ibuff
 
       !----- External functions. ----------------------------------------------------------!
@@ -292,12 +293,18 @@ module canopy_struct_dynamics
 
       !------------------------------------------------------------------------------------!
       !     Find the fraction of the canopy covered in snow (original snowfac function)    !
-      !     I think canopy roughness may need to be re-thought, but this was necessary     !
+      ! I think canopy roughness may need to be re-thought, but this was necessary         !
       ! for turbulence & CO2 mixing to not occasionally fail sanity checks in young patches!
+      ! (CR)
+      ! Calculation of surface roughness should use the planar snow fraction, as this      !
+      ! should be entailing an area weighted average.  If there is instability, I argue we !
+      ! should address how the horizontal planar fraction is calculated, not use the       !
+      ! vertical as a surrogate. (RGK) I Will leave as is for now. But this needs to be    !
+      ! fixed.                                                                             !
       !------------------------------------------------------------------------------------!
-      snowfac_can     = min(9.9d-1,csite%total_sfcw_depth(ipa)/csite%veg_height(ipa))
+       snowfac_can     = min(9.9d-1,csite%total_sfcw_depth(ipa)/csite%veg_height(ipa))
+      !snowfac_can       = csite%snowfac(ipa)
       !------------------------------------------------------------------------------------!
-
 
       !------------------------------------------------------------------------------------!
       !     If there is no vegetation in this patch, then we apply turbulence to bare      !
@@ -325,8 +332,17 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+
+         if (c13af > 0) then
+            call ed_stars(cmet%atm_theta,atm_enthalpy,cmet%atm_shv,cmet%atm_co2            &
+                      ,csite%can_theta(ipa),can_enthalpy,csite%can_shv(ipa)                &
+                      ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
+                      ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
+                      ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
                       ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
                       ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -408,8 +424,17 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+
+         if (c13af > 0) then
+            call ed_stars(cmet%atm_theta,atm_enthalpy,cmet%atm_shv,cmet%atm_co2            &
+                      ,csite%can_theta(ipa),can_enthalpy,csite%can_shv(ipa)                &
+                      ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
+                      ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
+                      ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
                       ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
                       ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -615,8 +640,17 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+
+         if (c13af > 0) then
+            call ed_stars(cmet%atm_theta,atm_enthalpy,cmet%atm_shv,cmet%atm_co2            &
+                      ,csite%can_theta(ipa),can_enthalpy,csite%can_shv(ipa)                &
+                      ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
+                      ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
+                      ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
                       ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
                       ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -1027,8 +1061,17 @@ module canopy_struct_dynamics
                       ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
                       ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
                       ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
+                      ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa))
+
+         if (c13af > 0) then
+            call ed_stars(cmet%atm_theta,atm_enthalpy,cmet%atm_shv,cmet%atm_co2               &
+                      ,csite%can_theta(ipa),can_enthalpy,csite%can_shv(ipa)                &
+                      ,csite%can_co2(ipa),cmet%geoht,csite%veg_displace(ipa)               &
+                      ,cmet%atm_ustar,cmet%vels,csite%rough(ipa),csite%ustar(ipa)          &
+                      ,csite%tstar(ipa),estar,csite%qstar(ipa),csite%cstar(ipa)            &
                       ,csite%zeta(ipa),csite%ribulk(ipa),csite%ggbare(ipa)                 &
                       ,cmet%atm_co2_c13,csite%can_co2_c13(ipa),csite%c13star(ipa))
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -1487,6 +1530,7 @@ module canopy_struct_dynamics
                                   , size2bl              ! ! function
       use ed_misc_coms     , only : igrass               ! ! intent(in)
       use phenology_coms   , only : elongf_min           ! ! intent(in)
+      use isotopes         , only : c13af                ! ! intent(in)
       !$ use omp_lib
 
       implicit none
@@ -1607,8 +1651,16 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+
+         if (c13af > 0) then
+            call ed_stars8(rk4site%atm_theta,initp%atm_enthalpy,rk4site%atm_shv             &
+                       ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
+                       ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
+                       ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
                        ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
                        ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -1682,8 +1734,16 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+         
+         if (c13af > 0) then
+            call ed_stars8(rk4site%atm_theta,initp%atm_enthalpy,rk4site%atm_shv             &
+                       ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
+                       ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
+                       ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
                        ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
                        ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -1890,8 +1950,16 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+
+         if (c13af > 0) then
+            call ed_stars8(rk4site%atm_theta,initp%atm_enthalpy,rk4site%atm_shv             &
+                       ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
+                       ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
+                       ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
                        ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
                        ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -2303,8 +2371,16 @@ module canopy_struct_dynamics
                        ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
                        ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
                        ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
+                       ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare)
+         
+         if (c13af > 0) then
+            call ed_stars8(rk4site%atm_theta,initp%atm_enthalpy,rk4site%atm_shv             &
+                       ,rk4site%atm_co2,initp%can_theta ,initp%can_enthalpy,initp%can_shv  &
+                       ,initp%can_co2,rk4site%geoht,initp%veg_displace,rk4site%atm_ustar   &
+                       ,initp%vels,initp%rough,initp%ustar,initp%tstar,initp%estar       &
                        ,initp%qstar,initp%cstar,initp%zeta,initp%ribulk,initp%ggbare       &
                        ,rk4site%atm_co2_c13,initp%can_co2_c13,initp%c13star)
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -2728,9 +2804,10 @@ module canopy_struct_dynamics
       real(kind=4), intent(out) :: zeta         ! z/(Obukhov length).           [    -----]
       real(kind=4), intent(out) :: rib          ! Bulk richardson number.       [    -----]
       real(kind=4), intent(out) :: ggbare       ! Ground conductance            [      m/s]
-      real(kind=4), intent(in)  :: co2_atm_c13  ! CO2 mixing ratio              [ µmol/mol]
-      real(kind=4), intent(in)  :: co2_can_c13  ! Canopy air CO2 mixing ratio   [ µmol/mol]
-      real(kind=4), intent(out) :: c13star      ! 13CO2 mixing turb. scale      [ µmol/mol]
+
+      real(kind=4), intent(in) , optional :: co2_atm_c13  ! Atmospheric 13CO    [ µmol/mol]
+      real(kind=4), intent(in) , optional :: co2_can_c13  ! Canopy 13CO2        [ µmol/mol]
+      real(kind=4), intent(out), optional :: c13star      ! 13CO2 mixing scale  [ µmol/mol]
       !----- Local variables. -------------------------------------------------------------!
       logical                   :: stable       ! Stable state                  [      T|F]
       real(kind=4)              :: zoz0m        ! zref/rough(momentum)          [    -----]
@@ -2988,7 +3065,10 @@ module canopy_struct_dynamics
       tstar = c3 * (theta_atm    - theta_can    )
       estar = c3 * (enthalpy_atm - enthalpy_can )
       cstar = c3 * (co2_atm      - co2_can      )
-      c13star = c3*(co2_atm_c13  - co2_can_c13  )
+
+      if (present(co2_atm_c13)) then
+         c13star = c3*(co2_atm_c13  - co2_can_c13  )
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -3092,9 +3172,10 @@ module canopy_struct_dynamics
       real(kind=8), intent(out) :: zeta         ! z/(Obukhov length).           [    -----]
       real(kind=8), intent(out) :: rib          ! Bulk richardson number.       [    -----]
       real(kind=8), intent(out) :: ggbare       ! Ground conductance            [      m/s]
-      real(kind=8), intent(in)  :: co2_atm_c13  ! CO2 mixing ratio              [ µmol/mol]
-      real(kind=8), intent(in)  :: co2_can_c13  ! Canopy air CO2 mixing ratio   [ µmol/mol]
-      real(kind=8), intent(out) :: c13star      ! 13CO2 mixing turb. scale      [ µmol/mol]
+
+      real(kind=8), intent(in) , optional :: co2_atm_c13  ! Atmospheric 13CO    [ µmol/mol]
+      real(kind=8), intent(in) , optional :: co2_can_c13  ! Canopy 13CO2        [ µmol/mol]
+      real(kind=8), intent(out), optional :: c13star      ! 13CO2 mixing scale  [ µmol/mol]
       !----- Local variables --------------------------------------------------------------!
       logical                   :: stable       ! Stable state                  [      T|F]
       real(kind=8)              :: zoz0m        ! zref/rough(momentum)          [    -----]
@@ -3359,7 +3440,10 @@ module canopy_struct_dynamics
       tstar = c3 * (theta_atm    - theta_can    )
       estar = c3 * (enthalpy_atm - enthalpy_can )
       cstar = c3 * (co2_atm      - co2_can      )
-      c13star = c3*(co2_atm_c13  - co2_can_c13  )
+      
+      if (present(co2_atm_c13)) then
+         c13star = c3*(co2_atm_c13  - co2_can_c13  )
+      end if
       !------------------------------------------------------------------------------------!
 
 

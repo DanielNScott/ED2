@@ -422,10 +422,12 @@ subroutine copy_patch_init(sourcesite,ipa,targetp,vels)
       targetp%avg_qthroughfall   = dble(sourcesite%fmean_qthroughfall  (ipa))
       targetp%avg_sensible_gc    = dble(sourcesite%fmean_sensible_gc   (ipa))
       targetp%avg_sensible_ac    = dble(sourcesite%fmean_sensible_ac   (ipa))
-      
-      targetp%avg_c13star        = dble(sourcesite%fmean_c13star       (ipa))
-      targetp%avg_carbon13_ac    = dble(sourcesite%fmean_carbon13_ac   (ipa))
-      targetp%avg_carbon13_st    = dble(sourcesite%fmean_carbon13_st   (ipa))
+     
+      if (c13af > 0) then 
+         targetp%avg_c13star     = dble(sourcesite%fmean_c13star       (ipa))
+         targetp%avg_carbon13_ac = dble(sourcesite%fmean_carbon13_ac   (ipa))
+         targetp%avg_carbon13_st = dble(sourcesite%fmean_carbon13_st   (ipa))
+      end if
 
       do k = rk4site%lsl, nzg
          targetp%avg_sensible_gg(k) = dble(sourcesite%fmean_sensible_gg(k,ipa))

@@ -1289,6 +1289,11 @@ module fuse_fiss_utils
                                          * cpatch%nplant           (recc)                  &
                                          + cpatch%cb_moistmax (imon,donc)                  &
                                          * cpatch%nplant           (donc) )
+         cpatch%cb_mlmax(imon,recc)    = newni                                             &
+                                       * ( cpatch%cb_mlmax    (imon,recc)                  &
+                                         * cpatch%nplant           (recc)                  &
+                                         + cpatch%cb_mlmax    (imon,donc)                  &
+                                         * cpatch%nplant           (donc) )
       end do
       !------------------------------------------------------------------------------------!
 
@@ -1337,6 +1342,9 @@ module fuse_fiss_utils
 
       cpatch%today_gpp_moistmax (recc) = cpatch%today_gpp_moistmax (recc)                  &
                                        + cpatch%today_gpp_moistmax (donc)
+
+      cpatch%today_gpp_mlmax    (recc) = cpatch%today_gpp_mlmax    (recc)                  &
+                                       + cpatch%today_gpp_mlmax    (donc)
 
       cpatch%today_leaf_resp    (recc) = cpatch%today_leaf_resp    (recc)                  &
                                        + cpatch%today_leaf_resp    (donc)
@@ -2944,9 +2952,9 @@ module fuse_fiss_utils
                                                + cpatch%qmean_par_level_diffd(:,donc)      &
                                                * cpatch%nplant                (donc) )     &
                                                * newni
-         cpatch%qmean_par_level_diffu(:,recc) = ( cpatch%qmean_par_level_diffu(:,recc)       &
+         cpatch%qmean_par_level_diffu(:,recc) = ( cpatch%qmean_par_level_diffu(:,recc)     &
                                                * cpatch%nplant                (recc)       &
-                                               + cpatch%qmean_par_level_diffu(:,donc)        &
+                                               + cpatch%qmean_par_level_diffu(:,donc)      &
                                                * cpatch%nplant                (donc) )     &
                                                * newni
 

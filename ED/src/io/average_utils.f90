@@ -2549,9 +2549,9 @@ module average_utils
                                                    + cpatch%fmean_wshed_wg      (ico)      &
                                                    * frqsum_o_daysec
                   if (c_alloc_flg > 0) then
-                     cpatch%dmean_lassim_resp_c13  (ico) = cpatch%dmean_lassim_resp_c13    (ico)      &
-                                                         + cpatch%fmean_lassim_resp_c13    (ico)      &
-                                                         * frqsum_o_daysec
+                     cpatch%dmean_lassim_resp(ico) = cpatch%dmean_lassim_resp   (ico)      &
+                                                   + cpatch%fmean_lassim_resp   (ico)      &
+                                                   * frqsum_o_daysec
                   end if
                   if (c13af > 0) then
                      cpatch%dmean_gpp_c13          (ico) = cpatch%dmean_gpp_c13           (ico)      &
@@ -2688,6 +2688,8 @@ module average_utils
                   cpatch%today_gpp_lightmax (ico) = cpatch%today_gpp_lightmax (ico)        &
                                                   * dtlsm_o_daysec
                   cpatch%today_gpp_moistmax (ico) = cpatch%today_gpp_moistmax (ico)        &
+                                                  * dtlsm_o_daysec
+                  cpatch%today_gpp_mlmax    (ico) = cpatch%today_gpp_mlmax (ico)           &
                                                   * dtlsm_o_daysec
                   cpatch%today_leaf_resp    (ico) = cpatch%today_leaf_resp    (ico)        &
                                                   * dtlsm_o_daysec
@@ -3346,6 +3348,7 @@ module average_utils
                   cpatch%today_gpp_pot      (ico) = 0.0
                   cpatch%today_gpp_lightmax (ico) = 0.0
                   cpatch%today_gpp_moistmax (ico) = 0.0
+                  cpatch%today_gpp_mlmax (ico) = 0.0
                   cpatch%today_leaf_resp    (ico) = 0.0
                   cpatch%today_root_resp    (ico) = 0.0
                   if (c_alloc_flg > 0) then
