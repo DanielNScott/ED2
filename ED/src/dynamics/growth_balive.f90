@@ -1289,7 +1289,7 @@ module growth_balive
             sah2tc = cpatch%bsapwooda_c13(ico)/cpatch%bsapwooda(ico)
          if (cpatch%bsapwoodb(ico) > tiny(1.0))                                            &
             sbh2tc = cpatch%bsapwoodb_c13(ico)/cpatch%bsapwoodb(ico)
-         if (cpatch%bstorage(ico) > tiny(1.0))                                             &
+         if (cpatch%bstorage(ico) > 10e14)                                                 &
             sth2tc = cpatch%bstorage_c13(ico)/cpatch%bstorage(ico)
       end if
 
@@ -2536,10 +2536,19 @@ module growth_balive
             reason  = 'Carbon-13 balance is negative.'
             !warning = .true. 
          end if
-         if (abs(carbon13_balance) > abs(carbon_balance)) then
-            reason  = 'Carbon-13 balance is greater in magnitude than carbon balance.'
-            warning = .true.
-         end if
+         !--------------------------------------------------------------------------------!
+         ! I believe this case should be allowed to be reached. Because growth resp is    !
+         ! essentially "removing" carbon before it "gets to it's pools" there is a        !
+         ! non-physicality to growth resp and hence carbon balance. The physical          !
+         ! interpretation would be that growth resp may legitimately remove total C from  !
+         ! plant pools much faster than it's removing C-13 in a given period of time.     !
+         !                                                                                !
+         ! |daily_c13_gain - growth_resp_c13| > |daily_c_gain - growth_resp| is fine.     !
+         !--------------------------------------------------------------------------------!
+         !if (abs(carbon13_balance) > abs(carbon_balance)) then
+         !   reason  = 'Carbon-13 balance is greater in magnitude than carbon balance.'
+         !   warning = .true.
+         !end if
 
          ! Check daily C and daily C-13 gains. These throw errors.
          if (daily_C_gain   < 0.0 .and. abs(daily_C_gain  ) > 0.0) then

@@ -52,16 +52,16 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
  
    check_erythang = .true.
    !---------------------------------------------------------------------------------------!
-   ! Check that some of the input stuff even makes sense...                                !
+   ! Please see the note in plant_cbal_sanity_check, this is not a meaningful check.       !
    !---------------------------------------------------------------------------------------!
-   if (abs(carbon13_balance) > abs(carbon_balance) .and. check_erythang) then
-      write (*,*) '------------------------------------------------------------------------'
-      write (*,*) 'Input check in alloc_c13: abs(carbon13_balance) > abs(carbon_balance)   !'
-      write (*,*) '------------------------------------------------------------------------'
-      write (*,'(A13, I4, I3)') 'Cohort, PFT: ', ico, cpatch%pft(ico)
-      write (*,*) 'carbon13_balance, carbon_balance : ', carbon13_balance, carbon_balance
-      write (*,*) ''
-   end if
+   !if (abs(carbon13_balance) > abs(carbon_balance) .and. check_erythang) then
+   !   write (*,*) '------------------------------------------------------------------------'
+   !   write (*,*) 'Input check in alloc_c13: abs(carbon13_balance) > abs(carbon_balance)   !'
+   !   write (*,*) '------------------------------------------------------------------------'
+   !   write (*,'(A13, I4, I3)') 'Cohort, PFT: ', ico, cpatch%pft(ico)
+   !   write (*,*) 'carbon13_balance, carbon_balance : ', carbon13_balance, carbon_balance
+   !   write (*,*) ''
+   !end if
    
    !------ Save Total Carbon 13 In --------------------------------------------------------!
    pre_leaf = cpatch%bleaf_c13(ico)
@@ -180,8 +180,15 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
       write(*,*)  c13_diff, pre_alloc_c13, post_alloc_c13
       write(*,*) ''
    case(2)
-      write(*,'(A14, I4, I3)') ' Cohort, PFT :', ico, cpatch%pft(ico)
+      write(*,'(A18, I4, I3)') ' Cohort, PFT     :', ico, cpatch%pft(ico)
+      write(*,*) '----------- Some Inputs -----------------------------------------'
+      write(*,*) ' bstorage        :', cpatch%bstorage(ico)
+      write(*,*) ' bstorage d13C   :', htIsoDelta(pre_st,cpatch%bstorage(ico))
+      write(*,*) ' bstorage ratio  :', sth2tc_in
+      write(*,*) ' carbon_balance  :', carbon_balance
+      write(*,*) ' carbon13_balance:', carbon13_balance
       write(*,*) ' '
+      write(*,*) '---------- Subroutine Results -----------------------------------'
       write(*,*) '- Variable Name: ---- Prev. Val ----- New Val ---- Difference ---'
       write(*,*) ' bleaf_c13       :', pre_leaf , post_leaf, post_leaf - pre_leaf
       write(*,*) ' broot_c13       :', pre_root , post_root, post_root - pre_root
