@@ -6,10 +6,8 @@ contains
 ! alloc_c13 is basically a wrapper function for calling the different allocation schemes,  !
 ! but it includes a lot of error checking.                                                 !
 !==========================================================================================!
-subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
-                     ,tr_bleaf , tr_broot, tr_bsapwooda  , tr_bsapwoodb       &
-                     ,lh2tc_in , rh2tc_in, sth2tc_in     , sah2tc_in          &
-                     ,sbh2tc_in, bleaf_in         )
+subroutine alloc_c13 (cpatch,ico,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb,daily_C_gain, &
+                      daily_c13_gain,carbon_balance,carbon13_balance,st_h2tc_in)
    use ed_state_vars,   only : patchtype        ! ! intent(in)
    use isotopes    ,    only : c13af            ! ! intent(in)
    implicit none
@@ -17,18 +15,15 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
    !------ Arguments. ---------------------------------------------------------------------!
    type(patchtype) , target         :: cpatch
    integer         , intent(in)     :: ico
+   real            , intent(in)     :: tr_bleaf          ! Xfer of total C from calling fn
+   real            , intent(in)     :: tr_broot          ! Xfer of total C from calling fn
+   real            , intent(in)     :: tr_bsapwooda      ! Xfer of total C from calling fn
+   real            , intent(in)     :: tr_bsapwoodb      ! Xfer of total C from calling fn
+   real            , intent(in)     :: daily_C_gain
+   real            , intent(in)     :: daily_c13_gain
    real            , intent(in)     :: carbon_balance
    real            , intent(in)     :: carbon13_balance
-   real, optional                   :: tr_bleaf          ! Xfer of total C from calling fn
-   real, optional                   :: tr_broot          ! Xfer of total C from calling fn
-   real, optional                   :: tr_bsapwooda      ! Xfer of total C from calling fn
-   real, optional                   :: tr_bsapwoodb      ! Xfer of total C from calling fn
-   real, optional  , intent(in)     :: lh2tc_in
-   real, optional  , intent(in)     :: rh2tc_in
-   real, optional  , intent(in)     :: sth2tc_in
-   real, optional  , intent(in)     :: sah2tc_in
-   real, optional  , intent(in)     :: sbh2tc_in
-   real, optional  , intent(in)     :: bleaf_in
+   real            , intent(in)     :: st_h2tc_in
    
    !------ Local Vars. --------------------------------------------------------------------!
    real(kind=8)   :: sum_c13_in              ! Pre-allocation C-13
@@ -44,7 +39,7 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
    integer        :: print_details           !
    logical        :: stop_run                ! Flag to stop the run if an error is serious.
    character(70)  :: alloc_msg               ! Tells us where a problem was if encountered.
-   character(20)  :: reason   
+   character(70)  :: reason   
    !---------------------------------------------------------------------------------------!
 
    stop_run       = .false.
@@ -85,19 +80,19 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
    !---------------------------------------------------------------------------------------!
    ! Allocate the C-13.                                                                    !
    !---------------------------------------------------------------------------------------!
-   select case(c13af)
-   case(1)
+   !select case(c13af)
+   !case(1)
       call mech_alloc_2 (cpatch,ico,carbon_balance,carbon13_balance,tr_bleaf,tr_broot,     &
-                         tr_bsapwooda,tr_bsapwoodb,sth2tc_in,alloc_msg)
-   case(2)
-      call nm_alloc_1(cpatch,ico,carbon13_balance)
+                         tr_bsapwooda,tr_bsapwoodb,st_h2tc_in,alloc_msg)
+   !case(2)
+   !   call nm_alloc_1(cpatch,ico,carbon13_balance)
    !case(3)
    !   call quad_alloc(cpatch,ico,carbon13_balance,lh2tc_in,sth2tc_in)
-   case(4)
-      call l_r_diff(cpatch,ico,carbon13_balance,lh2tc_in,rh2tc_in,sth2tc_in,bleaf_in)
-   case default
-      fatal_error('c13af Not in (1,2,4) but c13_alloc is called!','alloc_c13','iso_alloc.f90')
-   end select
+   !case(4)
+   !   call l_r_diff(cpatch,ico,carbon13_balance,lh2tc_in,rh2tc_in,sth2tc_in,bleaf_in)
+   !case default
+   !   fatal_error('c13af Not in (1,2,4) but c13_alloc is called!','alloc_c13','iso_alloc.f90')
+   !end select
    
    ! Update the living biomass.
    cpatch%balive_c13(ico) = cpatch%bleaf_c13    (ico) + cpatch%broot_c13    (ico)          &
@@ -129,7 +124,7 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
    if (( abs(sum_c13_dif / sum_c13_in ) > 0.000001 .or.                                    & 
          abs(sum_c13_dif / sum_c13_out) > 0.000001) ) then
       print_details = .true.
-      kill_sim      = .true.
+      stop_run      = .true.
       reason        = 'Greater than 1 millionth of total C-13 lost.'
    end if
    !---------------------------------------------------------------------------------------!
@@ -142,7 +137,7 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
       cpatch%bsapwooda_c13(ico) < 0.0         .or. cpatch%bsapwoodb_c13(ico) < 0.0 .or.   &
       cpatch%bstorage_c13(ico)  < -0.000000001 )) then
       print_details = .true.
-      kill_sim      = .true.
+      stop_run      = .true.
       reason        = 'A C-13 field is negative!'
    end if
    !---------------------------------------------------------------------------------------!
@@ -158,7 +153,7 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
       cpatch%bsapwoodb_c13(ico) > cpatch%bsapwoodb(ico) + tr_bsapwoodb        )) then
       !cpatch%bstorage_c13(ico)  > cpatch%bstorage(ico)         ) .and. check_erythang) then
       print_details = .true.
-      kill_sim      = .true.
+      stop_run      = .true.
       reason        = 'Total C-13 is greater than total C!'
    end if
    !---------------------------------------------------------------------------------------!
@@ -177,21 +172,21 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
       write(*,*) ' C-13 was not conserved in alloc_c13!'
       write(*,*) ' ', reason
       write(*,*) '-----------------------------------------------------------------'
-      write(*,*) ' '
-      write(*,*) '----------- Inputs ----------------------------------------------'
       write(*,'(A18, I4, I3)') ' Cohort, PFT     :', ico, cpatch%pft(ico)
       write(*,*) ' '
+      write(*,*) '----------- Inputs ----------------------------------------------'
+      write(*,*) ' carbon_balance  :', carbon_balance, carbon13_balance
       write(*,*) ' bstorage        :', cpatch%bstorage(ico)
-      write(*,*) ' bstorage d13C   :', htIsoDelta(st,cpatch%bstorage(ico))
-      write(*,*) ' bstorage ratio  :', sth2tc_in
+      write(*,*) ' bstorage d13C   :', htIsoDelta(st_c13_in,cpatch%bstorage(ico))
+      write(*,*) ' bstorage ratio  :', st_h2tc_in
       write(*,*) ' '
-      write(*,*) ' vleaf_resp      :', cpatch%vleaf_respiration(ico)
-      write(*,*) ' growth_resp     :', cpatch%growth_respiration(ico)
-      write(*,*) ' carbon_balance  :', carbon_balance
-      write(*,*) ' '
-      write(*,*) ' vleaf_resp_c13  :', cpatch%vleaf_respiration_c13(ico)
-      write(*,*) ' growth_resp_c13 :', cpatch%growth_respiration_c13(ico)
-      write(*,*) ' carbon13_balance:', carbon13_balance
+      write(*,*) '- Context Vars:  ----- Total C ----- 13C Value ---------------------'
+      write(*,*) ' daily_C_gain    :', daily_C_gain                  , daily_c13_gain
+      write(*,*) ' today_gpp       :', cpatch%today_gpp(ico)         , cpatch%today_gpp_c13(ico)
+      write(*,*) ' today_leaf_resp :', cpatch%today_leaf_resp(ico)   , cpatch%today_leaf_resp_c13(ico)
+      write(*,*) ' today_root_resp :', cpatch%today_root_resp(ico)   , cpatch%today_root_resp_c13(ico)
+      write(*,*) ' vleaf_resp      :', cpatch%vleaf_respiration(ico) , cpatch%vleaf_respiration_c13(ico)
+      write(*,*) ' growth_resp     :', cpatch%growth_respiration(ico), cpatch%growth_respiration_c13(ico)
       write(*,*) ' '
       write(*,*) '- Variable Name: ---- Input Val ---- Var Will Be --- Xfer to Var ---'
       write(*,*) ' bleaf           :', cpatch%bleaf(ico)    , cpatch%bleaf(ico)     + tr_bleaf    , tr_bleaf    
@@ -212,7 +207,7 @@ subroutine alloc_c13 (cpatch   , ico     , carbon_balance, carbon13_balance   &
       write(*,*) alloc_msg
    end if
    
-   if (kill_sim) then
+   if (stop_run) then
       call fatal_error(reason,'alloc_c13','iso_alloc.f90')
    end if
    !---------------------------------------------------------------------------------------!
@@ -238,7 +233,7 @@ subroutine mech_alloc_2(cpatch   , ico       , carbon_balance, carbon13_balance,
    real            , intent(in)  :: tr_bsapwooda
    real            , intent(in)  :: tr_bsapwoodb
    real            , intent(in)  :: sth2tc_in
-   character(70    , intent(out) :: alloc_msg
+   character(70)   , intent(out) :: alloc_msg
    
    !------ Local Var. ---------------------------------------------------------------------!
    real                          :: sum_tr
