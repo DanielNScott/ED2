@@ -47,7 +47,6 @@ subroutine structural_growth(cgrid, month)
    integer                       :: isi
    integer                       :: ipa
    integer                       :: ico
-   integer                       :: ilu
    integer                       :: ipft
    integer                       :: prev_month
    integer                       :: imonth
@@ -104,7 +103,6 @@ subroutine structural_growth(cgrid, month)
 
          patchloop: do ipa=1,csite%npatches
             cpatch => csite%patch(ipa)
-            ilu = csite%dist_type(ipa)
 
             if (dbg_growth) then
                phen_table = 0
@@ -145,6 +143,7 @@ subroutine structural_growth(cgrid, month)
                bstorage_in = cpatch%bstorage(ico)
                agb_in      = cpatch%agb     (ico)
                ba_in       = cpatch%basarea (ico)
+               !---------------------------------------------------------------------------!
 
                !---------------------------------------------------------------------------!
                !    Apply mortality, and do not allow nplant < negligible_nplant (such a   !
@@ -219,6 +218,7 @@ subroutine structural_growth(cgrid, month)
                !---------------------------------------------------------------------------!
                net_stem_N_uptake = (cpatch%bdead(ico) - bdead_in) * cpatch%nplant(ico)     &
                                  * ( 1.0 / c2n_stem(cpatch%pft(ico)) - 1.0 / c2n_storage)
+               !---------------------------------------------------------------------------!
                
                !---------------------------------------------------------------------------!
                !      Calculate total seed production and seed litter.  The seed pool gets !
@@ -228,6 +228,7 @@ subroutine structural_growth(cgrid, month)
                
                cpatch%today_NPPseeds(ico) = f_bseeds * cpatch%bstorage(ico)                &
                                           * cpatch%nplant(ico)
+               !---------------------------------------------------------------------------!
                
                !---------------------------------------------------------------------------!
                ! ALS. If agriculture: set seedling_mortality very low or zero              !
@@ -236,6 +237,7 @@ subroutine structural_growth(cgrid, month)
                seed_litter        = cpatch%bseeds(ico) * cpatch%nplant(ico)                &
                                   * seedling_mortality(ipft)
                                   
+               !---------------------------------------------------------------------------!
                
                !---------------------------------------------------------------------------!
                !      Rebalance the plant nitrogen uptake considering the actual alloc-    !
@@ -244,9 +246,11 @@ subroutine structural_growth(cgrid, month)
                !---------------------------------------------------------------------------!
                net_seed_N_uptake = cpatch%bseeds(ico) * cpatch%nplant(ico)                 &
                                  * (1.0 / c2n_recruit(ipft) - 1.0 / c2n_storage)
+               !---------------------------------------------------------------------------!
 
                !----- Decrement the storage pool. -----------------------------------------!
                cpatch%bstorage(ico) = cpatch%bstorage(ico) * (1.0 - f_bdead - f_bseeds)
+               !---------------------------------------------------------------------------!
 
                !----- Finalize litter inputs. ---------------------------------------------!
                csite%fsc_in(ipa) = csite%fsc_in(ipa) + f_labile(ipft) * balive_mort_litter &
@@ -263,6 +267,7 @@ subroutine structural_growth(cgrid, month)
                csite%total_plant_nitrogen_uptake(ipa) =                                    &
                       csite%total_plant_nitrogen_uptake(ipa) + net_seed_N_uptake           &
                     + net_stem_N_uptake
+               !---------------------------------------------------------------------------!
 
                !---------------------------------------------------------------------------!
                !     Calculate some derived cohort properties:                             !
@@ -278,22 +283,6 @@ subroutine structural_growth(cgrid, month)
                call update_derived_cohort_props(cpatch,ico                                 &
                                                   ,cpoly%green_leaf_factor(ipft,isi)       &
                                                   ,cpoly%lsl(isi))
-               !---------------------------------------------------------------------------!
-
-               !---------------------------------------------------------------------------!
-               ! MLO. We now update the heat capacity and the vegetation internal energy.  !
-               !      Since no energy or water balance is done here, we simply update the  !
-               !      energy in order to keep the same temperature and water as before.    !
-               !      Internal energy is an extensive variable, we just account for the    !
-               !      difference in the heat capacity to update it.                        !
-               !---------------------------------------------------------------------------!
-               old_leaf_hcap = cpatch%leaf_hcap(ico)
-               old_wood_hcap = cpatch%wood_hcap(ico)
-               call calc_veg_hcap(cpatch%bleaf(ico),cpatch%bdead(ico),cpatch%bsapwooda(ico)&
-                                 ,cpatch%nplant(ico),cpatch%pft(ico)                       &
-                                 ,cpatch%leaf_hcap(ico),cpatch%wood_hcap(ico) )
-               call update_veg_energy_cweh(csite,ipa,ico,old_leaf_hcap,old_wood_hcap)
-               call is_resolvable(csite,ipa,ico)
                !---------------------------------------------------------------------------!
 
 
@@ -369,12 +358,15 @@ subroutine structural_growth(cgrid, month)
                end if
                !---------------------------------------------------------------------------!
 
+
                !----- Light-related carbon balance. ---------------------------------------!
                if (cb_lightmax > 0.0) then
                   cbr_light = min(1.0, cb_act / cb_lightmax)
                else
                   cbr_light = cbr_severe_stress(ipft)
                end if
+               !---------------------------------------------------------------------------!
+
 
                !----- Soil moisture-related carbon balance. -------------------------------!
                if (cb_moistmax > 0.0) then
@@ -382,6 +374,8 @@ subroutine structural_growth(cgrid, month)
                else
                   cbr_moist = cbr_severe_stress(ipft)
                end if
+               !---------------------------------------------------------------------------!
+
 
                !----- Soil moisture+light related carbon balance. -------------------------!
                if (cb_mlmax > 0.0) then
@@ -389,35 +383,42 @@ subroutine structural_growth(cgrid, month)
                else
                   cbr_ml    = cbr_severe_stress(ipft)
                end if
+               !---------------------------------------------------------------------------!
+
 
                !---------------------------------------------------------------------------!
                !  calculate CBR according to the specified CBR_SCHEME                      !
                !---------------------------------------------------------------------------!
                select case (cbr_scheme)
                case (0)
-                 !----- CBR from absolute max CB ------------------------------------------!
-                 cpatch%cbr_bar(ico) = max(cbr_ml, cbr_severe_stress(ipft))
+                  !----- CBR from absolute max CB -----------------------------------------!
+                  cpatch%cbr_bar(ico) = max(cbr_ml, cbr_severe_stress(ipft))
+                  !------------------------------------------------------------------------!
+
 
                case (1)
-                 !----- CBR from combination of light & moist CBR -------------------------!
-                 !----- Relative carbon balance: a combination of the two factors. --------!
-                 if ( cbr_light <= cbr_severe_stress(ipft) .and.                           &
-                   cbr_moist <= cbr_severe_stress(ipft)       ) then
-                   cpatch%cbr_bar(ico) = cbr_severe_stress(ipft)
-                 else
-                    cpatch%cbr_bar(ico) = cbr_severe_stress(ipft)                          &
-                            + ( cbr_light - cbr_severe_stress(ipft) )                      &
-                            * ( cbr_moist - cbr_severe_stress(ipft) )                      &
-                            / (        ddmort_const  * cbr_moist                           &
-                              + (1.0 - ddmort_const) * cbr_light                           &
-                              - cbr_severe_stress(ipft) )
-                 end if
+                  !------------------------------------------------------------------------!
+                  !   CBR from combination of light & moist CBR                            !
+                  !   Relative carbon balance: a combination of the two factors.           !
+                  !------------------------------------------------------------------------!
+                  if ( cbr_light <= cbr_severe_stress(ipft) .and.                          &
+                       cbr_moist <= cbr_severe_stress(ipft)       ) then
+                     cpatch%cbr_bar(ico) = cbr_severe_stress(ipft)
+                  else
+                     cpatch%cbr_bar(ico) = cbr_severe_stress(ipft)                         &
+                                         + ( cbr_light - cbr_severe_stress(ipft) )         &
+                                         * ( cbr_moist - cbr_severe_stress(ipft) )         &
+                                         / (        ddmort_const  * cbr_moist              &
+                                           + (1.0 - ddmort_const) * cbr_light              &
+                                           - cbr_severe_stress(ipft) )
+                  end if
+                  !------------------------------------------------------------------------!
 
                case (2)
-                 !----- CBR from most limiting CBR ----------------------------------------!
-                 cpatch%cbr_bar(ico) = max( min(cbr_moist, cbr_light),                     &
-                                            cbr_severe_stress(ipft) )
-
+                  !----- CBR from most limiting CBR ---------------------------------------!
+                  cpatch%cbr_bar(ico) = max( min(cbr_moist, cbr_light)                     &
+                                           , cbr_severe_stress(ipft) )
+                  !------------------------------------------------------------------------!
                end select
                !---------------------------------------------------------------------------!
 
@@ -455,7 +456,7 @@ subroutine structural_growth(cgrid, month)
 
 
                !----- Update interesting output quantities. -------------------------------!
-               call update_vital_rates(cpatch,ico,ilu,dbh_in,bdead_in,balive_in,hite_in    &
+               call update_vital_rates(cpatch,ico,dbh_in,bdead_in,balive_in,hite_in        &
                                       ,bstorage_in,nplant_in,agb_in,ba_in,mort_litter      &
                                       ,csite%area(ipa),cpoly%basal_area(:,:,isi)           &
                                       ,cpoly%agb(:,:,isi),cpoly%basal_area_growth(:,:,isi) &
@@ -464,7 +465,26 @@ subroutine structural_growth(cgrid, month)
                                       ,cpoly%agb_mort(:,:,isi))
                !---------------------------------------------------------------------------!
 
+
+
+               !---------------------------------------------------------------------------!
+               ! MLO. We now update the heat capacity and the vegetation internal energy.  !
+               !      Since no energy or water balance is done here, we simply update the  !
+               !      energy in order to keep the same temperature and water as before.    !
+               !      Internal energy is an extensive variable, we just account for the    !
+               !      difference in the heat capacity to update it.                        !
+               !---------------------------------------------------------------------------!
+               old_leaf_hcap = cpatch%leaf_hcap(ico)
+               old_wood_hcap = cpatch%wood_hcap(ico)
+               call calc_veg_hcap(cpatch%bleaf(ico),cpatch%bdead(ico),cpatch%bsapwooda(ico)&
+                                 ,cpatch%nplant(ico),cpatch%pft(ico)                       &
+                                 ,cpatch%leaf_hcap(ico),cpatch%wood_hcap(ico) )
+               call update_veg_energy_cweh(csite,ipa,ico,old_leaf_hcap,old_wood_hcap)
+               call is_resolvable(csite,ipa,ico)
+               !---------------------------------------------------------------------------!
+
             end do cohortloop
+            !------------------------------------------------------------------------------!
 
             !------- Print debugging output if desired... ---------------------------------!
             if (dbg_growth) then
@@ -497,8 +517,11 @@ subroutine structural_growth(cgrid, month)
             !------------------------------------------------------------------------------!
 
          end do patchloop
+         !---------------------------------------------------------------------------------!
       end do siteloop
+      !------------------------------------------------------------------------------------!
    end do polyloop
+   !---------------------------------------------------------------------------------------!
    return
 end subroutine structural_growth
 !==========================================================================================!
@@ -554,7 +577,6 @@ subroutine structural_growth_eq_0(cgrid, month)
    integer                       :: isi
    integer                       :: ipa
    integer                       :: ico
-   integer                       :: ilu
    integer                       :: ipft
    integer                       :: prev_month
    integer                       :: imonth
@@ -609,7 +631,6 @@ subroutine structural_growth_eq_0(cgrid, month)
 
          patchloop: do ipa=1,csite%npatches
             cpatch => csite%patch(ipa)
-            ilu = csite%dist_type(ipa)
 
             cohortloop: do ico = 1,cpatch%ncohorts
                !----- Assigning an alias for PFT type. ------------------------------------!
@@ -730,6 +751,7 @@ subroutine structural_growth_eq_0(cgrid, month)
                                                   ,cpoly%green_leaf_factor(ipft,isi)       &
                                                   ,cpoly%lsl(isi))
                !---------------------------------------------------------------------------!
+
 
 
                !----- Update annual average carbon balances for mortality. ----------------!
@@ -857,7 +879,7 @@ subroutine structural_growth_eq_0(cgrid, month)
 
 
                !----- Update interesting output quantities. -------------------------------!
-               call update_vital_rates(cpatch,ico,ilu,dbh_in,bdead_in,balive_in,hite_in    &
+               call update_vital_rates(cpatch,ico,dbh_in,bdead_in,balive_in,hite_in        &
                                       ,bstorage_in,nplant_in,agb_in,ba_in,mort_litter      &
                                       ,csite%area(ipa),cpoly%basal_area(:,:,isi)           &
                                       ,cpoly%agb(:,:,isi),cpoly%basal_area_growth(:,:,isi) &
@@ -889,6 +911,24 @@ subroutine structural_growth_eq_0(cgrid, month)
                cpatch%wai             (ico) = wai_in
                cpatch%crown_area      (ico) = cai_in
                cpatch%krdepth         (ico) = krdepth_in
+               !---------------------------------------------------------------------------!
+
+
+
+               !---------------------------------------------------------------------------!
+               ! MLO. We now update the heat capacity and the vegetation internal energy.  !
+               !      Since no energy or water balance is done here, we simply update the  !
+               !      energy in order to keep the same temperature and water as before.    !
+               !      Internal energy is an extensive variable, we just account for the    !
+               !      difference in the heat capacity to update it.                        !
+               !---------------------------------------------------------------------------!
+               old_leaf_hcap = cpatch%leaf_hcap(ico)
+               old_wood_hcap = cpatch%wood_hcap(ico)
+               call calc_veg_hcap(cpatch%bleaf(ico),cpatch%bdead(ico),cpatch%bsapwooda(ico)&
+                                 ,cpatch%nplant(ico),cpatch%pft(ico)                       &
+                                 ,cpatch%leaf_hcap(ico),cpatch%wood_hcap(ico) )
+               call update_veg_energy_cweh(csite,ipa,ico,old_leaf_hcap,old_wood_hcap)
+               call is_resolvable(csite,ipa,ico)
                !---------------------------------------------------------------------------!
             end do cohortloop
             !------------------------------------------------------------------------------!
@@ -1093,14 +1133,12 @@ subroutine update_derived_cohort_props(cpatch,ico,green_leaf_factor,lsl)
    use pft_coms      , only : phenology           & ! intent(in)
                             , q                   & ! intent(in)
                             , qsw                 & ! intent(in)
-                            , is_grass            & ! intent(in)
-                            , hgt_min
+                            , is_grass            ! ! intent(in)
    use allometry     , only : bd2dbh              & ! function
                             , dbh2h               & ! function
                             , dbh2krdepth         & ! function
                             , bl2dbh              & ! function
                             , bl2h                & ! function
-                            , h2dbh               & ! function
                             , size2bl             & ! function
                             , ed_biomass          & ! function
                             , area_indices        ! ! subroutine
@@ -1143,12 +1181,12 @@ subroutine update_derived_cohort_props(cpatch,ico,green_leaf_factor,lsl)
    !----- Get DBH and height --------------------------------------------------------------!
    if (is_grass(ipft) .and. igrass == 1) then 
        !---- New grasses get dbh_effective and height from bleaf. -------------------------!
-      cpatch%hite(ico) = max( hgt_min(ipft), bl2h(cpatch%bleaf(ico),ipft))
-      cpatch%dbh(ico)  = h2dbh(cpatch%hite(ico),ipft)
+       cpatch%dbh(ico)  = bl2dbh(cpatch%bleaf(ico), ipft)
+       cpatch%hite(ico) = bl2h  (cpatch%bleaf(ico), ipft)
    else 
-      !---- Trees and old grasses get dbh from bdead. ------------------------------------!
-      cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
-      cpatch%hite(ico) = dbh2h (ipft, cpatch%dbh  (ico))
+       !---- Trees and old grasses get dbh from bdead. ------------------------------------!
+       cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
+       cpatch%hite(ico) = dbh2h (ipft, cpatch%dbh  (ico))
    end if
    !---------------------------------------------------------------------------------------!
 
@@ -1213,14 +1251,13 @@ end subroutine update_derived_cohort_props
 !==========================================================================================!
 !    This subroutine will compute the growth and mortality rates.                          !
 !------------------------------------------------------------------------------------------!
-subroutine update_vital_rates(cpatch,ico,ilu,dbh_in,bdead_in,balive_in,hite_in,bstorage_in &
+subroutine update_vital_rates(cpatch,ico,dbh_in,bdead_in,balive_in,hite_in,bstorage_in     &
                              ,nplant_in,agb_in,ba_in,mort_litter,area,basal_area,agb       &
                              ,basal_area_growth,agb_growth,basal_area_mort,agb_mort)
    
    use ed_state_vars , only : patchtype    ! ! structure
    use ed_max_dims   , only : n_pft        & ! intent(in)
-                            , n_dbh        & ! intent(in)
-                            , n_dist_types ! ! intent(in)
+                            , n_dbh        ! ! intent(in)
    use ed_misc_coms  , only : ddbhi        ! ! intent(in)
    use consts_coms   , only : pio4         ! ! intent(in)
    use pft_coms      , only : agf_bs       & ! intent(in)
@@ -1242,7 +1279,6 @@ subroutine update_vital_rates(cpatch,ico,ilu,dbh_in,bdead_in,balive_in,hite_in,b
    real                         , intent(in)    :: mort_litter
    real                         , intent(in)    :: area
    integer                      , intent(in)    :: ico
-   integer                      , intent(in)    :: ilu
    real, dimension(n_pft, n_dbh), intent(inout) :: basal_area
    real, dimension(n_pft, n_dbh), intent(inout) :: agb
    real, dimension(n_pft, n_dbh), intent(inout) :: basal_area_growth

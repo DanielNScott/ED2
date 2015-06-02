@@ -22,7 +22,6 @@ subroutine near_bare_ground_init(cgrid)
    type(sitetype)    , pointer :: csite
    integer                     :: ipy
    integer                     :: isi
-   integer                     :: k
    !---------------------------------------------------------------------------------------!
 
 
@@ -81,7 +80,6 @@ subroutine near_bare_ground_init(cgrid)
 
          csite%sum_dgd            (1) = 0.0
          csite%sum_chd            (1) = 0.0
-         csite%plantation         (1) = 0
          csite%plant_ag_biomass   (1) = 0.
 
          !----- We now populate the cohorts with near bare ground condition. --------------!
@@ -132,6 +130,7 @@ subroutine init_nbg_cohorts(csite,lsl,ipa_a,ipa_z)
                                  , include_pft        & ! intent(in)
                                  , include_these_pft  & ! intent(in)
                                  , include_pft_ag     & ! intent(in)
+                                 , include_pft_fp     & ! intent(in)
                                  , init_density       & ! intent(in)
                                  , agf_bs             ! ! intent(in)
    use consts_coms        , only : t3ple              & ! intent(in)
@@ -184,9 +183,11 @@ subroutine init_nbg_cohorts(csite,lsl,ipa_a,ipa_z)
          !     Decide how many cohorts to allocate.                                        !
          !---------------------------------------------------------------------------------!
          select case (csite%dist_type(ipa))
-         case (1)   !---- Agriculture. ----------------------------------------------------!
+         case (1)     !---- Agriculture. --------------------------------------------------!
             mypfts = count(include_pft_ag)
-         case (2,3) !---- Secondary or primary forest. ------------------------------------!
+         case (2)     !---- Forest plantation. --------------------------------------------!
+            mypfts = count(include_pft_fp)
+         case default !---- Secondary or primary forest. ----------------------------------!
             mypfts = count(include_pft)
          end select
          !---------------------------------------------------------------------------------!
@@ -211,8 +212,15 @@ subroutine init_nbg_cohorts(csite,lsl,ipa_a,ipa_z)
             else
                cycle pftloop
             end if
-         case (2,3)
-            !----- Forest, only the ones allowed are included. ----------------------------!
+         case (2)
+            !----- Forest plantation, only the ones allowed are included. -----------------!
+            if (include_pft_fp(ipft)) then
+               ico = ico + 1
+            else
+               cycle pftloop
+            end if
+         case default
+            !----- Primary or secondary vegetation, only the ones allowed are included. ---!
             if (include_pft(ipft)) then
                ico = ico + 1
             else
@@ -535,8 +543,7 @@ subroutine near_bare_ground_big_leaf_init(cgrid)
    integer                     :: ipy               ! Patch counter
    integer                     :: ico               ! Cohort counter
    integer                     :: isi               ! Site counter
-   integer                     :: ipa      
-   integer                     :: k       
+   integer                     :: ipa               ! Patch counter
    integer                     :: mypfts            ! Number of included PFTs
    integer                     :: ipft              ! PFT counter
    real                        :: salloc            ! balive/bleaf when on allom.
@@ -606,7 +613,6 @@ subroutine near_bare_ground_big_leaf_init(cgrid)
 
             csite%sum_dgd            (ipa) = 0.0
             csite%sum_chd            (ipa) = 0.0
-            csite%plantation         (ipa) = 0
             csite%plant_ag_biomass   (ipa) = 0.
 
             !------------------------------------------------------------------------------!

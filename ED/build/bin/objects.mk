@@ -2,7 +2,7 @@
 
 # Define main source.
 
-MAIN = $(ED_DRIVER)/edmain.f90
+MAIN = $(ED_DRIVER)/edmain.F90
 MAINOBJ = edmain.o
 
 
@@ -79,6 +79,8 @@ OBJ_MODEL =                        \
 	hydrology_constants.o      \
 	init_hydro_sites.o         \
 	invmondays.o               \
+	iso_alloc.o                \
+	isotopes.o                 \
 	landuse_init.o             \
 	lapse.o                    \
 	leaf_database.o            \

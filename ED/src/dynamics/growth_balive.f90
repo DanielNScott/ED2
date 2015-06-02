@@ -88,20 +88,20 @@ module growth_balive
       !------------------------------------------------------------------------------------!
 
 
-      do ipy = 1,cgrid%npolygons
+      polyloop: do ipy = 1,cgrid%npolygons
          cpoly => cgrid%polygon(ipy)
 
-         do isi = 1,cpoly%nsites
+         siteloop: do isi = 1,cpoly%nsites
             csite => cpoly%site(isi)
 
-            do ipa = 1,csite%npatches
+            patchloop: do ipa = 1,csite%npatches
                cpatch => csite%patch(ipa)
 
                !----- Reset averaged variables. -------------------------------------------!
                csite%total_plant_nitrogen_uptake(ipa) = 0.0
 
                !----- Loop over cohorts. --------------------------------------------------!
-               do ico = 1,cpatch%ncohorts
+               cohortloop: do ico = 1,cpatch%ncohorts
 
                   !----- Alias for current PFT. -------------------------------------------!
                   ipft = cpatch%pft(ico)
@@ -226,29 +226,18 @@ module growth_balive
                   ! changes daily is the frost mortality, and the disturbance mortality is !
                   ! not updated here (it is updated in the main disturbance procedure).    !
                   !                                                                        !
-                  !      How we integrate mortality also depends on whether we are running !
-                  ! size-and-age (or size-only) structure, or big leaf.  Big leaf doesn't  !
-                  ! create new patches, thus we also include the disturbance mortality     !
-                  ! here.  Loss of plants in size-and-age is represented by creating a new !
-                  ! patch, so it shouldn't be included here.  Size-only is done by         !
-                  ! creating and merging the patch back, so it should not be added here    !
-                  ! either.                                                                !
+                  !      We no longer include mortality rates due to disturbance in the    !
+                  ! big-leaf simulations, this is now done at disturbance.f90.             !
                   !------------------------------------------------------------------------!
-                  call mortality_rates(cpatch,ipa,ico,csite%avg_daily_temp(ipa)            &
-                                      ,csite%age(ipa))
-                  select case (ibigleaf)
-                  case (0)
-                     dlnndt   = - sum(cpatch%mort_rate(1:4,ico))
-                     dndt     = dlnndt * cpatch%nplant(ico)
-                  case (1)
-                     dlnndt   = - sum(cpatch%mort_rate(1:5,ico))
-                     dndt     = dlnndt * cpatch%nplant(ico)
-                  end select
+                  call mortality_rates(cpatch,ico,csite%avg_daily_temp(ipa),csite%age(ipa))
+                  dlnndt   = - sum(cpatch%mort_rate(1:4,ico))
+                  dndt     = dlnndt * cpatch%nplant(ico)
                   !------------------------------------------------------------------------!
 
                   !----- Update monthly mortality rates [plants/m2/month and 1/month]. ----!
                   cpatch%monthly_dndt  (ico) = cpatch%monthly_dndt  (ico) + dndt   * tfact
                   cpatch%monthly_dlnndt(ico) = cpatch%monthly_dlnndt(ico) + dlnndt * tfact
+                  !------------------------------------------------------------------------!
 
 
                   !----- Updating LAI, WAI, and CAI. --------------------------------------!
@@ -257,11 +246,17 @@ module growth_balive
                                    ,cpatch%hite(ico) ,cpatch%pft(ico),cpatch%sla(ico)      &
                                    ,cpatch%lai(ico),cpatch%wai(ico),cpatch%crown_area(ico) &
                                    ,cpatch%bsapwooda(ico))
+                  !------------------------------------------------------------------------!
+
+
 
                   !----- Update above-ground biomass. -------------------------------------!
                   cpatch%agb(ico) = ed_biomass(cpatch%bdead(ico),cpatch%bleaf(ico)         &
                                               ,cpatch%bsapwooda(ico),cpatch%pft(ico))
-                                              
+                  !------------------------------------------------------------------------!
+
+
+
                   !------------------------------------------------------------------------!
                   !     It is likely that biomass has changed, therefore, update           !
                   ! vegetation energy and heat capacity.                                   !
@@ -276,22 +271,30 @@ module growth_balive
                   !----- Update the stability status. -------------------------------------!
                   call is_resolvable(csite,ipa,ico)
                   !------------------------------------------------------------------------!
-               end do
-               
+               end do cohortloop
+               !---------------------------------------------------------------------------!
+
                !----- Update litter. ------------------------------------------------------!
                call litter(csite,ipa)
-               
+               !---------------------------------------------------------------------------!
+
                !----- Update patch LAI, WAI, height, roughness... -------------------------!
-               call update_patch_derived_props(csite,cpoly%lsl(isi),cpoly%met(isi)%prss,ipa)
+               call update_patch_derived_props(csite,ipa)
+               !---------------------------------------------------------------------------!
 
                !----- Recalculate storage terms (for budget assessment). ------------------!
                call update_budget(csite,cpoly%lsl(isi),ipa,ipa)
+               !---------------------------------------------------------------------------!
 
                !----- It's a new day, reset average daily temperature. --------------------!
                csite%avg_daily_temp(ipa) = 0.0 
-            end do
-         end do
-      end do
+               !---------------------------------------------------------------------------!
+            end do patchloop
+            !------------------------------------------------------------------------------!
+         end do siteloop
+         !---------------------------------------------------------------------------------!
+      end do polyloop
+      !------------------------------------------------------------------------------------!
 
       return
    end subroutine dbalive_dt
@@ -370,20 +373,20 @@ module growth_balive
       !------------------------------------------------------------------------------------!
 
 
-      do ipy = 1,cgrid%npolygons
+      polyloop: do ipy = 1,cgrid%npolygons
          cpoly => cgrid%polygon(ipy)
 
-         do isi = 1,cpoly%nsites
+         siteloop: do isi = 1,cpoly%nsites
             csite => cpoly%site(isi)
 
-            do ipa = 1,csite%npatches
+            patchloop: do ipa = 1,csite%npatches
                cpatch => csite%patch(ipa)
 
                !----- Reset averaged variables. -------------------------------------------!
                csite%total_plant_nitrogen_uptake(ipa) = 0.0
 
                !----- Loop over cohorts. --------------------------------------------------!
-               do ico = 1,cpatch%ncohorts
+               cohortloop: do ico = 1,cpatch%ncohorts
 
                   !----- Alias for current PFT. -------------------------------------------!
                   ipft = cpatch%pft(ico)
@@ -507,8 +510,7 @@ module growth_balive
                   !------------------------------------------------------------------------!
                   !      Do mortality --- note that only frost mortality changes daily.    !
                   !------------------------------------------------------------------------!
-                  call mortality_rates(cpatch,ipa,ico,csite%avg_daily_temp(ipa)            &
-                                      ,csite%age(ipa))
+                  call mortality_rates(cpatch,ico,csite%avg_daily_temp(ipa),csite%age(ipa))
                   select case (ibigleaf)
                   case (0)
                      dlnndt   = - sum(cpatch%mort_rate(1:4,ico))
@@ -523,14 +525,20 @@ module growth_balive
                   !----- Update monthly mortality rates [plants/m2/month and 1/month]. ----!
                   cpatch%monthly_dndt  (ico) = cpatch%monthly_dndt  (ico) + dndt   * tfact
                   cpatch%monthly_dlnndt(ico) = cpatch%monthly_dlnndt(ico) + dlnndt * tfact
+                  !------------------------------------------------------------------------!
 
-               end do
+               end do cohortloop
+               !---------------------------------------------------------------------------!
 
                !----- It's a new day, reset average daily temperature. --------------------!
                csite%avg_daily_temp(ipa) = 0.0 
-            end do
-         end do
-      end do
+               !---------------------------------------------------------------------------!
+            end do patchloop
+            !------------------------------------------------------------------------------!
+         end do siteloop
+         !---------------------------------------------------------------------------------!
+      end do polyloop
+      !------------------------------------------------------------------------------------!
 
       return
    end subroutine dbalive_dt_eq_0
@@ -1287,6 +1295,7 @@ module growth_balive
       use decomp_coms   , only : f_labile                 ! ! intent(in)
       use allometry     , only : size2bl                  ! ! function
       use phenology_coms, only : elongf_min               ! ! intent(in)
+      use consts_coms   , only : tiny_num                 ! ! intent(in)
       !----- DS Addnl Uses ----------------------------------------------------------------!
       use isotopes       , only : c13af                   & ! intent(in)
                                 , c_alloc_flg             & ! intent(inout)
@@ -1459,7 +1468,7 @@ module growth_balive
             delta_bsapwoodb = max (0.0, bsapwoodb_aim - cpatch%bsapwoodb(ico))
             !------------------------------------------------------------------------------!
 
-            if(cpatch%elongf(ico)<1e-15 .and. .not. close_nonfatalmessage) then
+            if(cpatch%elongf(ico) < tiny_num) then
                
                write(*,'(a)')' ============================================'
                write(*,'(a)')' LINE 990 growth_balive.f90'
@@ -2095,6 +2104,7 @@ module growth_balive
                                , c2n_stem     ! ! intent(in)
       use decomp_coms   , only : f_labile     ! ! intent(in)
       use allometry     , only : size2bl      ! ! function
+      use consts_coms   , only : tiny_num     ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(sitetype) , target        :: csite
@@ -2150,7 +2160,8 @@ module growth_balive
                       (cpatch%phenology_status(ico) == 1) 
 
       if (carbon_balance > 0.0 .or. time_to_flush) then 
-         if (cpatch%phenology_status(ico) == 1 .or. cpatch%phenology_status(ico) == 0) then
+         select case (cpatch%phenology_status(ico))
+         case (0,1)
             !------------------------------------------------------------------------------!
             ! There are leaves, we are not actively dropping leaves and we're off          !
             ! allometry.  Here we will compute the maximum amount that can go to balive    !
@@ -2178,7 +2189,7 @@ module growth_balive
             delta_bsapwoodb = max (0.0, bsapwoodb_aim - cpatch%bsapwoodb(ico))
             !------------------------------------------------------------------------------!
 
-            if(cpatch%elongf(ico)<1e-15) then
+            if(cpatch%elongf(ico) < tiny_num) then
 
                write(*,'(a)')' ============================================'
                write(*,'(a)')' LINE 1660 growth_balive.f90'
@@ -2300,7 +2311,7 @@ module growth_balive
                !---------------------------------------------------------------------------!
                cpatch%phenology_status(ico) = 0
             end if
-         else
+         case default
             !------------------------------------------------------------------------------!
             !     Put carbon gain into storage.  If we're not actively dropping leaves or  !
             ! off-allometry, this will be used for structural growth at the end of the     !
@@ -2317,8 +2328,9 @@ module growth_balive
             cpatch%today_nppsapwood(ico) = 0.0
             cpatch%today_nppdaily(ico)   = carbon_balance * cpatch%nplant(ico)
             !------------------------------------------------------------------------------!
-         end if
- 
+         end select
+         !---------------------------------------------------------------------------------!
+
 
       else
          !---------------------------------------------------------------------------------!
