@@ -195,6 +195,9 @@ module growth_balive
                         call apply_c13_xfers(cpatch,ico,carbon13_balance,tr_bleaf_c13      &
                                             ,tr_broot_c13,tr_bsapwooda_c13                 &
                                             ,tr_bsapwoodb_c13,tr_bstorage_c13)
+                        
+                        call plant_cbal_sanity(cpatch,ico,carbon_balance,carbon13_balance  &
+                                              ,daily_C_gain,daily_c13_gain)
                      end if
                   end if
                   !------------------------------------------------------------------------!
@@ -3478,24 +3481,6 @@ module growth_balive
       temp_dep = 1.0
       !------------------------------------------------------------------------!                  
       
-      !------------------------------------------------------------------------!
-      ! Resp 13C loss computed (with frac.) via total * ratio. Currently this  !
-      ! is done s.t. growth resp. carries no fractionation for two reasons:    !
-      !  1) G.r. being taken from carbon_bal. has no clear relation w/ reality !
-      !  2) (or 1b...) Incl. it req.s casing in iso_alloc w/o clear meaning    ! 
-      !------------------------------------------------------------------------!
-      if (c13af > 0) then
-         cpatch%growth_respiration_c13(ico)  =                                 &
-                max(0.0,daily_c13_gain*growth_resp_factor(ipft))
-
-         cpatch%vleaf_respiration_c13 (ico)  =                                 &
-                           resp_h2tc('vleaf',cpatch%balive_c13(ico)            &
-                                      ,cpatch%balive    (ico))                 &
-                           *(1.0-green_leaf_factor)                            &
-                           * salloci * cpatch%balive(ico)                      &
-                           * storage_turnover_rate(ipft)                       &
-                           * tfact * temp_dep
-      end if
       
       !------------------------------------------------------------------------!
       !      Compute respiration rates for coming day [kgC/plant/day].         !
@@ -3513,17 +3498,24 @@ module growth_balive
                                       * storage_turnover_rate(ipft)            &
                                       * tfact * temp_dep
       !------------------------------------------------------------------------!
+      
+      
+      !------------------------------------------------------------------------!
+      ! Compute C-13 terms...                                                  !
+      !------------------------------------------------------------------------!
+      if (c13af > 0) then
+         cpatch%growth_respiration_c13(ico) = max(0.0, daily_c13_gain         &
+                                                     * growth_resp_factor(ipft))
 
-      if (c_alloc_flg > 0) then
-         !cpatch%vleaf_respiration(ico) = min(cpatch%vleaf_respiration(ico)                 &
-         !                                   ,cpatch%bstorage(ico))
-         cpatch%vleaf_respiration(ico) = 0
-         if (c13af > 0) then
-            !cpatch%vleaf_respiration_c13(ico) = min(cpatch%vleaf_respiration_c13(ico)      &
-            !                                       ,cpatch%bstorage_c13(ico))
-            cpatch%vleaf_respiration_c13(ico) = 0
-         end if
+         !cpatch%vleaf_respiration_c13 (ico) = (1.0 - green_leaf_factor)        &
+         !                                   * salloci * cpatch%balive_c13(ico) &
+         !                                   * storage_turnover_rate(ipft)      &
+         !                                   * tfact * temp_dep
+         
+         cpatch%vleaf_respiration    (ico) = 0.0
+         cpatch%vleaf_respiration_c13(ico) = 0.0
       end if
+      !------------------------------------------------------------------------!
 
    end subroutine gvl_resp
    !=======================================================================================!
@@ -3536,8 +3528,7 @@ module growth_balive
    subroutine plant_cbal_sanity(cpatch,ico,carbon_balance,carbon13_balance,daily_C_gain,   &
                                 daily_c13_gain)
       use ed_state_vars  , only : patchtype           ! ! structure
-      use isotopes       , only : c_alloc_flg         & ! intent(in)
-                                , c13af               & ! intent(in)
+      use isotopes       , only : c13af               & ! intent(in)
                                 , larprop             ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -3557,7 +3548,7 @@ module growth_balive
       Cfmt = '(A18,A18,A18,A18)'
       Rfmt = '(ES18.4E3,ES18.4E3,ES18.4E3,ES18.4E3)'
       
-      if (c_alloc_flg > 0) then
+      if (c13af > 0) then
          ! Check carbon balance and C-13 balance. These throw warnings.
          if (carbon_balance   < 0.0 .and. abs(carbon_balance  ) > 0.0) then
             reason  = 'Carbon balance is negative.'
@@ -3618,10 +3609,10 @@ module growth_balive
          write(*,*) '!--- Resps and GPPs ---------------------------------------------------!'
          write(*,*) ' gpp              ,         gpp_c13 : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
          write(*,*) ' leaf_resp        ,   leaf_resp_c13 : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
-         write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
+         !write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
          write(*,*) ' today_gpp        ,   today_gpp_c13 : ', cpatch%today_gpp(ico)        , cpatch%today_gpp_c13(ico)
          write(*,*) ' today_leaf_resp  ,         ..._c13 : ', cpatch%today_leaf_resp(ico)  , cpatch%today_leaf_resp_c13(ico)
-         write(*,*) ' today_lassim_resp,         ..._c13 : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)                
+         !write(*,*) ' today_lassim_resp,         ..._c13 : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)                
          write(*,*) '------------------------------------------------------------------------'
       end if
       

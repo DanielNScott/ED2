@@ -707,7 +707,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                                                 + cpatch%leaf_respiration_c13(ico)
                !---------------------------------------------------------------------------!
                
-               call c13_sanity_check(cpatch,ico,'canopy_photosynth.','photosyn_driv.f90')
+               call c13_sanity_check(cpatch,ico,'canopy_photosynthesis','photosyn_driv.f90')
                !---------------------------------------------------------------------------!
             end if ! End of C-13 conditional (c13af > 0)
             !------------------------------------------------------------------------------!

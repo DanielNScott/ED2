@@ -39,7 +39,7 @@ subroutine alloc_c13 (cpatch,ico,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb,dai
    integer        :: print_details           !
    logical        :: stop_run                ! Flag to stop the run if an error is serious.
    character(70)  :: alloc_msg               ! Tells us where a problem was if encountered.
-   character(70)  :: reason   
+   character(20)  :: reason   
    !---------------------------------------------------------------------------------------!
 
    stop_run       = .false.
@@ -1564,111 +1564,122 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
    if (c13af > 0 .and. c_alloc_flg > 0) then
       ! Assimilated C-13 should not exceed assimilated C.
       if (cpatch%gpp_c13      (ico) > cpatch%gpp      (ico) .or. &
-          cpatch%today_gpp_c13(ico) > cpatch%today_gpp(ico)) diagnosis = 1
-      
-      ! Leaf respired C-13 should exceed respired C.
-      if (cpatch%leaf_respiration_c13(ico) > cpatch%leaf_respiration(ico) .or. &
-          cpatch%today_leaf_resp_c13 (ico) > cpatch%today_leaf_resp (ico)) diagnosis = 2
-   
-      ! Assimilate based resp should be positive.
-      if (cpatch%today_lassim_resp(ico) < 0.0 .or. cpatch%today_lassim_resp_c13(ico) < 0.0 .or. &
-          cpatch%lassim_resp      (ico) < 0.0 .or. cpatch%lassim_resp_c13      (ico) < 0.0) diagnosis = 3
-      
-      ! Assimilate based resp should not exceed total resp.
-      if (cpatch%lassim_resp      (ico) > cpatch%leaf_respiration(ico) .and. abs(cpatch%lassim_resp      (ico)) > tiny(1.0) .or. &
-          cpatch%today_lassim_resp(ico) > cpatch%today_leaf_resp (ico) .and. abs(cpatch%today_lassim_resp(ico)) > tiny(1.0)) diagnosis = 4
-                     
-      ! Assimilate based resp shold not exceed total assimilate
-      if (cpatch%lassim_resp      (ico) > cpatch%gpp      (ico) .and. cpatch%gpp_c13      (ico) > tiny(1.0) .or. &
-          cpatch%today_lassim_resp(ico) > cpatch%today_gpp(ico) .and. cpatch%today_gpp_c13(ico) > tiny(1.0)) diagnosis = 5
-      
-      ! Assimilate based resp c13 should not exceed total assim respiration
-      if (cpatch%lassim_resp_c13      (ico) > cpatch%lassim_resp      (ico) .or. &
-          cpatch%today_lassim_resp_c13(ico) > cpatch%today_lassim_resp(ico)) diagnosis = 6
-
-     ! Assimilate based resp c13 should not exceed total resp c13
-      if (cpatch%lassim_resp_c13      (ico) > cpatch%leaf_respiration_c13(ico) .or. &
-          cpatch%today_lassim_resp_c13(ico) > cpatch%today_leaf_resp_c13 (ico)) diagnosis = 7
-      
-      ! Assim Resp c13 should not exceed total assimilate c13
-      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp_c13(ico) .and. &
-          cpatch%gpp_c13              (ico) > tiny(1.0)           .and. & 
-          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) diagnosis = 8
-          
-      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp_c13(ico) .and. &
-          cpatch%today_gpp_c13        (ico) > tiny(1.0)                 .and. &
-          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) diagnosis = 8
-
-      ! Assim Resp c13 should not exceed total assimilate
-      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp       (ico) .and. &
-          cpatch%gpp                  (ico) > tiny(1.0)              .and. &
-          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) diagnosis = 9
-          
-      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp (ico) .and. &
-          cpatch%today_gpp_c13        (ico) > tiny(1.0)              .and. &
-          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) diagnosis = 9
-   end if
-
-   if (diagnosis > 0) then
-      write(*,*) '-----------------------------------------------------------------------'
-      write(*,*) ' Error found with C-13 sanity check! Potentially relevant info follows.'
-      write(*,*) '-----------------------------------------------------------------------'
-
-      select case(diagnosis)
-      case(1)
+          cpatch%today_gpp_c13(ico) > cpatch%today_gpp(ico)) then
          write(*,*) ' There is too much C-13 in gpp...'
          reason   = 'GPP C-13 too high.'
          show_gpp = .true.
-      case(2)
+      end if
+      
+      ! Leaf respired C-13 should exceed respired C.
+      if (cpatch%leaf_respiration_c13(ico) > cpatch%leaf_respiration(ico) .or. &
+          cpatch%today_leaf_resp_c13 (ico) > cpatch%today_leaf_resp (ico)) then
          write(*,*) ' There is too much C-13 in leaf respiration...'
          reason   = 'Respired C-13 too high.'
          show_LR  = .true.
-      case(3)
+      end if
+   
+      ! Assimilate based resp should be positive.
+      if (cpatch%today_lassim_resp(ico) < 0.0 .or. cpatch%today_lassim_resp_c13(ico) < 0.0 .or. &
+          cpatch%lassim_resp      (ico) < 0.0 .or. cpatch%lassim_resp_c13      (ico) < 0.0) then
          write(*,*) ' Leaf respiration of assimilate is less than 0...'
          reason   = 'Respired C-13 is neg.'
          show_LAR = .true.
-      case(4)
+      end if
+      
+      ! Assimilate based resp should not exceed total resp.
+      if (cpatch%lassim_resp      (ico) > cpatch%leaf_respiration(ico) .and. abs(cpatch%lassim_resp      (ico)) > tiny(1.0) .or. &
+          cpatch%today_lassim_resp(ico) > cpatch%today_leaf_resp (ico) .and. abs(cpatch%today_lassim_resp(ico)) > tiny(1.0)) then
          write(*,*) ' Leaf respiration of assimilate exceeds total leaf respiration...'
          reason   = 'LAR too high.'
          show_LR  = .true.
          show_LAR = .true.
-      case(5)
+      end if
+                     
+      ! Assimilate based resp shold not exceed total assimilate
+      if (cpatch%lassim_resp      (ico) > cpatch%gpp      (ico) .and. cpatch%gpp_c13      (ico) > tiny(1.0) .or. &
+          cpatch%today_lassim_resp(ico) > cpatch%today_gpp(ico) .and. cpatch%today_gpp_c13(ico) > tiny(1.0)) then
          write(*,*) ' Leaf respiration of assimilate exceeds total assimilation...'
          reason   = 'LAR too high.'
          show_gpp = .true.
          show_LAR = .true.
-      case(6)
+      end if
+      
+      ! Assimilate based resp c13 should not exceed total assim respiration
+      if ((cpatch%lassim_resp_c13      (ico) > cpatch%lassim_resp      (ico) .and. &
+           cpatch%lassim_resp          (ico) > tiny(1.0))                    .or.  &
+          (cpatch%today_lassim_resp_c13(ico) > cpatch%today_lassim_resp(ico) .and. &
+           cpatch%today_lassim_resp    (ico) > tiny(1.0))) then
          write(*,*) ' Leaf respiration of assimilate C-13 exceeds total LAR...'
          reason   = 'LAR C-13 too high.'
          show_LAR = .true.
-      case(7)
+      end if
+
+     ! Assimilate based resp c13 should not exceed total resp c13
+      if ((cpatch%lassim_resp_c13      (ico) > cpatch%leaf_respiration_c13(ico) .and. &
+           cpatch%leaf_respiration_c13 (ico) > tiny(1.0))                       .or.  &
+          (cpatch%today_lassim_resp_c13(ico) > cpatch%today_leaf_resp_c13 (ico) .and. &
+           cpatch%today_leaf_resp_c13  (ico) > tiny(1.0))) then
          write(*,*) ' Leaf respiration of assimilate C-13 exceeds total resp of C-13...'
          reason   = 'LAR C-13 too high.'
          show_LR  = .true.
          show_LAR = .true.
-      case(8)
-         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total assimilated C-13..'
-         reason   = 'LAR C-13 too high.'
-         show_GPP = .true.
-         show_LAR = .true.
-      case(9)
-         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total assimilate..'
-         reason   = 'LAR C-13 too high.'
-         show_GPP = .true.
-         show_LAR = .true.
-      end select
-      
-      if (show_gpp .or. show_LR .or. show_LAR) then
-         write(*,*) ' cohort, pft, larprop : ', ico, cpatch%pft(ico), larprop
       end if
-      if (show_gpp) then
+      
+      ! Assim Resp c13 should not exceed total assimilate c13
+      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp_c13(ico) .and. &
+          cpatch%gpp_c13              (ico) > tiny(1.0)           .and. & 
+          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) then
+         write(*,*) ' lassim_resp_c13 > gpp_c13 ...'
+         reason   = 'LAR C-13 too high.'
+         show_GPP = .true.
+         show_LAR = .true.
+      end if
+          
+      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp_c13(ico) .and. &
+          cpatch%today_gpp_c13        (ico) > tiny(1.0)                 .and. &
+          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) then
+         write(*,*) ' today_lassim_resp_c13 > today_gpp_c13 ...'
+         reason   = 'LAR C-13 too high.'
+         show_GPP = .true.
+         show_LAR = .true.
+      end if
+
+      ! Assim Resp c13 should not exceed total assimilate
+      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp       (ico) .and. &
+          cpatch%gpp                  (ico) > tiny(1.0)              .and. &
+          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) then
+         write(*,*) ' lassim_resp_c13 > gpp ...'
+         reason   = 'LAR C-13 too high.'
+         show_GPP = .true.
+         show_LAR = .true.
+      end if
+          
+      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp (ico) .and. &
+          cpatch%today_gpp_c13        (ico) > tiny(1.0)              .and. &
+          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) then
+         write(*,*) ' today_lassim_resp_c13 > today_gpp ...'
+         reason   = 'LAR C-13 too high.'
+         show_GPP = .true.
+         show_LAR = .true.
+      end if
+   end if
+
+   if (show_gpp .or. show_LR .or. show_LAR) then
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,*) ' C-13 sanity check error in ', call_loc, '!'
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,*) ' cohort, pft, larprop : ', ico, cpatch%pft(ico), larprop
+      
+      !if (show_gpp) then
          write(*,*) ' gpp              ,         gpp_c13 : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
          write(*,*) ' today_gpp        ,   today_gpp_c13 : ', cpatch%today_gpp(ico)        , cpatch%today_gpp_c13(ico)
-      end if
-      if (show_LR ) then
+      !end if
+      
+      !if (show_LR ) then
          write(*,*) ' leaf_resp        ,   leaf_resp_c13 : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
          write(*,*) ' today_leaf_resp  ,         ..._c13 : ', cpatch%today_leaf_resp(ico)  , cpatch%today_leaf_resp_c13(ico)
-      end if
+      !end if
+      
       if (show_LAR) then
          write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
          write(*,*) ' today_lassim_resp,         ..._c13 : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)
@@ -1688,8 +1699,8 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
          write(*,*) ' If this msg is not from canopy_photosynthesis, ignore them.        '
          write(*,*) ' assim_h2tc : ', assim_h2tc, cpatch%gpp_c13(ico) / cpatch%gpp(ico)
          write(*,*) '-----------------------------------------------------------------------'
-         call fatal_error(reason,call_loc,fname)
       end if
+      call fatal_error(reason,call_loc,fname)
    end if
    
    
