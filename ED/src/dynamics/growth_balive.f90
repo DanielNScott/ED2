@@ -41,7 +41,8 @@ module growth_balive
       use budget_utils    , only : update_budget          ! ! sub-routine
 
       !----- DS Additional Uses -----------------------------------------------------------!
-      use iso_alloc       , only : resp_h2tc              ! ! function
+      use iso_alloc       , only : resp_h2tc              & ! function
+                                 , c13_sanity_check       ! ! subroutine
       use isotopes        , only : c13af                  ! ! intent(in)
 !     use iso_checks      , only : c13_sanity_check       ! ! subroutine
 
@@ -196,8 +197,9 @@ module growth_balive
                                             ,tr_broot_c13,tr_bsapwooda_c13                 &
                                             ,tr_bsapwoodb_c13,tr_bstorage_c13)
                         
-                        call plant_cbal_sanity(cpatch,ico,carbon_balance,carbon13_balance  &
-                                              ,daily_C_gain,daily_c13_gain)
+                        call c13_sanity_check(cpatch,ico,'dbalive_dt','growth_balive.f90')
+                        !call plant_cbal_sanity(cpatch,ico,carbon_balance,carbon13_balance  &
+                        !                      ,daily_C_gain,daily_c13_gain)
                      end if
                   end if
                   !------------------------------------------------------------------------!

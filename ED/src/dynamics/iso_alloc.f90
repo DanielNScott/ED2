@@ -1529,7 +1529,8 @@ end subroutine pheninit_iso
 !==========================================================================================!
 !     This sub-routine does a pretty comprehensive sanity check on C-13 variables.         !
 !------------------------------------------------------------------------------------------!
-subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
+subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gain          &
+                           ,assim_h2tc,leaf_h2tc)
    use ed_max_dims    , only : str_len            ! ! intent(in)
    use ed_state_vars  , only : patchtype          ! ! structure
    use isotopes       , only : c13af              & ! intent(in)
@@ -1541,6 +1542,8 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
    integer                   , intent(in) :: ico         ! Current cohort number
    character(*)              , intent(in) :: call_loc    ! What routine called this check?
    character(*)              , intent(in) :: fname       ! What file is that routine in?
+   real        ,optional     , intent(in) :: daily_C_gain
+   real        ,optional     , intent(in) :: daily_c13_gain
    real        ,optional     , intent(in) :: assim_h2tc  ! Ratio of C-13/C in assimilate
    real        ,optional     , intent(in) :: leaf_h2tc   ! Ratio of C-13/C in leaves
    !----- Local variables. ----------------------------------------------------------------!
@@ -1548,6 +1551,7 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
    logical        :: show_gpp  = .false.  ! Print Gross Primay Production?
    logical        :: show_LR   = .false.  ! Print Leaf Respiration?
    logical        :: show_LAR  = .false.  ! Print Leaf Assimilate Respiration?
+   logical        :: show_DCG  = .false.  ! Print Daily C Gain info?
    character(60)  :: reason               ! Error or warning diagnosis reason
    character(17)  :: Cfmt                 ! Character format, for strings
    character(37)  :: Rfmt                 ! Real format, for reals.
@@ -1563,8 +1567,10 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
    !------------------------------------------------------------------------------!
    if (c13af > 0 .and. c_alloc_flg > 0) then
       ! Assimilated C-13 should not exceed assimilated C.
-      if (cpatch%gpp_c13      (ico) > cpatch%gpp      (ico) .or. &
-          cpatch%today_gpp_c13(ico) > cpatch%today_gpp(ico)) then
+      if ((cpatch%gpp_c13      (ico) > cpatch%gpp      (ico) .and. &
+           cpatch%gpp          (ico) > tiny(1.0)            ).or.  &
+          (cpatch%today_gpp_c13(ico) > cpatch%today_gpp(ico).and. &
+           cpatch%today_gpp    (ico) > tiny(1.0)            )) then
          write(*,*) ' There is too much C-13 in gpp...'
          reason   = 'GPP C-13 too high.'
          show_gpp = .true.
@@ -1645,9 +1651,8 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
       end if
 
       ! Assim Resp c13 should not exceed total assimilate
-      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp       (ico) .and. &
-          cpatch%gpp                  (ico) > tiny(1.0)              .and. &
-          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) then
+      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp(ico) .and. &
+          cpatch%gpp                  (ico) > tiny(1.0)      ) then
          write(*,*) ' lassim_resp_c13 > gpp ...'
          reason   = 'LAR C-13 too high.'
          show_GPP = .true.
@@ -1655,13 +1660,23 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
       end if
           
       if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp (ico) .and. &
-          cpatch%today_gpp_c13        (ico) > tiny(1.0)              .and. &
-          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) then
+          cpatch%today_gpp_c13        (ico) > tiny(1.0)             ) then
          write(*,*) ' today_lassim_resp_c13 > today_gpp ...'
          reason   = 'LAR C-13 too high.'
          show_GPP = .true.
          show_LAR = .true.
       end if
+      
+      !if (present(daily_c13_gain)) then
+      !   if (daily_c13_gain > daily_C_gain  .and. &
+      !       daily_C_gain   > tiny(1.0)    ) then
+      !      write(*,*) ' daily_c13_gain > daily_C_gain ...'
+      !      reason   = 'daily_c13_gain too high.'
+      !      show_GPP = .true.
+      !      show_LAR = .true.
+      !      show_DCG = .true.
+      !   end if
+      !end if
    end if
 
    if (show_gpp .or. show_LR .or. show_LAR) then
@@ -1684,6 +1699,10 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,assim_h2tc,leaf_h2tc)
          write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
          write(*,*) ' today_lassim_resp,         ..._c13 : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)
       end if
+      
+      !if (show_DCG) then
+      !   write(*,*) ' daily_C_gain     , daily_c13_gain  : ', daily_C_gain                 , daily_c13_gain
+      !end if
       
       if (present(assim_h2tc)) then
          write(*,*) '-----------------------------------------------------------------------'
