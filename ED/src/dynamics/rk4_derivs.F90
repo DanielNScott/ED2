@@ -1299,10 +1299,12 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
   
    cohortloop: do ico = 1,cpatch%ncohorts
 
-      cflxgc = cflxgc + initp%root_resp(ico)
+      cflxgc = cflxgc + initp%root_resp(ico) + initp%root_growth_resp(ico)                 &
+                      + initp%sapb_growth_resp(ico)
       if (c13af > 0) then
-         c13flxgc = c13flxgc + initp%root_resp_c13(ico)
-      end if 
+         c13flxgc = c13flxgc + initp%root_resp_c13(ico) + initp%root_growth_resp_c13(ico)  &
+                             + initp%sapb_growth_resp_c13(ico)
+      end if
 
       !------------------------------------------------------------------------------------!
       !    Add the respiration terms according to their "source".                          !
@@ -1311,12 +1313,13 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
       !                 to lack of a better place to put).                                 !
       ! Leaf   -> CAS : Leaf respiration, Virtual leaf respiration - GPP.                  !
       !------------------------------------------------------------------------------------!
-      cflxlc_tot    = cflxlc_tot + initp%vleaf_resp(ico)
-      cflxwc_tot    = cflxwc_tot + initp%growth_resp(ico) + initp%storage_resp(ico)
+      cflxlc_tot    = cflxlc_tot + initp%leaf_growth_resp(ico)
+      cflxwc_tot    = cflxwc_tot + initp%sapa_growth_resp(ico) + initp%storage_resp(ico)
       if (c13af > 0) then
-         c13flxlc_tot = c13flxlc_tot + initp%vleaf_resp_c13(ico)
-         c13flxwc_tot = c13flxwc_tot + initp%growth_resp_c13(ico) + initp%storage_resp_c13(ico)
-      end if 
+         c13flxlc_tot = c13flxlc_tot + initp%leaf_growth_resp_c13(ico)
+         c13flxwc_tot = c13flxwc_tot + initp%sapa_growth_resp_c13(ico)                     &
+                                     + initp%storage_resp_c13(ico)
+      end if
       !------------------------------------------------------------------------------------!
 
 

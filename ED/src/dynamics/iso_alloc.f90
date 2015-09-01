@@ -185,7 +185,6 @@ subroutine alloc_c13 (cpatch,ico,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb,dai
       write(*,*) ' today_gpp       :', cpatch%today_gpp(ico)         , cpatch%today_gpp_c13(ico)
       write(*,*) ' today_leaf_resp :', cpatch%today_leaf_resp(ico)   , cpatch%today_leaf_resp_c13(ico)
       write(*,*) ' today_root_resp :', cpatch%today_root_resp(ico)   , cpatch%today_root_resp_c13(ico)
-      write(*,*) ' vleaf_resp      :', cpatch%vleaf_respiration(ico) , cpatch%vleaf_respiration_c13(ico)
       write(*,*) ' growth_resp     :', cpatch%growth_respiration(ico), cpatch%growth_respiration_c13(ico)
       write(*,*) ' '
       write(*,*) '- Variable Name: ---- Input Val ---- Var Will Be --- Xfer to Var ---'
@@ -1193,8 +1192,6 @@ real(kind=8) function resp_h2tc(rtype,heavy,total)
       frac = dble(iso_grf)
    case('stor')
       frac = dble(iso_strf)
-   case('vleaf')
-      frac = dble(iso_vlrf)
    case('het')
       frac = dble(iso_hrf)
    case default

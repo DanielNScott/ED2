@@ -1377,16 +1377,21 @@ subroutine copy_rk4_patch(sourcep, targetp, cpatch)
       targetp%gpp             (k) = sourcep%gpp             (k)
       targetp%leaf_resp       (k) = sourcep%leaf_resp       (k)
       targetp%root_resp       (k) = sourcep%root_resp       (k)
-      targetp%growth_resp     (k) = sourcep%growth_resp     (k)
+      targetp%leaf_growth_resp(k) = sourcep%leaf_growth_resp(k)
+      targetp%root_growth_resp(k) = sourcep%root_growth_resp(k)
+      targetp%sapa_growth_resp(k) = sourcep%sapa_growth_resp(k)
+      targetp%sapb_growth_resp(k) = sourcep%sapb_growth_resp(k)
       targetp%storage_resp    (k) = sourcep%storage_resp    (k)
-      targetp%vleaf_resp      (k) = sourcep%vleaf_resp      (k)
 
       targetp%gpp_c13         (k) = sourcep%gpp_c13         (k)
       targetp%leaf_resp_c13   (k) = sourcep%leaf_resp_c13   (k)
       targetp%root_resp_c13   (k) = sourcep%root_resp_c13   (k)
-      targetp%growth_resp_c13 (k) = sourcep%growth_resp_c13 (k)
       targetp%storage_resp_c13(k) = sourcep%storage_resp_c13(k)
-      targetp%vleaf_resp_c13  (k) = sourcep%vleaf_resp_c13  (k)
+      
+      targetp%leaf_growth_resp_c13 (k) = sourcep%leaf_growth_resp_c13 (k)
+      targetp%root_growth_resp_c13 (k) = sourcep%root_growth_resp_c13 (k)
+      targetp%sapa_growth_resp_c13 (k) = sourcep%sapa_growth_resp_c13 (k)
+      targetp%sapb_growth_resp_c13 (k) = sourcep%sapb_growth_resp_c13 (k)
    end do
 
    if (checkbudget) then
