@@ -145,6 +145,8 @@ module physiology_coms
    !                                                                                       !
    ! VMFACT_C3     -- Factor multiplying the default Vm0 for C3 plants (1.0 = default).    !
    ! VMFACT_C4     -- Factor multiplying the default Vm0 for C4 plants (1.0 = default).    !
+   ! VMFACT_HW     -- Factor multiplying the default Vm0 for Hw plants (1.0 = default).    !
+   ! VMFACT_CO     -- Factor multiplying the default Vm0 for Co plants (1.0 = default).    !
    ! MPHOTO_TRC3   -- Stomatal slope (M) for tropical C3 plants                            !
    ! MPHOTO_TEC3   -- Stomatal slope (M) for conifers and temperate C3 plants              !
    ! MPHOTO_C4     -- Stomatal slope (M) for C4 plants.                                    !
@@ -182,6 +184,8 @@ module physiology_coms
    !---------------------------------------------------------------------------------------!
    real(kind=4)               :: vmfact_c3
    real(kind=4)               :: vmfact_c4
+   real(kind=4)               :: vmfact_hw
+   real(kind=4)               :: vmfact_co
    real(kind=4)               :: mphoto_trc3
    real(kind=4)               :: mphoto_tec3
    real(kind=4)               :: mphoto_c4
