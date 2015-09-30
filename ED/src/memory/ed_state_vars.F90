@@ -312,7 +312,10 @@ module ed_state_vars
       ! Plant growth respiration (kgC/plant/day)
       real ,pointer,dimension(:) :: sapb_growth_resp
       ! Plant storage respiration (kgC/plant/day)
-      real ,pointer,dimension(:) :: storage_respiration
+      real ,pointer,dimension(:) :: leaf_storage_resp
+      real ,pointer,dimension(:) :: root_storage_resp
+      real ,pointer,dimension(:) :: sapa_storage_resp
+      real ,pointer,dimension(:) :: sapb_storage_resp
 
       ! Plant density tendency [plants/m2/month]
       real ,pointer,dimension(:) :: monthly_dndt
@@ -502,7 +505,10 @@ module ed_state_vars
       real,pointer,dimension(:)   :: fmean_root_growth_resp ! Growth resp.      [ kgC/pl/yr]
       real,pointer,dimension(:)   :: fmean_sapa_growth_resp ! Growth resp.      [ kgC/pl/yr]
       real,pointer,dimension(:)   :: fmean_sapb_growth_resp ! Growth resp.      [ kgC/pl/yr]
-      real,pointer,dimension(:)   :: fmean_storage_resp     ! Storage resp.     [ kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_leaf_storage_resp! Storage resp.     [ kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_root_storage_resp! Storage resp.     [ kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_sapa_storage_resp! Storage resp.     [ kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_sapb_storage_resp! Storage resp.     [ kgC/pl/yr]
       real,pointer,dimension(:)   :: fmean_plresp           ! Plant resp.       [ kgC/pl/yr]
       real,pointer,dimension(:)   :: fmean_leaf_energy      ! Leaf int. energy  [     J/m2g]
       real,pointer,dimension(:)   :: fmean_leaf_water       ! Leaf sfc. water   [    kg/m2g]
@@ -521,6 +527,9 @@ module ed_state_vars
       real,pointer,dimension(:)   :: fmean_fs_open          ! Net stress factor [        --]
       real,pointer,dimension(:)   :: fmean_fsw              ! Moisture stress   [        --]
       real,pointer,dimension(:)   :: fmean_fsn              ! Nitrogen stress   [        --]
+      real,pointer,dimension(:)   :: fmean_a_open           ! Assim. (no stress)[umol/m2l/s]
+      real,pointer,dimension(:)   :: fmean_a_closed         ! Minimum assim.    [umol/m2l/s]
+      real,pointer,dimension(:)   :: fmean_a_net            ! Assim. (actual)   [umol/m2l/s]
       real,pointer,dimension(:)   :: fmean_a_light          ! Assim. (light)    [umol/m2l/s]
       real,pointer,dimension(:)   :: fmean_a_rubp           ! Assim. (RuBP)     [umol/m2l/s]
       real,pointer,dimension(:)   :: fmean_a_co2            ! Assim. (CO2)      [umol/m2l/s]
@@ -550,6 +559,8 @@ module ed_state_vars
       real,pointer,dimension(:)   :: fmean_vapor_wc         ! Wood evaporation  [  kg/m2g/s]
       real,pointer,dimension(:)   :: fmean_intercepted_aw   ! Wood interception [  kg/m2g/s]
       real,pointer,dimension(:)   :: fmean_wshed_wg         ! Wood shedding     [  kg/m2g/s]
+      real,pointer,dimension(:)   :: fmean_lai		    ! LAI  		[     m2/m2]
+      real,pointer,dimension(:)	  :: fmean_bdead	    ! Bdead		[     kg/pl]
       !----- Variables without sub-daily averages. ----------------------------------------!
       real,pointer,dimension(:)   :: dmean_nppleaf          ! Leaf NPP          [ kgC/pl/yr]
       real,pointer,dimension(:)   :: dmean_nppfroot         ! Fine root NPP     [ kgC/pl/yr]
@@ -577,7 +588,10 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_root_growth_resp
       real,pointer,dimension(:)     :: dmean_sapa_growth_resp
       real,pointer,dimension(:)     :: dmean_sapb_growth_resp
-      real,pointer,dimension(:)     :: dmean_storage_resp
+      real,pointer,dimension(:)     :: dmean_leaf_storage_resp
+      real,pointer,dimension(:)     :: dmean_root_storage_resp
+      real,pointer,dimension(:)     :: dmean_sapa_storage_resp
+      real,pointer,dimension(:)     :: dmean_sapb_storage_resp
       real,pointer,dimension(:)     :: dmean_plresp
       real,pointer,dimension(:)     :: dmean_leaf_energy
       real,pointer,dimension(:)     :: dmean_leaf_water
@@ -596,6 +610,9 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_fs_open
       real,pointer,dimension(:)     :: dmean_fsw
       real,pointer,dimension(:)     :: dmean_fsn
+      real,pointer,dimension(:)     :: dmean_a_open
+      real,pointer,dimension(:)     :: dmean_a_closed
+      real,pointer,dimension(:)     :: dmean_a_net
       real,pointer,dimension(:)     :: dmean_a_light
       real,pointer,dimension(:)     :: dmean_a_rubp
       real,pointer,dimension(:)     :: dmean_a_co2
@@ -636,7 +653,10 @@ module ed_state_vars
       real,pointer,dimension(:)     :: mmean_root_growth_resp
       real,pointer,dimension(:)     :: mmean_sapa_growth_resp
       real,pointer,dimension(:)     :: mmean_sapb_growth_resp
-      real,pointer,dimension(:)     :: mmean_storage_resp
+      real,pointer,dimension(:)     :: mmean_leaf_storage_resp
+      real,pointer,dimension(:)     :: mmean_root_storage_resp
+      real,pointer,dimension(:)     :: mmean_sapa_storage_resp
+      real,pointer,dimension(:)     :: mmean_sapb_storage_resp
       real,pointer,dimension(:)     :: mmean_plresp
       real,pointer,dimension(:)     :: mmean_leaf_energy
       real,pointer,dimension(:)     :: mmean_leaf_water
@@ -655,6 +675,9 @@ module ed_state_vars
       real,pointer,dimension(:)     :: mmean_fs_open
       real,pointer,dimension(:)     :: mmean_fsw
       real,pointer,dimension(:)     :: mmean_fsn
+      real,pointer,dimension(:)     :: mmean_a_open
+      real,pointer,dimension(:)     :: mmean_a_closed
+      real,pointer,dimension(:)     :: mmean_a_net
       real,pointer,dimension(:)     :: mmean_a_light
       real,pointer,dimension(:)     :: mmean_a_rubp
       real,pointer,dimension(:)     :: mmean_a_co2
@@ -711,7 +734,10 @@ module ed_state_vars
       real,pointer,dimension(:,:)   :: qmean_root_growth_resp
       real,pointer,dimension(:,:)   :: qmean_sapa_growth_resp
       real,pointer,dimension(:,:)   :: qmean_sapb_growth_resp
-      real,pointer,dimension(:,:)   :: qmean_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_leaf_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_root_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_sapa_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_sapb_storage_resp
       real,pointer,dimension(:,:)   :: qmean_plresp
       real,pointer,dimension(:,:)   :: qmean_leaf_energy
       real,pointer,dimension(:,:)   :: qmean_leaf_water
@@ -730,6 +756,9 @@ module ed_state_vars
       real,pointer,dimension(:,:)   :: qmean_fs_open
       real,pointer,dimension(:,:)   :: qmean_fsw
       real,pointer,dimension(:,:)   :: qmean_fsn
+      real,pointer,dimension(:,:)   :: qmean_a_open
+      real,pointer,dimension(:,:)   :: qmean_a_closed
+      real,pointer,dimension(:,:)   :: qmean_a_net
       real,pointer,dimension(:,:)   :: qmean_a_light
       real,pointer,dimension(:,:)   :: qmean_a_rubp
       real,pointer,dimension(:,:)   :: qmean_a_co2
@@ -782,11 +811,14 @@ module ed_state_vars
       ! SEE NOTE ONE              :: npp_c13                 ! Net primary prod. [kgC/pl/yr]
       real ,pointer,dimension(:)  :: leaf_respiration_c13    ! [umol/m2/s]
       real ,pointer,dimension(:)  :: root_respiration_c13    ! [umol/m2/s]
-      real ,pointer, dimension(:) :: storage_respiration_c13 ! (kgC/plant/day)    (comp. daily)
       real ,pointer, dimension(:) :: leaf_growth_resp_c13    ! (kgC/plant/day)    (comp. daily)
       real ,pointer, dimension(:) :: root_growth_resp_c13    ! (kgC/plant/day)    (comp. daily)
       real ,pointer, dimension(:) :: sapa_growth_resp_c13    ! (kgC/plant/day)    (comp. daily)
       real ,pointer, dimension(:) :: sapb_growth_resp_c13    ! (kgC/plant/day)    (comp. daily)
+      real ,pointer, dimension(:) :: leaf_storage_resp_c13   ! (kgC/plant/day)    (comp. daily)
+      real ,pointer, dimension(:) :: root_storage_resp_c13   ! (kgC/plant/day)    (comp. daily)
+      real ,pointer, dimension(:) :: sapa_storage_resp_c13   ! (kgC/plant/day)    (comp. daily)
+      real ,pointer, dimension(:) :: sapb_storage_resp_c13   ! (kgC/plant/day)    (comp. daily)
       ! SEE NOTE ONE              :: plresp_c13              ! Plant resp.       [kgC/pl/yr]
 
       real ,pointer, dimension(:) :: bleaf_c13    			    ! (kgC/plant)
@@ -833,7 +865,10 @@ module ed_state_vars
       real,pointer,dimension(:)   :: fmean_root_growth_resp_c13 ! Growth resp.      [kgC/pl/yr]
       real,pointer,dimension(:)   :: fmean_sapa_growth_resp_c13 ! Growth resp.      [kgC/pl/yr]
       real,pointer,dimension(:)   :: fmean_sapb_growth_resp_c13 ! Growth resp.      [kgC/pl/yr]
-      real,pointer,dimension(:)   :: fmean_storage_resp_c13     ! Storage resp.     [kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_leaf_storage_resp_c13! Growth resp.      [kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_root_storage_resp_c13! Growth resp.      [kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_sapa_storage_resp_c13! Growth resp.      [kgC/pl/yr]
+      real,pointer,dimension(:)   :: fmean_sapb_storage_resp_c13! Growth resp.      [kgC/pl/yr]
       real,pointer,dimension(:)   :: fmean_plresp_c13           ! Plant resp.       [kgC/pl/yr]
       !----- Monthly means of variables that are integrated daily. ------------------------!
       real,pointer,dimension(:)   :: mmean_bleaf_c13            ! Leaf biomass      [   kgC/pl]
@@ -851,7 +886,10 @@ module ed_state_vars
       real,pointer,dimension(:)   :: dmean_root_growth_resp_c13
       real,pointer,dimension(:)   :: dmean_sapa_growth_resp_c13
       real,pointer,dimension(:)   :: dmean_sapb_growth_resp_c13
-      real,pointer,dimension(:)   :: dmean_storage_resp_c13
+      real,pointer,dimension(:)   :: dmean_leaf_storage_resp_c13
+      real,pointer,dimension(:)   :: dmean_root_storage_resp_c13
+      real,pointer,dimension(:)   :: dmean_sapa_storage_resp_c13
+      real,pointer,dimension(:)   :: dmean_sapb_storage_resp_c13
       real,pointer,dimension(:)   :: dmean_plresp_c13
       !----- Monthly mean (same units as fast mean). --------------------------------------!
       real,pointer,dimension(:)   :: mmean_gpp_c13
@@ -862,7 +900,10 @@ module ed_state_vars
       real,pointer,dimension(:)   :: mmean_root_growth_resp_c13
       real,pointer,dimension(:)   :: mmean_sapa_growth_resp_c13
       real,pointer,dimension(:)   :: mmean_sapb_growth_resp_c13
-      real,pointer,dimension(:)   :: mmean_storage_resp_c13
+      real,pointer,dimension(:)   :: mmean_leaf_storage_resp_c13
+      real,pointer,dimension(:)   :: mmean_root_storage_resp_c13
+      real,pointer,dimension(:)   :: mmean_sapa_storage_resp_c13
+      real,pointer,dimension(:)   :: mmean_sapb_storage_resp_c13
       real,pointer,dimension(:)   :: mmean_plresp_c13
       !-------------------------------------------------------------------------------------!
       
@@ -2364,7 +2405,10 @@ module ed_state_vars
       real,pointer,dimension(:) :: fmean_root_growth_resp ! Growth resp.        [ kgC/m2/yr]
       real,pointer,dimension(:) :: fmean_sapa_growth_resp ! Growth resp.        [ kgC/m2/yr]
       real,pointer,dimension(:) :: fmean_sapb_growth_resp ! Growth resp.        [ kgC/m2/yr]
-      real,pointer,dimension(:) :: fmean_storage_resp     ! Storage resp.       [ kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_leaf_storage_resp     ! Storage resp.       [ kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_root_storage_resp     ! Storage resp.       [ kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_sapa_storage_resp     ! Storage resp.       [ kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_sapb_storage_resp     ! Storage resp.       [ kgC/m2/yr]
       real,pointer,dimension(:) :: fmean_plresp           ! Plant respiration.  [ kgC/m2/yr]
       real,pointer,dimension(:) :: fmean_leaf_energy      ! Leaf int. energy    [      J/m2]
       real,pointer,dimension(:) :: fmean_leaf_water       ! Leaf sfc. water     [     kg/m2]
@@ -2383,6 +2427,9 @@ module ed_state_vars
       real,pointer,dimension(:) :: fmean_fs_open          ! Net stress factor   [        --]
       real,pointer,dimension(:) :: fmean_fsw              ! Moisture stress     [        --]
       real,pointer,dimension(:) :: fmean_fsn              ! Nitrogen stress     [        --]
+      real,pointer,dimension(:) :: fmean_a_open           ! Assim. (no stress)  [umol/m2l/s]
+      real,pointer,dimension(:) :: fmean_a_closed         ! Min. Assim.         [umol/m2l/s]
+      real,pointer,dimension(:) :: fmean_a_net            ! Assim. actual       [umol/m2l/s]
       real,pointer,dimension(:) :: fmean_a_light          ! Assim. (light)      [umol/m2l/s]
       real,pointer,dimension(:) :: fmean_a_rubp           ! Assim. (RuBP)       [umol/m2l/s]
       real,pointer,dimension(:) :: fmean_a_co2            ! Assim. (CO2)        [umol/m2l/s]
@@ -2488,6 +2535,9 @@ module ed_state_vars
       !----- Moore Foundation variables. --------------------------------------------------!
       real,pointer,dimension(:) :: fmean_soil_wetness     ! Soil wetness index  [        --]
       real,pointer,dimension(:) :: fmean_skin_temp        ! Skin temperature    [         K]
+      !--------Variables required by PEcAn.  ----------------------------------------------!
+      real,pointer,dimension(:) :: fmean_lai		  ! LAI  		[     m2/m2]
+      real,pointer,dimension(:)	:: fmean_bdead	    	  ! Bdead		[     kg/pl]
       !----- Variables without sub-daily averages. ----------------------------------------!
       real,pointer,dimension(:) :: dmean_nppleaf          ! Leaf NPP            [ kgC/m2/yr]
       real,pointer,dimension(:) :: dmean_nppfroot         ! Fine root NPP       [ kgC/m2/yr]
@@ -2529,7 +2579,10 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_root_growth_resp
       real,pointer,dimension(:)     :: dmean_sapa_growth_resp
       real,pointer,dimension(:)     :: dmean_sapb_growth_resp
-      real,pointer,dimension(:)     :: dmean_storage_resp
+      real,pointer,dimension(:)     :: dmean_leaf_storage_resp
+      real,pointer,dimension(:)     :: dmean_root_storage_resp
+      real,pointer,dimension(:)     :: dmean_sapa_storage_resp
+      real,pointer,dimension(:)     :: dmean_sapb_storage_resp
       real,pointer,dimension(:)     :: dmean_plresp
       real,pointer,dimension(:)     :: dmean_leaf_energy
       real,pointer,dimension(:)     :: dmean_leaf_water
@@ -2548,6 +2601,9 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_fs_open
       real,pointer,dimension(:)     :: dmean_fsw
       real,pointer,dimension(:)     :: dmean_fsn
+      real,pointer,dimension(:)     :: dmean_a_open
+      real,pointer,dimension(:)     :: dmean_a_closed
+      real,pointer,dimension(:)     :: dmean_a_net
       real,pointer,dimension(:)     :: dmean_a_light
       real,pointer,dimension(:)     :: dmean_a_rubp
       real,pointer,dimension(:)     :: dmean_a_co2
@@ -2653,7 +2709,10 @@ module ed_state_vars
       real,pointer,dimension(:)     :: mmean_root_growth_resp
       real,pointer,dimension(:)     :: mmean_sapa_growth_resp
       real,pointer,dimension(:)     :: mmean_sapb_growth_resp
-      real,pointer,dimension(:)     :: mmean_storage_resp
+      real,pointer,dimension(:)     :: mmean_leaf_storage_resp
+      real,pointer,dimension(:)     :: mmean_root_storage_resp
+      real,pointer,dimension(:)     :: mmean_sapa_storage_resp
+      real,pointer,dimension(:)     :: mmean_sapb_storage_resp
       real,pointer,dimension(:)     :: mmean_plresp
       real,pointer,dimension(:)     :: mmean_leaf_energy
       real,pointer,dimension(:)     :: mmean_leaf_water
@@ -2672,6 +2731,9 @@ module ed_state_vars
       real,pointer,dimension(:)     :: mmean_fs_open
       real,pointer,dimension(:)     :: mmean_fsw
       real,pointer,dimension(:)     :: mmean_fsn
+      real,pointer,dimension(:)     :: mmean_a_open
+      real,pointer,dimension(:)     :: mmean_a_closed
+      real,pointer,dimension(:)     :: mmean_a_net
       real,pointer,dimension(:)     :: mmean_a_light
       real,pointer,dimension(:)     :: mmean_a_rubp
       real,pointer,dimension(:)     :: mmean_a_co2
@@ -2814,7 +2876,10 @@ module ed_state_vars
       real,pointer,dimension(:,:)   :: qmean_root_growth_resp
       real,pointer,dimension(:,:)   :: qmean_sapa_growth_resp
       real,pointer,dimension(:,:)   :: qmean_sapb_growth_resp
-      real,pointer,dimension(:,:)   :: qmean_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_leaf_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_root_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_sapa_storage_resp
+      real,pointer,dimension(:,:)   :: qmean_sapb_storage_resp
       real,pointer,dimension(:,:)   :: qmean_plresp
       real,pointer,dimension(:,:)   :: qmean_leaf_energy
       real,pointer,dimension(:,:)   :: qmean_leaf_water
@@ -2833,6 +2898,9 @@ module ed_state_vars
       real,pointer,dimension(:,:)   :: qmean_fs_open
       real,pointer,dimension(:,:)   :: qmean_fsw
       real,pointer,dimension(:,:)   :: qmean_fsn
+      real,pointer,dimension(:,:)   :: qmean_a_open
+      real,pointer,dimension(:,:)   :: qmean_a_closed
+      real,pointer,dimension(:,:)   :: qmean_a_net
       real,pointer,dimension(:,:)   :: qmean_a_light
       real,pointer,dimension(:,:)   :: qmean_a_rubp
       real,pointer,dimension(:,:)   :: qmean_a_co2
@@ -2992,7 +3060,10 @@ module ed_state_vars
       real,pointer,dimension(:) :: fmean_root_growth_resp_c13 ! Growth resp.        [kgC/m2/yr]
       real,pointer,dimension(:) :: fmean_sapa_growth_resp_c13 ! Growth resp.        [kgC/m2/yr]
       real,pointer,dimension(:) :: fmean_sapb_growth_resp_c13 ! Growth resp.        [kgC/m2/yr]
-      real,pointer,dimension(:) :: fmean_storage_resp_c13     ! Storage resp.       [kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_leaf_storage_resp_c13! Growth resp.        [kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_root_storage_resp_c13! Growth resp.        [kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_sapa_storage_resp_c13! Growth resp.        [kgC/m2/yr]
+      real,pointer,dimension(:) :: fmean_sapb_storage_resp_c13! Growth resp.        [kgC/m2/yr]
       real,pointer,dimension(:) :: fmean_plresp_c13           ! Plant respiration.  [kgC/m2/yr]
       !----- Photosynthesis/Decomposition. ------------------------------------------------!
       real,pointer,dimension(:)   :: fmean_rh_c13              ! Heterotr. resp.    [kgC/m2/yr]
@@ -3026,7 +3097,10 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_root_growth_resp_c13
       real,pointer,dimension(:)     :: dmean_sapa_growth_resp_c13
       real,pointer,dimension(:)     :: dmean_sapb_growth_resp_c13
-      real,pointer,dimension(:)     :: dmean_storage_resp_c13
+      real,pointer,dimension(:)     :: dmean_leaf_storage_resp_c13
+      real,pointer,dimension(:)     :: dmean_root_storage_resp_c13
+      real,pointer,dimension(:)     :: dmean_sapa_storage_resp_c13
+      real,pointer,dimension(:)     :: dmean_sapb_storage_resp_c13
       real,pointer,dimension(:)     :: dmean_plresp_c13
       real,pointer,dimension(:)     :: dmean_rh_c13
       real,pointer,dimension(:)     :: dmean_cwd_rh_c13  
@@ -3044,8 +3118,11 @@ module ed_state_vars
       real,pointer,dimension(:)     :: mmean_leaf_growth_resp_c13
       real,pointer,dimension(:)     :: mmean_root_growth_resp_c13
       real,pointer,dimension(:)     :: mmean_sapa_growth_resp_c13
-      real,pointer,dimension(:)     :: mmean_sapb_rowth_resp_c13
-      real,pointer,dimension(:)     :: mmean_storage_resp_c13
+      real,pointer,dimension(:)     :: mmean_sapb_growth_resp_c13
+      real,pointer,dimension(:)     :: mmean_leaf_storage_resp_c13
+      real,pointer,dimension(:)     :: mmean_root_storage_resp_c13
+      real,pointer,dimension(:)     :: mmean_sapa_storage_resp_c13
+      real,pointer,dimension(:)     :: mmean_sapb_storage_resp_c13
       real,pointer,dimension(:)     :: mmean_plresp_c13   
       real,pointer,dimension(:)     :: mmean_rh_c13
       real,pointer,dimension(:)     :: mmean_cwd_rh_c13   
@@ -3338,7 +3415,10 @@ module ed_state_vars
       allocate(cgrid%fmean_root_growth_resp     (                    npolygons))
       allocate(cgrid%fmean_sapa_growth_resp     (                    npolygons))
       allocate(cgrid%fmean_sapb_growth_resp     (                    npolygons))
-      allocate(cgrid%fmean_storage_resp         (                    npolygons))
+      allocate(cgrid%fmean_leaf_storage_resp    (                    npolygons))
+      allocate(cgrid%fmean_root_storage_resp    (                    npolygons))
+      allocate(cgrid%fmean_sapa_storage_resp    (                    npolygons))
+      allocate(cgrid%fmean_sapb_storage_resp    (                    npolygons))
       allocate(cgrid%fmean_plresp               (                    npolygons))
       allocate(cgrid%fmean_leaf_energy          (                    npolygons))
       allocate(cgrid%fmean_leaf_water           (                    npolygons))
@@ -3357,6 +3437,9 @@ module ed_state_vars
       allocate(cgrid%fmean_fs_open              (                    npolygons))
       allocate(cgrid%fmean_fsw                  (                    npolygons))
       allocate(cgrid%fmean_fsn                  (                    npolygons))
+      allocate(cgrid%fmean_a_open               (                    npolygons))
+      allocate(cgrid%fmean_a_closed             (                    npolygons))
+      allocate(cgrid%fmean_a_net                (                    npolygons))
       allocate(cgrid%fmean_a_light              (                    npolygons))
       allocate(cgrid%fmean_a_rubp               (                    npolygons))
       allocate(cgrid%fmean_a_co2                (                    npolygons))
@@ -3455,6 +3538,8 @@ module ed_state_vars
       allocate(cgrid%fmean_dpcpg                (                    npolygons))
       allocate(cgrid%fmean_soil_wetness         (                    npolygons))
       allocate(cgrid%fmean_skin_temp            (                    npolygons))
+      allocate(cgrid%fmean_lai         (                    npolygons))
+      allocate(cgrid%fmean_bdead       (                    npolygons))
       
       !----- C Isotope Vars --------------------------------------------------!
       if (c_alloc_flg > 0) then
@@ -3488,7 +3573,10 @@ module ed_state_vars
          allocate(cgrid%fmean_root_growth_resp_c13    (                    npolygons))
          allocate(cgrid%fmean_sapa_growth_resp_c13    (                    npolygons))
          allocate(cgrid%fmean_sapb_growth_resp_c13    (                    npolygons))
-         allocate(cgrid%fmean_storage_resp_c13        (                    npolygons))
+         allocate(cgrid%fmean_leaf_storage_resp_c13   (                    npolygons))
+         allocate(cgrid%fmean_root_storage_resp_c13   (                    npolygons))
+         allocate(cgrid%fmean_sapa_storage_resp_c13   (                    npolygons))
+         allocate(cgrid%fmean_sapb_storage_resp_c13   (                    npolygons))
          allocate(cgrid%fmean_plresp_c13              (                    npolygons))
          !----- Photosynthesis/Decomposition. ------------------------------------------------!
          allocate(cgrid%fmean_rh_c13                  (                    npolygons))
@@ -3501,10 +3589,10 @@ module ed_state_vars
          if (c_alloc_flg > 0) then
             allocate(cgrid%fmean_lassim_resp_c13      (                    npolygons))
          end if
-      end if
-                                                      
-                                                      
-                                                      
+      end if             
+
+
+
       !------------------------------------------------------------------------------------!
       !     Allocate the daily means, only if daily means, monthly means, or mean diurnal  !
       ! cycles are requested by the user.                                                  !
@@ -3530,7 +3618,10 @@ module ed_state_vars
          allocate(cgrid%dmean_root_growth_resp (                     npolygons))
          allocate(cgrid%dmean_sapa_growth_resp (                     npolygons))
          allocate(cgrid%dmean_sapb_growth_resp (                     npolygons))
-         allocate(cgrid%dmean_storage_resp     (                     npolygons))
+         allocate(cgrid%dmean_leaf_storage_resp(                     npolygons))
+         allocate(cgrid%dmean_root_storage_resp(                     npolygons))
+         allocate(cgrid%dmean_sapa_storage_resp(                     npolygons))
+         allocate(cgrid%dmean_sapb_storage_resp(                     npolygons))
          allocate(cgrid%dmean_plresp           (                     npolygons))
          allocate(cgrid%dmean_leaf_energy      (                     npolygons))
          allocate(cgrid%dmean_leaf_water       (                     npolygons))
@@ -3549,6 +3640,9 @@ module ed_state_vars
          allocate(cgrid%dmean_fs_open          (                     npolygons))
          allocate(cgrid%dmean_fsw              (                     npolygons))
          allocate(cgrid%dmean_fsn              (                     npolygons))
+         allocate(cgrid%dmean_a_open           (                     npolygons))
+         allocate(cgrid%dmean_a_closed         (                     npolygons))
+         allocate(cgrid%dmean_a_net            (                     npolygons))
          allocate(cgrid%dmean_a_light          (                     npolygons))
          allocate(cgrid%dmean_a_rubp           (                     npolygons))
          allocate(cgrid%dmean_a_co2            (                     npolygons))
@@ -3660,7 +3754,10 @@ module ed_state_vars
             allocate(cgrid%dmean_root_growth_resp_c13    (                    npolygons))
             allocate(cgrid%dmean_sapa_growth_resp_c13    (                    npolygons))
             allocate(cgrid%dmean_sapb_growth_resp_c13    (                    npolygons))
-            allocate(cgrid%dmean_storage_resp_c13        (                    npolygons))
+            allocate(cgrid%dmean_leaf_storage_resp_c13   (                    npolygons))
+            allocate(cgrid%dmean_root_storage_resp_c13   (                    npolygons))
+            allocate(cgrid%dmean_sapa_storage_resp_c13   (                    npolygons))
+            allocate(cgrid%dmean_sapb_storage_resp_c13   (                    npolygons))
             allocate(cgrid%dmean_plresp_c13              (                    npolygons))
             !----- Photosynthesis/Decomposition. ------------------------------------------------!
             allocate(cgrid%dmean_rh_c13                  (                    npolygons))
@@ -3714,7 +3811,10 @@ module ed_state_vars
          allocate(cgrid%mmean_root_growth_resp (                     npolygons)) 
          allocate(cgrid%mmean_sapa_growth_resp (                     npolygons)) 
          allocate(cgrid%mmean_sapb_growth_resp (                     npolygons)) 
-         allocate(cgrid%mmean_storage_resp     (                     npolygons)) 
+         allocate(cgrid%mmean_leaf_storage_resp(                     npolygons)) 
+         allocate(cgrid%mmean_root_storage_resp(                     npolygons)) 
+         allocate(cgrid%mmean_sapa_storage_resp(                     npolygons)) 
+         allocate(cgrid%mmean_sapb_storage_resp(                     npolygons)) 
          allocate(cgrid%mmean_plresp           (                     npolygons)) 
          allocate(cgrid%mmean_leaf_energy      (                     npolygons)) 
          allocate(cgrid%mmean_leaf_water       (                     npolygons)) 
@@ -3733,6 +3833,9 @@ module ed_state_vars
          allocate(cgrid%mmean_fs_open          (                     npolygons)) 
          allocate(cgrid%mmean_fsw              (                     npolygons)) 
          allocate(cgrid%mmean_fsn              (                     npolygons)) 
+         allocate(cgrid%mmean_a_open           (                     npolygons))
+         allocate(cgrid%mmean_a_closed         (                     npolygons))
+         allocate(cgrid%mmean_a_net            (                     npolygons))
          allocate(cgrid%mmean_a_light          (                     npolygons))
          allocate(cgrid%mmean_a_rubp           (                     npolygons))
          allocate(cgrid%mmean_a_co2            (                     npolygons))
@@ -3890,7 +3993,10 @@ module ed_state_vars
             allocate(cgrid%mmean_root_growth_resp_c13    (                     npolygons))
             allocate(cgrid%mmean_sapa_growth_resp_c13    (                     npolygons))
             allocate(cgrid%mmean_sapb_growth_resp_c13    (                     npolygons))
-            allocate(cgrid%mmean_storage_resp_c13        (                     npolygons))
+            allocate(cgrid%mmean_leaf_storage_resp_c13   (                     npolygons))
+            allocate(cgrid%mmean_root_storage_resp_c13   (                     npolygons))
+            allocate(cgrid%mmean_sapa_storage_resp_c13   (                     npolygons))
+            allocate(cgrid%mmean_sapb_storage_resp_c13   (                     npolygons))
             allocate(cgrid%mmean_plresp_c13              (                     npolygons))
             allocate(cgrid%mmean_rh_c13                  (                     npolygons))
             allocate(cgrid%mmean_cwd_rh_c13              (                     npolygons))
@@ -3923,7 +4029,10 @@ module ed_state_vars
          allocate(cgrid%qmean_root_growth_resp (             ndcycle,npolygons))
          allocate(cgrid%qmean_sapa_growth_resp (             ndcycle,npolygons))
          allocate(cgrid%qmean_sapb_growth_resp (             ndcycle,npolygons))
-         allocate(cgrid%qmean_storage_resp     (             ndcycle,npolygons))
+         allocate(cgrid%qmean_leaf_storage_resp(             ndcycle,npolygons))
+         allocate(cgrid%qmean_root_storage_resp(             ndcycle,npolygons))
+         allocate(cgrid%qmean_sapa_storage_resp(             ndcycle,npolygons))
+         allocate(cgrid%qmean_sapb_storage_resp(             ndcycle,npolygons))
          allocate(cgrid%qmean_plresp           (             ndcycle,npolygons))
          allocate(cgrid%qmean_leaf_energy      (             ndcycle,npolygons))
          allocate(cgrid%qmean_leaf_water       (             ndcycle,npolygons))
@@ -3942,6 +4051,9 @@ module ed_state_vars
          allocate(cgrid%qmean_fs_open          (             ndcycle,npolygons))
          allocate(cgrid%qmean_fsw              (             ndcycle,npolygons))
          allocate(cgrid%qmean_fsn              (             ndcycle,npolygons))
+         allocate(cgrid%qmean_a_open           (             ndcycle,npolygons))
+         allocate(cgrid%qmean_a_closed         (             ndcycle,npolygons))
+         allocate(cgrid%qmean_a_net            (             ndcycle,npolygons))
          allocate(cgrid%qmean_a_light          (             ndcycle,npolygons))
          allocate(cgrid%qmean_a_rubp           (             ndcycle,npolygons))
          allocate(cgrid%qmean_a_co2            (             ndcycle,npolygons))
@@ -4924,7 +5036,10 @@ module ed_state_vars
       allocate(cpatch%root_growth_resp             (                    ncohorts))
       allocate(cpatch%sapa_growth_resp             (                    ncohorts))
       allocate(cpatch%sapb_growth_resp             (                    ncohorts))
-      allocate(cpatch%storage_respiration          (                    ncohorts))
+      allocate(cpatch%leaf_storage_resp            (                    ncohorts))
+      allocate(cpatch%root_storage_resp            (                    ncohorts))
+      allocate(cpatch%sapa_storage_resp            (                    ncohorts))
+      allocate(cpatch%sapb_storage_resp            (                    ncohorts))
       allocate(cpatch%monthly_dndt                 (                    ncohorts))
       allocate(cpatch%monthly_dlnndt               (                    ncohorts))
       allocate(cpatch%mort_rate                    (             n_mort,ncohorts))
@@ -4990,7 +5105,10 @@ module ed_state_vars
       allocate(cpatch%fmean_root_growth_resp       (                    ncohorts))
       allocate(cpatch%fmean_sapa_growth_resp       (                    ncohorts))
       allocate(cpatch%fmean_sapb_growth_resp       (                    ncohorts))
-      allocate(cpatch%fmean_storage_resp           (                    ncohorts))
+      allocate(cpatch%fmean_leaf_storage_resp      (                    ncohorts))
+      allocate(cpatch%fmean_root_storage_resp      (                    ncohorts))
+      allocate(cpatch%fmean_sapa_storage_resp      (                    ncohorts))
+      allocate(cpatch%fmean_sapb_storage_resp      (                    ncohorts))
       allocate(cpatch%fmean_plresp                 (                    ncohorts))
       allocate(cpatch%fmean_leaf_energy            (                    ncohorts))
       allocate(cpatch%fmean_leaf_water             (                    ncohorts))
@@ -5009,6 +5127,9 @@ module ed_state_vars
       allocate(cpatch%fmean_fs_open                (                    ncohorts))
       allocate(cpatch%fmean_fsw                    (                    ncohorts))
       allocate(cpatch%fmean_fsn                    (                    ncohorts))
+      allocate(cpatch%fmean_a_open                 (                    ncohorts))
+      allocate(cpatch%fmean_a_closed               (                    ncohorts))
+      allocate(cpatch%fmean_a_net                  (                    ncohorts))
       allocate(cpatch%fmean_A_light                (                    ncohorts))
       allocate(cpatch%fmean_A_rubp                 (                    ncohorts))
       allocate(cpatch%fmean_A_co2                  (                    ncohorts))
@@ -5040,6 +5161,8 @@ module ed_state_vars
       allocate(cpatch%fmean_vapor_wc               (                    ncohorts))
       allocate(cpatch%fmean_intercepted_aw         (                    ncohorts))
       allocate(cpatch%fmean_wshed_wg               (                    ncohorts))
+      allocate(cpatch%fmean_lai                    (                    ncohorts))
+      allocate(cpatch%fmean_bdead                  (                    ncohorts))
       !----- C Isotope Vars ----------------------------------------------------------------!
       if (c_alloc_flg > 0) then
          allocate(cpatch%lassim_resp                      (                    ncohorts))
@@ -5054,7 +5177,10 @@ module ed_state_vars
          allocate(cpatch%root_growth_resp_c13             (                    ncohorts))
          allocate(cpatch%sapa_growth_resp_c13             (                    ncohorts))
          allocate(cpatch%sapb_growth_resp_c13             (                    ncohorts))
-         allocate(cpatch%storage_respiration_c13          (                    ncohorts))
+         allocate(cpatch%leaf_storage_resp_c13            (                    ncohorts))
+         allocate(cpatch%root_storage_resp_c13            (                    ncohorts))
+         allocate(cpatch%sapa_storage_resp_c13            (                    ncohorts))
+         allocate(cpatch%sapb_storage_resp_c13            (                    ncohorts))
 
          allocate(cpatch%bleaf_c13    			             (                    ncohorts))
          allocate(cpatch%broot_c13	                      (                    ncohorts))
@@ -5080,7 +5206,10 @@ module ed_state_vars
          allocate(cpatch%fmean_root_growth_resp_c13       (                    ncohorts))
          allocate(cpatch%fmean_sapa_growth_resp_c13       (                    ncohorts))
          allocate(cpatch%fmean_sapb_growth_resp_c13       (                    ncohorts))
-         allocate(cpatch%fmean_storage_resp_c13           (                    ncohorts))
+         allocate(cpatch%fmean_leaf_storage_resp_c13      (                    ncohorts))
+         allocate(cpatch%fmean_root_storage_resp_c13      (                    ncohorts))
+         allocate(cpatch%fmean_sapa_storage_resp_c13      (                    ncohorts))
+         allocate(cpatch%fmean_sapb_storage_resp_c13      (                    ncohorts))
          allocate(cpatch%fmean_plresp_c13                 (                    ncohorts))
          if (c_alloc_flg > 0) then
             allocate(cpatch%lassim_resp_c13               (                    ncohorts))
@@ -5088,8 +5217,9 @@ module ed_state_vars
             allocate(cpatch%fmean_lassim_resp_c13         (                    ncohorts))
          end if
       end if
-                                                            
-      if (writing_long) then                          
+
+                                                 
+      if (writing_long) then
          allocate(cpatch%dmean_nppleaf             (                    ncohorts))
          allocate(cpatch%dmean_nppfroot            (                    ncohorts))
          allocate(cpatch%dmean_nppsapwood          (                    ncohorts))
@@ -5105,7 +5235,10 @@ module ed_state_vars
          allocate(cpatch%dmean_root_growth_resp    (                    ncohorts))
          allocate(cpatch%dmean_sapa_growth_resp    (                    ncohorts))
          allocate(cpatch%dmean_sapb_growth_resp    (                    ncohorts))
-         allocate(cpatch%dmean_storage_resp        (                    ncohorts))
+         allocate(cpatch%dmean_leaf_storage_resp   (                    ncohorts))
+         allocate(cpatch%dmean_root_storage_resp   (                    ncohorts))
+         allocate(cpatch%dmean_sapa_storage_resp   (                    ncohorts))
+         allocate(cpatch%dmean_sapb_storage_resp   (                    ncohorts))
          allocate(cpatch%dmean_plresp              (                    ncohorts))
          allocate(cpatch%dmean_leaf_energy         (                    ncohorts))
          allocate(cpatch%dmean_leaf_water          (                    ncohorts))
@@ -5124,6 +5257,9 @@ module ed_state_vars
          allocate(cpatch%dmean_fs_open             (                    ncohorts))
          allocate(cpatch%dmean_fsw                 (                    ncohorts))
          allocate(cpatch%dmean_fsn                 (                    ncohorts))
+         allocate(cpatch%dmean_a_open              (                    ncohorts))
+         allocate(cpatch%dmean_a_closed            (                    ncohorts))
+         allocate(cpatch%dmean_a_net               (                    ncohorts))
          allocate(cpatch%dmean_A_light             (                    ncohorts))
          allocate(cpatch%dmean_A_rubp              (                    ncohorts))
          allocate(cpatch%dmean_A_co2               (                    ncohorts))
@@ -5168,7 +5304,10 @@ module ed_state_vars
             allocate(cpatch%dmean_root_growth_resp_c13       (                    ncohorts))
             allocate(cpatch%dmean_sapa_growth_resp_c13       (                    ncohorts))
             allocate(cpatch%dmean_sapb_growth_resp_c13       (                    ncohorts))
-            allocate(cpatch%dmean_storage_resp_c13           (                    ncohorts))
+            allocate(cpatch%dmean_leaf_storage_resp_c13      (                    ncohorts))
+            allocate(cpatch%dmean_root_storage_resp_c13      (                    ncohorts))
+            allocate(cpatch%dmean_sapa_storage_resp_c13      (                    ncohorts))
+            allocate(cpatch%dmean_sapb_storage_resp_c13      (                    ncohorts))
             allocate(cpatch%dmean_plresp_c13                 (                    ncohorts))
             if (c_alloc_flg > 0) then
                allocate(cpatch%dmean_lassim_resp_c13         (                    ncohorts))
@@ -5194,7 +5333,10 @@ module ed_state_vars
          allocate(cpatch%mmean_root_growth_resp    (                    ncohorts))
          allocate(cpatch%mmean_sapa_growth_resp    (                    ncohorts))
          allocate(cpatch%mmean_sapb_growth_resp    (                    ncohorts))
-         allocate(cpatch%mmean_storage_resp        (                    ncohorts))
+         allocate(cpatch%mmean_leaf_storage_resp   (                    ncohorts))
+         allocate(cpatch%mmean_root_storage_resp   (                    ncohorts))
+         allocate(cpatch%mmean_sapa_storage_resp   (                    ncohorts))
+         allocate(cpatch%mmean_sapb_storage_resp   (                    ncohorts))
          allocate(cpatch%mmean_plresp              (                    ncohorts))
          allocate(cpatch%mmean_leaf_energy         (                    ncohorts))
          allocate(cpatch%mmean_leaf_water          (                    ncohorts))
@@ -5213,6 +5355,9 @@ module ed_state_vars
          allocate(cpatch%mmean_fs_open             (                    ncohorts))
          allocate(cpatch%mmean_fsw                 (                    ncohorts))
          allocate(cpatch%mmean_fsn                 (                    ncohorts))
+         allocate(cpatch%mmean_a_open              (                    ncohorts))
+         allocate(cpatch%mmean_a_closed            (                    ncohorts))
+         allocate(cpatch%mmean_a_net               (                    ncohorts))
          allocate(cpatch%mmean_A_light             (                    ncohorts))
          allocate(cpatch%mmean_A_rubp              (                    ncohorts))
          allocate(cpatch%mmean_A_co2               (                    ncohorts))
@@ -5278,7 +5423,10 @@ module ed_state_vars
             allocate(cpatch%mmean_root_growth_resp_c13       (                    ncohorts))
             allocate(cpatch%mmean_sapa_growth_resp_c13       (                    ncohorts))
             allocate(cpatch%mmean_sapb_growth_resp_c13       (                    ncohorts))
-            allocate(cpatch%mmean_storage_resp_c13           (                    ncohorts))
+            allocate(cpatch%mmean_leaf_storage_resp_c13      (                    ncohorts))
+            allocate(cpatch%mmean_root_storage_resp_c13      (                    ncohorts))
+            allocate(cpatch%mmean_sapa_storage_resp_c13      (                    ncohorts))
+            allocate(cpatch%mmean_sapb_storage_resp_c13      (                    ncohorts))
             allocate(cpatch%mmean_plresp_c13                 (                    ncohorts))
             if (c_alloc_flg > 0) then
                allocate(cpatch%mmean_lassim_resp_c13         (                    ncohorts))
@@ -5295,7 +5443,10 @@ module ed_state_vars
          allocate(cpatch%qmean_root_growth_resp    (            ndcycle,ncohorts))
          allocate(cpatch%qmean_sapa_growth_resp    (            ndcycle,ncohorts))
          allocate(cpatch%qmean_sapb_growth_resp    (            ndcycle,ncohorts))
-         allocate(cpatch%qmean_storage_resp        (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_leaf_storage_resp   (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_root_storage_resp   (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_sapa_storage_resp   (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_sapb_storage_resp   (            ndcycle,ncohorts))
          allocate(cpatch%qmean_plresp              (            ndcycle,ncohorts))
          allocate(cpatch%qmean_leaf_energy         (            ndcycle,ncohorts))
          allocate(cpatch%qmean_leaf_water          (            ndcycle,ncohorts))
@@ -5314,6 +5465,9 @@ module ed_state_vars
          allocate(cpatch%qmean_fs_open             (            ndcycle,ncohorts))
          allocate(cpatch%qmean_fsw                 (            ndcycle,ncohorts))
          allocate(cpatch%qmean_fsn                 (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_a_open              (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_a_closed            (            ndcycle,ncohorts))
+         allocate(cpatch%qmean_a_net               (            ndcycle,ncohorts))
          allocate(cpatch%qmean_A_light             (            ndcycle,ncohorts))
          allocate(cpatch%qmean_A_rubp              (            ndcycle,ncohorts))
          allocate(cpatch%qmean_A_co2               (            ndcycle,ncohorts))
@@ -5481,7 +5635,10 @@ module ed_state_vars
       nullify(cgrid%fmean_root_growth_resp  )
       nullify(cgrid%fmean_sapa_growth_resp  )
       nullify(cgrid%fmean_sapb_growth_resp  )
-      nullify(cgrid%fmean_storage_resp      )
+      nullify(cgrid%fmean_leaf_storage_resp )
+      nullify(cgrid%fmean_root_storage_resp )
+      nullify(cgrid%fmean_sapa_storage_resp )
+      nullify(cgrid%fmean_sapb_storage_resp )
       nullify(cgrid%fmean_plresp            )
       nullify(cgrid%fmean_leaf_energy       )
       nullify(cgrid%fmean_leaf_water        )
@@ -5500,6 +5657,9 @@ module ed_state_vars
       nullify(cgrid%fmean_fs_open           )
       nullify(cgrid%fmean_fsw               )
       nullify(cgrid%fmean_fsn               )
+      nullify(cgrid%fmean_a_open            )
+      nullify(cgrid%fmean_a_closed          )
+      nullify(cgrid%fmean_a_net             )
       nullify(cgrid%fmean_A_light           )
       nullify(cgrid%fmean_A_rubp            )
       nullify(cgrid%fmean_A_co2             )
@@ -5598,6 +5758,8 @@ module ed_state_vars
       nullify(cgrid%fmean_dpcpg             )
       nullify(cgrid%fmean_soil_wetness      )
       nullify(cgrid%fmean_skin_temp         )
+      nullify(cgrid%fmean_lai		    )
+      nullify(cgrid%fmean_bdead		    )
       nullify(cgrid%dmean_nppleaf           )
       nullify(cgrid%dmean_nppfroot          )
       nullify(cgrid%dmean_nppsapwood        )
@@ -5618,7 +5780,10 @@ module ed_state_vars
       nullify(cgrid%dmean_root_growth_resp  )
       nullify(cgrid%dmean_sapa_growth_resp  )
       nullify(cgrid%dmean_sapb_growth_resp  )
-      nullify(cgrid%dmean_storage_resp      )
+      nullify(cgrid%dmean_leaf_storage_resp )
+      nullify(cgrid%dmean_root_storage_resp )
+      nullify(cgrid%dmean_sapa_storage_resp )
+      nullify(cgrid%dmean_sapb_storage_resp )
       nullify(cgrid%dmean_plresp            )
       nullify(cgrid%dmean_leaf_energy       )
       nullify(cgrid%dmean_leaf_water        )
@@ -5637,6 +5802,9 @@ module ed_state_vars
       nullify(cgrid%dmean_fs_open           )
       nullify(cgrid%dmean_fsw               )
       nullify(cgrid%dmean_fsn               )
+      nullify(cgrid%dmean_a_open            )
+      nullify(cgrid%dmean_a_closed          )
+      nullify(cgrid%dmean_a_net             )
       nullify(cgrid%dmean_A_light           )
       nullify(cgrid%dmean_A_rubp            )
       nullify(cgrid%dmean_A_co2             )
@@ -5759,7 +5927,10 @@ module ed_state_vars
       nullify(cgrid%mmean_root_growth_resp  )
       nullify(cgrid%mmean_sapa_growth_resp  )
       nullify(cgrid%mmean_sapb_growth_resp  )
-      nullify(cgrid%mmean_storage_resp      )
+      nullify(cgrid%mmean_leaf_storage_resp )
+      nullify(cgrid%mmean_root_storage_resp )
+      nullify(cgrid%mmean_sapa_storage_resp )
+      nullify(cgrid%mmean_sapb_storage_resp )
       nullify(cgrid%mmean_plresp            )
       nullify(cgrid%mmean_leaf_energy       )
       nullify(cgrid%mmean_leaf_water        )
@@ -5778,6 +5949,9 @@ module ed_state_vars
       nullify(cgrid%mmean_fs_open           )
       nullify(cgrid%mmean_fsw               )
       nullify(cgrid%mmean_fsn               )
+      nullify(cgrid%mmean_a_open            )
+      nullify(cgrid%mmean_a_closed          )
+      nullify(cgrid%mmean_a_net             )
       nullify(cgrid%mmean_A_light           )
       nullify(cgrid%mmean_A_rubp            )
       nullify(cgrid%mmean_A_co2             )
@@ -5918,7 +6092,10 @@ module ed_state_vars
       nullify(cgrid%qmean_root_growth_resp  )
       nullify(cgrid%qmean_sapa_growth_resp  )
       nullify(cgrid%qmean_sapb_growth_resp  )
-      nullify(cgrid%qmean_storage_resp      )
+      nullify(cgrid%qmean_leaf_storage_resp )
+      nullify(cgrid%qmean_root_storage_resp )
+      nullify(cgrid%qmean_sapa_storage_resp )
+      nullify(cgrid%qmean_sapb_storage_resp )
       nullify(cgrid%qmean_plresp            )
       nullify(cgrid%qmean_leaf_energy       )
       nullify(cgrid%qmean_leaf_water        )
@@ -5937,6 +6114,9 @@ module ed_state_vars
       nullify(cgrid%qmean_fs_open           )
       nullify(cgrid%qmean_fsw               )
       nullify(cgrid%qmean_fsn               )
+      nullify(cgrid%qmean_a_open            )
+      nullify(cgrid%qmean_a_closed          )
+      nullify(cgrid%qmean_a_net             )
       nullify(cgrid%qmean_A_light           )
       nullify(cgrid%qmean_A_rubp            )
       nullify(cgrid%qmean_A_co2             )
@@ -6085,7 +6265,10 @@ module ed_state_vars
       nullify(cgrid%fmean_root_growth_resp_c13    )
       nullify(cgrid%fmean_sapa_growth_resp_c13    )
       nullify(cgrid%fmean_sapb_growth_resp_c13    )
-      nullify(cgrid%fmean_storage_resp_c13        )
+      nullify(cgrid%fmean_leaf_storage_resp_c13   )
+      nullify(cgrid%fmean_root_storage_resp_c13   )
+      nullify(cgrid%fmean_sapa_storage_resp_c13   )
+      nullify(cgrid%fmean_sapb_storage_resp_c13   )
       nullify(cgrid%fmean_plresp_c13              )
       nullify(cgrid%fmean_rh_c13                  )
       nullify(cgrid%fmean_cwd_rh_c13              )
@@ -6106,7 +6289,10 @@ module ed_state_vars
       nullify(cgrid%dmean_root_growth_resp_c13    )
       nullify(cgrid%dmean_sapa_growth_resp_c13    )
       nullify(cgrid%dmean_sapb_growth_resp_c13    )
-      nullify(cgrid%dmean_storage_resp_c13        )
+      nullify(cgrid%dmean_leaf_storage_resp_c13   )
+      nullify(cgrid%dmean_root_storage_resp_c13   )
+      nullify(cgrid%dmean_sapa_storage_resp_c13   )
+      nullify(cgrid%dmean_sapb_storage_resp_c13   )
       nullify(cgrid%dmean_plresp_c13              )
       nullify(cgrid%dmean_rh_c13                  )
       nullify(cgrid%dmean_cwd_rh_c13              )
@@ -6138,7 +6324,10 @@ module ed_state_vars
       nullify(cgrid%mmean_root_growth_resp_c13    )
       nullify(cgrid%mmean_sapa_growth_resp_c13    )
       nullify(cgrid%mmean_sapb_growth_resp_c13    )
-      nullify(cgrid%mmean_storage_resp_c13        )
+      nullify(cgrid%mmean_leaf_storage_resp_c13   )
+      nullify(cgrid%mmean_root_storage_resp_c13   )
+      nullify(cgrid%mmean_sapa_storage_resp_c13   )
+      nullify(cgrid%mmean_sapb_storage_resp_c13   )
       nullify(cgrid%mmean_plresp_c13              )
       nullify(cgrid%mmean_rh_c13                  )
       nullify(cgrid%mmean_cwd_rh_c13              )
@@ -6898,7 +7087,10 @@ module ed_state_vars
       nullify(cpatch%root_growth_resp      )
       nullify(cpatch%sapa_growth_resp      )
       nullify(cpatch%sapb_growth_resp      )
-      nullify(cpatch%storage_respiration   )
+      nullify(cpatch%leaf_storage_resp     )
+      nullify(cpatch%root_storage_resp     )
+      nullify(cpatch%sapa_storage_resp     )
+      nullify(cpatch%sapb_storage_resp     )
       nullify(cpatch%monthly_dndt          )
       nullify(cpatch%monthly_dlnndt        )
       nullify(cpatch%mort_rate             )
@@ -6963,7 +7155,10 @@ module ed_state_vars
       nullify(cpatch%fmean_root_growth_resp)
       nullify(cpatch%fmean_sapa_growth_resp)
       nullify(cpatch%fmean_sapb_growth_resp)
-      nullify(cpatch%fmean_storage_resp    )
+      nullify(cpatch%fmean_leaf_storage_resp)
+      nullify(cpatch%fmean_root_storage_resp)
+      nullify(cpatch%fmean_sapa_storage_resp)
+      nullify(cpatch%fmean_sapb_storage_resp)
       nullify(cpatch%fmean_plresp          )
       nullify(cpatch%fmean_leaf_energy     )
       nullify(cpatch%fmean_leaf_water      )
@@ -6982,6 +7177,9 @@ module ed_state_vars
       nullify(cpatch%fmean_fs_open         )
       nullify(cpatch%fmean_fsw             )
       nullify(cpatch%fmean_fsn             )
+      nullify(cpatch%fmean_a_open          )
+      nullify(cpatch%fmean_a_closed        )
+      nullify(cpatch%fmean_a_net           )
       nullify(cpatch%fmean_A_light         )
       nullify(cpatch%fmean_A_rubp          )
       nullify(cpatch%fmean_A_co2           )
@@ -7013,6 +7211,8 @@ module ed_state_vars
       nullify(cpatch%fmean_vapor_wc        )
       nullify(cpatch%fmean_intercepted_aw  )
       nullify(cpatch%fmean_wshed_wg        )
+      nullify(cpatch%fmean_lai             )
+      nullify(cpatch%fmean_bdead           )
       nullify(cpatch%dmean_nppleaf         )
       nullify(cpatch%dmean_nppfroot        )
       nullify(cpatch%dmean_nppsapwood      )
@@ -7028,7 +7228,10 @@ module ed_state_vars
       nullify(cpatch%dmean_root_growth_resp)
       nullify(cpatch%dmean_sapa_growth_resp)
       nullify(cpatch%dmean_sapb_growth_resp)
-      nullify(cpatch%dmean_storage_resp    )
+      nullify(cpatch%dmean_leaf_storage_resp)
+      nullify(cpatch%dmean_root_storage_resp)
+      nullify(cpatch%dmean_sapa_storage_resp)
+      nullify(cpatch%dmean_sapb_storage_resp)
       nullify(cpatch%dmean_plresp          )
       nullify(cpatch%dmean_leaf_energy     )
       nullify(cpatch%dmean_leaf_water      )
@@ -7047,6 +7250,9 @@ module ed_state_vars
       nullify(cpatch%dmean_fs_open         )
       nullify(cpatch%dmean_fsw             )
       nullify(cpatch%dmean_fsn             )
+      nullify(cpatch%dmean_a_open          )
+      nullify(cpatch%dmean_a_closed        )
+      nullify(cpatch%dmean_a_net           )
       nullify(cpatch%dmean_A_light         )
       nullify(cpatch%dmean_A_rubp          )
       nullify(cpatch%dmean_A_co2           )
@@ -7095,7 +7301,10 @@ module ed_state_vars
       nullify(cpatch%mmean_root_growth_resp)
       nullify(cpatch%mmean_sapa_growth_resp)
       nullify(cpatch%mmean_sapb_growth_resp)
-      nullify(cpatch%mmean_storage_resp    )
+      nullify(cpatch%mmean_leaf_storage_resp)
+      nullify(cpatch%mmean_root_storage_resp)
+      nullify(cpatch%mmean_sapa_storage_resp)
+      nullify(cpatch%mmean_sapb_storage_resp)
       nullify(cpatch%mmean_plresp          )
       nullify(cpatch%mmean_leaf_energy     )
       nullify(cpatch%mmean_leaf_water      )
@@ -7114,6 +7323,9 @@ module ed_state_vars
       nullify(cpatch%mmean_fs_open         )
       nullify(cpatch%mmean_fsw             )
       nullify(cpatch%mmean_fsn             )
+      nullify(cpatch%mmean_a_open          )
+      nullify(cpatch%mmean_a_closed        )
+      nullify(cpatch%mmean_a_net           )
       nullify(cpatch%mmean_A_light         )
       nullify(cpatch%mmean_A_rubp          )
       nullify(cpatch%mmean_A_co2           )
@@ -7168,7 +7380,10 @@ module ed_state_vars
       nullify(cpatch%qmean_root_growth_resp)
       nullify(cpatch%qmean_sapa_growth_resp)
       nullify(cpatch%qmean_sapb_growth_resp)
-      nullify(cpatch%qmean_storage_resp    )
+      nullify(cpatch%qmean_leaf_storage_resp)
+      nullify(cpatch%qmean_root_storage_resp)
+      nullify(cpatch%qmean_sapa_storage_resp)
+      nullify(cpatch%qmean_sapb_storage_resp)
       nullify(cpatch%qmean_plresp          )
       nullify(cpatch%qmean_leaf_energy     )
       nullify(cpatch%qmean_leaf_water      )
@@ -7187,6 +7402,9 @@ module ed_state_vars
       nullify(cpatch%qmean_fs_open         )
       nullify(cpatch%qmean_fsw             )
       nullify(cpatch%qmean_fsn             )
+      nullify(cpatch%qmean_a_open          )
+      nullify(cpatch%qmean_a_closed        )
+      nullify(cpatch%qmean_a_net           )
       nullify(cpatch%qmean_A_light         )
       nullify(cpatch%qmean_A_rubp          )
       nullify(cpatch%qmean_A_co2           )
@@ -7254,7 +7472,10 @@ module ed_state_vars
       nullify(cpatch%root_growth_resp_c13      )          
       nullify(cpatch%sapa_growth_resp_c13      )          
       nullify(cpatch%sapb_growth_resp_c13      )          
-      nullify(cpatch%storage_respiration_c13   )          
+      nullify(cpatch%leaf_storage_resp_c13     )          
+      nullify(cpatch%root_storage_resp_c13     )          
+      nullify(cpatch%sapa_storage_resp_c13     )          
+      nullify(cpatch%sapb_storage_resp_c13     )          
       nullify(cpatch%leaf_maintenance_c13      )          
       nullify(cpatch%root_maintenance_c13      )          
       nullify(cpatch%leaf_drop_c13             )          
@@ -7262,40 +7483,49 @@ module ed_state_vars
       nullify(cpatch%root_respiration_c13      )          
       nullify(cpatch%gpp_c13                   )          
 
-      nullify(cpatch%fmean_npp_c13                   )         
-      nullify(cpatch%fmean_leaf_growth_resp_c13    )          
-      nullify(cpatch%fmean_root_growth_resp_c13    )          
-      nullify(cpatch%fmean_sapa_growth_resp_c13    )          
-      nullify(cpatch%fmean_sapb_growth_resp_c13    )          
-      nullify(cpatch%fmean_storage_resp_c13   )          
+      nullify(cpatch%fmean_npp_c13              )
+      nullify(cpatch%fmean_leaf_growth_resp_c13 )
+      nullify(cpatch%fmean_root_growth_resp_c13 )
+      nullify(cpatch%fmean_sapa_growth_resp_c13 )
+      nullify(cpatch%fmean_sapb_growth_resp_c13 )
+      nullify(cpatch%fmean_leaf_storage_resp_c13)
+      nullify(cpatch%fmean_root_storage_resp_c13)
+      nullify(cpatch%fmean_sapa_storage_resp_c13)
+      nullify(cpatch%fmean_sapb_storage_resp_c13)
       nullify(cpatch%fmean_leaf_resp_c13      )          
       nullify(cpatch%fmean_root_resp_c13      )          
-      nullify(cpatch%fmean_gpp_c13                   )            
-      nullify(cpatch%fmean_plresp_c13                )       
+      nullify(cpatch%fmean_gpp_c13                   )
+      nullify(cpatch%fmean_plresp_c13                )
       
-      nullify(cpatch%dmean_npp_c13                   )         
-      nullify(cpatch%dmean_leaf_growth_resp_c13    )          
-      nullify(cpatch%dmean_root_growth_resp_c13    )          
-      nullify(cpatch%dmean_sapa_growth_resp_c13    )          
-      nullify(cpatch%dmean_sapb_growth_resp_c13    )          
-      nullify(cpatch%dmean_storage_resp_c13   )          
+      nullify(cpatch%dmean_npp_c13                   )
+      nullify(cpatch%dmean_leaf_growth_resp_c13    )
+      nullify(cpatch%dmean_root_growth_resp_c13    )
+      nullify(cpatch%dmean_sapa_growth_resp_c13    )
+      nullify(cpatch%dmean_sapb_growth_resp_c13    )
+      nullify(cpatch%dmean_leaf_storage_resp_c13   )
+      nullify(cpatch%dmean_root_storage_resp_c13   )
+      nullify(cpatch%dmean_sapa_storage_resp_c13   )
+      nullify(cpatch%dmean_sapb_storage_resp_c13   )
       nullify(cpatch%dmean_leaf_resp_c13      )          
       nullify(cpatch%dmean_root_resp_c13      )
       nullify(cpatch%dmean_gpp_c13                   )
       nullify(cpatch%dmean_plresp_c13                )       
 
-      nullify(cpatch%mmean_npp_c13                   )         
-      nullify(cpatch%mmean_bleaf_c13                 )          
-      nullify(cpatch%mmean_broot_c13                 )          
-      nullify(cpatch%mmean_bstorage_c13              )          
-      nullify(cpatch%mmean_leaf_growth_resp_c13    )          
-      nullify(cpatch%mmean_root_growth_resp_c13    )          
-      nullify(cpatch%mmean_sapa_growth_resp_c13    )          
-      nullify(cpatch%mmean_sapb_growth_resp_c13    )          
-      nullify(cpatch%mmean_storage_resp_c13   )          
-      nullify(cpatch%mmean_leaf_maintenance_c13      )          
-      nullify(cpatch%mmean_root_maintenance_c13      )
-      nullify(cpatch%mmean_leaf_drop_c13             )          
+      nullify(cpatch%mmean_npp_c13                   )
+      nullify(cpatch%mmean_bleaf_c13                 )
+      nullify(cpatch%mmean_broot_c13                 )
+      nullify(cpatch%mmean_bstorage_c13              )
+      nullify(cpatch%mmean_leaf_growth_resp_c13    )
+      nullify(cpatch%mmean_root_growth_resp_c13    )
+      nullify(cpatch%mmean_sapa_growth_resp_c13    )
+      nullify(cpatch%mmean_sapb_growth_resp_c13    )
+      nullify(cpatch%mmean_leaf_storage_resp_c13   )
+      nullify(cpatch%mmean_root_storage_resp_c13   )
+      nullify(cpatch%mmean_sapa_storage_resp_c13   )
+      nullify(cpatch%mmean_sapb_storage_resp_c13   )
+      nullify(cpatch%mmean_leaf_maintenance_c13    )          
+      nullify(cpatch%mmean_root_maintenance_c13    )
+      nullify(cpatch%mmean_leaf_drop_c13           )          
       nullify(cpatch%mmean_leaf_resp_c13      )          
       nullify(cpatch%mmean_root_resp_c13      )          
       nullify(cpatch%mmean_gpp_c13                   )   
@@ -7437,7 +7667,10 @@ module ed_state_vars
       if(associated(cgrid%fmean_root_growth_resp)) deallocate(cgrid%fmean_root_growth_resp)
       if(associated(cgrid%fmean_sapa_growth_resp)) deallocate(cgrid%fmean_sapa_growth_resp)
       if(associated(cgrid%fmean_sapb_growth_resp)) deallocate(cgrid%fmean_sapb_growth_resp)
-      if(associated(cgrid%fmean_storage_resp    )) deallocate(cgrid%fmean_storage_resp    )
+      if(associated(cgrid%fmean_leaf_storage_resp)) deallocate(cgrid%fmean_leaf_storage_resp)
+      if(associated(cgrid%fmean_root_storage_resp)) deallocate(cgrid%fmean_root_storage_resp)
+      if(associated(cgrid%fmean_sapa_storage_resp)) deallocate(cgrid%fmean_sapa_storage_resp)
+      if(associated(cgrid%fmean_sapb_storage_resp)) deallocate(cgrid%fmean_sapb_storage_resp)
       if(associated(cgrid%fmean_plresp          )) deallocate(cgrid%fmean_plresp          )
       if(associated(cgrid%fmean_leaf_energy     )) deallocate(cgrid%fmean_leaf_energy     )
       if(associated(cgrid%fmean_leaf_water      )) deallocate(cgrid%fmean_leaf_water      )
@@ -7456,6 +7689,9 @@ module ed_state_vars
       if(associated(cgrid%fmean_fs_open         )) deallocate(cgrid%fmean_fs_open         )
       if(associated(cgrid%fmean_fsw             )) deallocate(cgrid%fmean_fsw             )
       if(associated(cgrid%fmean_fsn             )) deallocate(cgrid%fmean_fsn             )
+      if(associated(cgrid%fmean_a_open          )) deallocate(cgrid%fmean_a_open          )
+      if(associated(cgrid%fmean_a_closed        )) deallocate(cgrid%fmean_a_closed        )
+      if(associated(cgrid%fmean_a_net           )) deallocate(cgrid%fmean_a_net           )
       if(associated(cgrid%fmean_A_light         )) deallocate(cgrid%fmean_A_light         )
       if(associated(cgrid%fmean_A_rubp          )) deallocate(cgrid%fmean_A_rubp          )
       if(associated(cgrid%fmean_A_co2           )) deallocate(cgrid%fmean_A_co2           )
@@ -7554,6 +7790,8 @@ module ed_state_vars
       if(associated(cgrid%fmean_dpcpg           )) deallocate(cgrid%fmean_dpcpg           )
       if(associated(cgrid%fmean_soil_wetness    )) deallocate(cgrid%fmean_soil_wetness    )
       if(associated(cgrid%fmean_skin_temp       )) deallocate(cgrid%fmean_skin_temp       )
+      if(associated(cgrid%fmean_lai             )) deallocate(cgrid%fmean_lai             )
+      if(associated(cgrid%fmean_bdead           )) deallocate(cgrid%fmean_bdead           )
       if(associated(cgrid%dmean_nppleaf         )) deallocate(cgrid%dmean_nppleaf         )
       if(associated(cgrid%dmean_nppfroot        )) deallocate(cgrid%dmean_nppfroot        )
       if(associated(cgrid%dmean_nppsapwood      )) deallocate(cgrid%dmean_nppsapwood      )
@@ -7574,7 +7812,10 @@ module ed_state_vars
       if(associated(cgrid%dmean_root_growth_resp)) deallocate(cgrid%dmean_root_growth_resp)
       if(associated(cgrid%dmean_sapa_growth_resp)) deallocate(cgrid%dmean_sapa_growth_resp)
       if(associated(cgrid%dmean_sapb_growth_resp)) deallocate(cgrid%dmean_sapb_growth_resp)
-      if(associated(cgrid%dmean_storage_resp    )) deallocate(cgrid%dmean_storage_resp    )
+      if(associated(cgrid%dmean_leaf_storage_resp)) deallocate(cgrid%dmean_leaf_storage_resp)
+      if(associated(cgrid%dmean_root_storage_resp)) deallocate(cgrid%dmean_root_storage_resp)
+      if(associated(cgrid%dmean_sapa_storage_resp)) deallocate(cgrid%dmean_sapa_storage_resp)
+      if(associated(cgrid%dmean_sapb_storage_resp)) deallocate(cgrid%dmean_sapb_storage_resp)
       if(associated(cgrid%dmean_plresp          )) deallocate(cgrid%dmean_plresp          )
       if(associated(cgrid%dmean_leaf_energy     )) deallocate(cgrid%dmean_leaf_energy     )
       if(associated(cgrid%dmean_leaf_water      )) deallocate(cgrid%dmean_leaf_water      )
@@ -7593,6 +7834,9 @@ module ed_state_vars
       if(associated(cgrid%dmean_fs_open         )) deallocate(cgrid%dmean_fs_open         )
       if(associated(cgrid%dmean_fsw             )) deallocate(cgrid%dmean_fsw             )
       if(associated(cgrid%dmean_fsn             )) deallocate(cgrid%dmean_fsn             )
+      if(associated(cgrid%dmean_a_open          )) deallocate(cgrid%dmean_a_open          )
+      if(associated(cgrid%dmean_a_closed        )) deallocate(cgrid%dmean_a_closed        )
+      if(associated(cgrid%dmean_a_net           )) deallocate(cgrid%dmean_a_net           )
       if(associated(cgrid%dmean_A_light         )) deallocate(cgrid%dmean_A_light         )
       if(associated(cgrid%dmean_A_rubp          )) deallocate(cgrid%dmean_A_rubp          )
       if(associated(cgrid%dmean_A_co2           )) deallocate(cgrid%dmean_A_co2           )
@@ -7715,7 +7959,10 @@ module ed_state_vars
       if(associated(cgrid%mmean_root_growth_resp)) deallocate(cgrid%mmean_root_growth_resp)
       if(associated(cgrid%mmean_sapa_growth_resp)) deallocate(cgrid%mmean_sapa_growth_resp)
       if(associated(cgrid%mmean_sapb_growth_resp)) deallocate(cgrid%mmean_sapb_growth_resp)
-      if(associated(cgrid%mmean_storage_resp    )) deallocate(cgrid%mmean_storage_resp    )
+      if(associated(cgrid%mmean_leaf_storage_resp)) deallocate(cgrid%mmean_leaf_storage_resp)
+      if(associated(cgrid%mmean_root_storage_resp)) deallocate(cgrid%mmean_root_storage_resp)
+      if(associated(cgrid%mmean_sapa_storage_resp)) deallocate(cgrid%mmean_sapa_storage_resp)
+      if(associated(cgrid%mmean_sapb_storage_resp)) deallocate(cgrid%mmean_sapb_storage_resp)
       if(associated(cgrid%mmean_plresp          )) deallocate(cgrid%mmean_plresp          )
       if(associated(cgrid%mmean_leaf_energy     )) deallocate(cgrid%mmean_leaf_energy     )
       if(associated(cgrid%mmean_leaf_water      )) deallocate(cgrid%mmean_leaf_water      )
@@ -7734,6 +7981,9 @@ module ed_state_vars
       if(associated(cgrid%mmean_fs_open         )) deallocate(cgrid%mmean_fs_open         )
       if(associated(cgrid%mmean_fsw             )) deallocate(cgrid%mmean_fsw             )
       if(associated(cgrid%mmean_fsn             )) deallocate(cgrid%mmean_fsn             )
+      if(associated(cgrid%mmean_a_open          )) deallocate(cgrid%mmean_a_open          )
+      if(associated(cgrid%mmean_a_closed        )) deallocate(cgrid%mmean_a_closed        )
+      if(associated(cgrid%mmean_a_net           )) deallocate(cgrid%mmean_a_net           )
       if(associated(cgrid%mmean_A_light         )) deallocate(cgrid%mmean_A_light         )
       if(associated(cgrid%mmean_A_rubp          )) deallocate(cgrid%mmean_A_rubp          )
       if(associated(cgrid%mmean_A_co2           )) deallocate(cgrid%mmean_A_co2           )
@@ -7874,7 +8124,10 @@ module ed_state_vars
       if(associated(cgrid%qmean_root_growth_resp)) deallocate(cgrid%qmean_root_growth_resp)
       if(associated(cgrid%qmean_sapa_growth_resp)) deallocate(cgrid%qmean_sapa_growth_resp)
       if(associated(cgrid%qmean_sapb_growth_resp)) deallocate(cgrid%qmean_sapb_growth_resp)
-      if(associated(cgrid%qmean_storage_resp    )) deallocate(cgrid%qmean_storage_resp    )
+      if(associated(cgrid%qmean_leaf_storage_resp)) deallocate(cgrid%qmean_leaf_storage_resp)
+      if(associated(cgrid%qmean_root_storage_resp)) deallocate(cgrid%qmean_root_storage_resp)
+      if(associated(cgrid%qmean_sapa_storage_resp)) deallocate(cgrid%qmean_sapa_storage_resp)
+      if(associated(cgrid%qmean_sapb_storage_resp)) deallocate(cgrid%qmean_sapb_storage_resp)
       if(associated(cgrid%qmean_plresp          )) deallocate(cgrid%qmean_plresp          )
       if(associated(cgrid%qmean_leaf_energy     )) deallocate(cgrid%qmean_leaf_energy     )
       if(associated(cgrid%qmean_leaf_water      )) deallocate(cgrid%qmean_leaf_water      )
@@ -7893,6 +8146,9 @@ module ed_state_vars
       if(associated(cgrid%qmean_fs_open         )) deallocate(cgrid%qmean_fs_open         )
       if(associated(cgrid%qmean_fsw             )) deallocate(cgrid%qmean_fsw             )
       if(associated(cgrid%qmean_fsn             )) deallocate(cgrid%qmean_fsn             )
+      if(associated(cgrid%qmean_a_open          )) deallocate(cgrid%qmean_a_open          )
+      if(associated(cgrid%qmean_a_closed        )) deallocate(cgrid%qmean_a_closed        )
+      if(associated(cgrid%qmean_a_net           )) deallocate(cgrid%qmean_a_net           )
       if(associated(cgrid%qmean_A_light         )) deallocate(cgrid%qmean_A_light         )
       if(associated(cgrid%qmean_A_rubp          )) deallocate(cgrid%qmean_A_rubp          )
       if(associated(cgrid%qmean_A_co2           )) deallocate(cgrid%qmean_A_co2           )
@@ -8041,7 +8297,10 @@ module ed_state_vars
       if(associated(cgrid%fmean_root_growth_resp_c13    )) deallocate(cgrid%fmean_root_growth_resp_c13    )
       if(associated(cgrid%fmean_sapa_growth_resp_c13    )) deallocate(cgrid%fmean_sapa_growth_resp_c13    )
       if(associated(cgrid%fmean_sapb_growth_resp_c13    )) deallocate(cgrid%fmean_sapb_growth_resp_c13    )
-      if(associated(cgrid%fmean_storage_resp_c13        )) deallocate(cgrid%fmean_storage_resp_c13        )
+      if(associated(cgrid%fmean_leaf_storage_resp_c13   )) deallocate(cgrid%fmean_leaf_storage_resp_c13   )
+      if(associated(cgrid%fmean_root_storage_resp_c13   )) deallocate(cgrid%fmean_root_storage_resp_c13   )
+      if(associated(cgrid%fmean_sapa_storage_resp_c13   )) deallocate(cgrid%fmean_sapa_storage_resp_c13   )
+      if(associated(cgrid%fmean_sapb_storage_resp_c13   )) deallocate(cgrid%fmean_sapb_storage_resp_c13   )
       if(associated(cgrid%fmean_plresp_c13              )) deallocate(cgrid%fmean_plresp_c13              )
       if(associated(cgrid%fmean_rh_c13                  )) deallocate(cgrid%fmean_rh_c13                  )
       if(associated(cgrid%fmean_cwd_rh_c13              )) deallocate(cgrid%fmean_cwd_rh_c13              )
@@ -8062,7 +8321,10 @@ module ed_state_vars
       if(associated(cgrid%dmean_root_growth_resp_c13    )) deallocate(cgrid%dmean_root_growth_resp_c13    )
       if(associated(cgrid%dmean_sapa_growth_resp_c13    )) deallocate(cgrid%dmean_sapa_growth_resp_c13    )
       if(associated(cgrid%dmean_sapb_growth_resp_c13    )) deallocate(cgrid%dmean_sapb_growth_resp_c13    )
-      if(associated(cgrid%dmean_storage_resp_c13        )) deallocate(cgrid%dmean_storage_resp_c13        )
+      if(associated(cgrid%dmean_leaf_storage_resp_c13   )) deallocate(cgrid%dmean_leaf_storage_resp_c13   )
+      if(associated(cgrid%dmean_root_storage_resp_c13   )) deallocate(cgrid%dmean_root_storage_resp_c13   )
+      if(associated(cgrid%dmean_sapa_storage_resp_c13   )) deallocate(cgrid%dmean_sapa_storage_resp_c13   )
+      if(associated(cgrid%dmean_sapb_storage_resp_c13   )) deallocate(cgrid%dmean_sapb_storage_resp_c13   )
       if(associated(cgrid%dmean_plresp_c13              )) deallocate(cgrid%dmean_plresp_c13              )
       if(associated(cgrid%dmean_rh_c13                  )) deallocate(cgrid%dmean_rh_c13                  )
       if(associated(cgrid%dmean_cwd_rh_c13              )) deallocate(cgrid%dmean_cwd_rh_c13              )
@@ -8094,7 +8356,10 @@ module ed_state_vars
       if(associated(cgrid%mmean_root_growth_resp_c13    )) deallocate(cgrid%mmean_root_growth_resp_c13    )
       if(associated(cgrid%mmean_sapa_growth_resp_c13    )) deallocate(cgrid%mmean_sapa_growth_resp_c13    )
       if(associated(cgrid%mmean_sapb_growth_resp_c13    )) deallocate(cgrid%mmean_sapb_growth_resp_c13    )
-      if(associated(cgrid%mmean_storage_resp_c13        )) deallocate(cgrid%mmean_storage_resp_c13        )
+      if(associated(cgrid%mmean_leaf_storage_resp_c13   )) deallocate(cgrid%mmean_leaf_storage_resp_c13   )
+      if(associated(cgrid%mmean_root_storage_resp_c13   )) deallocate(cgrid%mmean_root_storage_resp_c13   )
+      if(associated(cgrid%mmean_sapa_storage_resp_c13   )) deallocate(cgrid%mmean_sapa_storage_resp_c13   )
+      if(associated(cgrid%mmean_sapb_storage_resp_c13   )) deallocate(cgrid%mmean_sapb_storage_resp_c13   )
       if(associated(cgrid%mmean_plresp_c13              )) deallocate(cgrid%mmean_plresp_c13              )
       if(associated(cgrid%mmean_rh_c13                  )) deallocate(cgrid%mmean_rh_c13                  )
       if(associated(cgrid%mmean_cwd_rh_c13              )) deallocate(cgrid%mmean_cwd_rh_c13              )
@@ -8885,7 +9150,10 @@ module ed_state_vars
       if(associated(cpatch%root_growth_resp    )) deallocate(cpatch%root_growth_resp    )
       if(associated(cpatch%sapa_growth_resp    )) deallocate(cpatch%sapa_growth_resp    )
       if(associated(cpatch%sapb_growth_resp    )) deallocate(cpatch%sapb_growth_resp    )
-      if(associated(cpatch%storage_respiration )) deallocate(cpatch%storage_respiration )
+      if(associated(cpatch%leaf_storage_resp   )) deallocate(cpatch%leaf_storage_resp   )
+      if(associated(cpatch%root_storage_resp   )) deallocate(cpatch%root_storage_resp   )
+      if(associated(cpatch%sapa_storage_resp   )) deallocate(cpatch%sapa_storage_resp   )
+      if(associated(cpatch%sapb_storage_resp   )) deallocate(cpatch%sapb_storage_resp   )
       if(associated(cpatch%monthly_dndt        )) deallocate(cpatch%monthly_dndt        )
       if(associated(cpatch%monthly_dlnndt      )) deallocate(cpatch%monthly_dlnndt      )
       if(associated(cpatch%mort_rate           )) deallocate(cpatch%mort_rate           )
@@ -8950,7 +9218,10 @@ module ed_state_vars
       if(associated(cpatch%fmean_root_growth_resp)) deallocate(cpatch%fmean_root_growth_resp)
       if(associated(cpatch%fmean_sapa_growth_resp)) deallocate(cpatch%fmean_sapa_growth_resp)
       if(associated(cpatch%fmean_sapb_growth_resp)) deallocate(cpatch%fmean_sapb_growth_resp)
-      if(associated(cpatch%fmean_storage_resp  )) deallocate(cpatch%fmean_storage_resp  )
+      if(associated(cpatch%fmean_leaf_storage_resp)) deallocate(cpatch%fmean_leaf_storage_resp)
+      if(associated(cpatch%fmean_root_storage_resp)) deallocate(cpatch%fmean_root_storage_resp)
+      if(associated(cpatch%fmean_sapa_storage_resp)) deallocate(cpatch%fmean_sapa_storage_resp)
+      if(associated(cpatch%fmean_sapb_storage_resp)) deallocate(cpatch%fmean_sapb_storage_resp)
       if(associated(cpatch%fmean_plresp        )) deallocate(cpatch%fmean_plresp        )
       if(associated(cpatch%fmean_leaf_energy   )) deallocate(cpatch%fmean_leaf_energy   )
       if(associated(cpatch%fmean_leaf_water    )) deallocate(cpatch%fmean_leaf_water    )
@@ -8969,6 +9240,9 @@ module ed_state_vars
       if(associated(cpatch%fmean_fs_open       )) deallocate(cpatch%fmean_fs_open       )
       if(associated(cpatch%fmean_fsw           )) deallocate(cpatch%fmean_fsw           )
       if(associated(cpatch%fmean_fsn           )) deallocate(cpatch%fmean_fsn           )
+      if(associated(cpatch%fmean_a_open        )) deallocate(cpatch%fmean_a_open        )
+      if(associated(cpatch%fmean_a_closed      )) deallocate(cpatch%fmean_a_closed      )
+      if(associated(cpatch%fmean_a_net         )) deallocate(cpatch%fmean_a_net         )
       if(associated(cpatch%fmean_A_light       )) deallocate(cpatch%fmean_A_light       )
       if(associated(cpatch%fmean_A_rubp        )) deallocate(cpatch%fmean_A_rubp        )
       if(associated(cpatch%fmean_A_co2         )) deallocate(cpatch%fmean_A_co2         )
@@ -9002,6 +9276,8 @@ module ed_state_vars
       if(associated(cpatch%fmean_vapor_wc      )) deallocate(cpatch%fmean_vapor_wc      )
       if(associated(cpatch%fmean_intercepted_aw)) deallocate(cpatch%fmean_intercepted_aw)
       if(associated(cpatch%fmean_wshed_wg      )) deallocate(cpatch%fmean_wshed_wg      )
+      if(associated(cpatch%fmean_lai           )) deallocate(cpatch%fmean_lai           )
+      if(associated(cpatch%fmean_bdead         )) deallocate(cpatch%fmean_bdead         )
       if(associated(cpatch%dmean_nppleaf       )) deallocate(cpatch%dmean_nppleaf       )
       if(associated(cpatch%dmean_nppfroot      )) deallocate(cpatch%dmean_nppfroot      )
       if(associated(cpatch%dmean_nppsapwood    )) deallocate(cpatch%dmean_nppsapwood    )
@@ -9017,7 +9293,10 @@ module ed_state_vars
       if(associated(cpatch%dmean_root_growth_resp)) deallocate(cpatch%dmean_root_growth_resp)
       if(associated(cpatch%dmean_sapa_growth_resp)) deallocate(cpatch%dmean_sapa_growth_resp)
       if(associated(cpatch%dmean_sapb_growth_resp)) deallocate(cpatch%dmean_sapb_growth_resp)
-      if(associated(cpatch%dmean_storage_resp  )) deallocate(cpatch%dmean_storage_resp  )
+      if(associated(cpatch%dmean_leaf_storage_resp)) deallocate(cpatch%dmean_leaf_storage_resp)
+      if(associated(cpatch%dmean_root_storage_resp)) deallocate(cpatch%dmean_root_storage_resp)
+      if(associated(cpatch%dmean_sapa_storage_resp)) deallocate(cpatch%dmean_sapa_storage_resp)
+      if(associated(cpatch%dmean_sapb_storage_resp)) deallocate(cpatch%dmean_sapb_storage_resp)
       if(associated(cpatch%dmean_plresp        )) deallocate(cpatch%dmean_plresp        )
       if(associated(cpatch%dmean_leaf_energy   )) deallocate(cpatch%dmean_leaf_energy   )
       if(associated(cpatch%dmean_leaf_water    )) deallocate(cpatch%dmean_leaf_water    )
@@ -9036,6 +9315,9 @@ module ed_state_vars
       if(associated(cpatch%dmean_fs_open       )) deallocate(cpatch%dmean_fs_open       )
       if(associated(cpatch%dmean_fsw           )) deallocate(cpatch%dmean_fsw           )
       if(associated(cpatch%dmean_fsn           )) deallocate(cpatch%dmean_fsn           )
+      if(associated(cpatch%dmean_a_open        )) deallocate(cpatch%dmean_a_open        )
+      if(associated(cpatch%dmean_a_closed      )) deallocate(cpatch%dmean_a_closed      )
+      if(associated(cpatch%dmean_a_net         )) deallocate(cpatch%dmean_a_net         )
       if(associated(cpatch%dmean_A_light       )) deallocate(cpatch%dmean_A_light       )
       if(associated(cpatch%dmean_A_rubp        )) deallocate(cpatch%dmean_A_rubp        )
       if(associated(cpatch%dmean_A_co2         )) deallocate(cpatch%dmean_A_co2         )
@@ -9088,7 +9370,10 @@ module ed_state_vars
       if(associated(cpatch%mmean_root_growth_resp)) deallocate(cpatch%mmean_root_growth_resp)
       if(associated(cpatch%mmean_sapa_growth_resp)) deallocate(cpatch%mmean_sapa_growth_resp)
       if(associated(cpatch%mmean_sapb_growth_resp)) deallocate(cpatch%mmean_sapb_growth_resp)
-      if(associated(cpatch%mmean_storage_resp  )) deallocate(cpatch%mmean_storage_resp  )
+      if(associated(cpatch%mmean_leaf_storage_resp)) deallocate(cpatch%mmean_leaf_storage_resp)
+      if(associated(cpatch%mmean_root_storage_resp)) deallocate(cpatch%mmean_root_storage_resp)
+      if(associated(cpatch%mmean_sapa_storage_resp)) deallocate(cpatch%mmean_sapa_storage_resp)
+      if(associated(cpatch%mmean_sapb_storage_resp)) deallocate(cpatch%mmean_sapb_storage_resp)
       if(associated(cpatch%mmean_plresp        )) deallocate(cpatch%mmean_plresp        )
       if(associated(cpatch%mmean_leaf_energy   )) deallocate(cpatch%mmean_leaf_energy   )
       if(associated(cpatch%mmean_leaf_water    )) deallocate(cpatch%mmean_leaf_water    )
@@ -9107,6 +9392,9 @@ module ed_state_vars
       if(associated(cpatch%mmean_fs_open       )) deallocate(cpatch%mmean_fs_open       )
       if(associated(cpatch%mmean_fsw           )) deallocate(cpatch%mmean_fsw           )
       if(associated(cpatch%mmean_fsn           )) deallocate(cpatch%mmean_fsn           )
+      if(associated(cpatch%mmean_a_open        )) deallocate(cpatch%mmean_a_open        )
+      if(associated(cpatch%mmean_a_closed      )) deallocate(cpatch%mmean_a_closed      )
+      if(associated(cpatch%mmean_a_net         )) deallocate(cpatch%mmean_a_net         )
       if(associated(cpatch%mmean_A_light       )) deallocate(cpatch%mmean_A_light       )
       if(associated(cpatch%mmean_A_rubp        )) deallocate(cpatch%mmean_A_rubp        )
       if(associated(cpatch%mmean_A_co2         )) deallocate(cpatch%mmean_A_co2         )
@@ -9163,7 +9451,10 @@ module ed_state_vars
       if(associated(cpatch%qmean_root_growth_resp)) deallocate(cpatch%qmean_root_growth_resp)
       if(associated(cpatch%qmean_sapa_growth_resp)) deallocate(cpatch%qmean_sapa_growth_resp)
       if(associated(cpatch%qmean_sapb_growth_resp)) deallocate(cpatch%qmean_sapb_growth_resp)
-      if(associated(cpatch%qmean_storage_resp  )) deallocate(cpatch%qmean_storage_resp  )
+      if(associated(cpatch%qmean_leaf_storage_resp)) deallocate(cpatch%qmean_leaf_storage_resp)
+      if(associated(cpatch%qmean_root_storage_resp)) deallocate(cpatch%qmean_root_storage_resp)
+      if(associated(cpatch%qmean_sapa_storage_resp)) deallocate(cpatch%qmean_sapa_storage_resp)
+      if(associated(cpatch%qmean_sapb_storage_resp)) deallocate(cpatch%qmean_sapb_storage_resp)
       if(associated(cpatch%qmean_plresp        )) deallocate(cpatch%qmean_plresp        )
       if(associated(cpatch%qmean_leaf_energy   )) deallocate(cpatch%qmean_leaf_energy   )
       if(associated(cpatch%qmean_leaf_water    )) deallocate(cpatch%qmean_leaf_water    )
@@ -9182,6 +9473,9 @@ module ed_state_vars
       if(associated(cpatch%qmean_fs_open       )) deallocate(cpatch%qmean_fs_open       )
       if(associated(cpatch%qmean_fsw           )) deallocate(cpatch%qmean_fsw           )
       if(associated(cpatch%qmean_fsn           )) deallocate(cpatch%qmean_fsn           )
+      if(associated(cpatch%qmean_a_open        )) deallocate(cpatch%qmean_a_open        )
+      if(associated(cpatch%qmean_a_closed      )) deallocate(cpatch%qmean_a_closed      )
+      if(associated(cpatch%qmean_a_net         )) deallocate(cpatch%qmean_a_net         )
       if(associated(cpatch%qmean_A_light       )) deallocate(cpatch%qmean_A_light       )
       if(associated(cpatch%qmean_A_rubp        )) deallocate(cpatch%qmean_A_rubp        )
       if(associated(cpatch%qmean_A_co2         )) deallocate(cpatch%qmean_A_co2         )
@@ -9251,7 +9545,10 @@ module ed_state_vars
       if(associated(cpatch%root_growth_resp_c13      )) deallocate(cpatch%root_growth_resp_c13      )          
       if(associated(cpatch%sapa_growth_resp_c13      )) deallocate(cpatch%sapa_growth_resp_c13      )          
       if(associated(cpatch%sapb_growth_resp_c13      )) deallocate(cpatch%sapb_growth_resp_c13      )          
-      if(associated(cpatch%storage_respiration_c13   )) deallocate(cpatch%storage_respiration_c13   )          
+      if(associated(cpatch%leaf_storage_resp_c13     )) deallocate(cpatch%leaf_storage_resp_c13     )          
+      if(associated(cpatch%root_storage_resp_c13     )) deallocate(cpatch%root_storage_resp_c13     )          
+      if(associated(cpatch%sapa_storage_resp_c13     )) deallocate(cpatch%sapa_storage_resp_c13     )          
+      if(associated(cpatch%sapb_storage_resp_c13     )) deallocate(cpatch%sapb_storage_resp_c13     )          
       if(associated(cpatch%leaf_maintenance_c13      )) deallocate(cpatch%leaf_maintenance_c13      )          
       if(associated(cpatch%root_maintenance_c13      )) deallocate(cpatch%root_maintenance_c13      )          
       if(associated(cpatch%leaf_drop_c13             )) deallocate(cpatch%leaf_drop_c13             )          
@@ -9260,22 +9557,28 @@ module ed_state_vars
       if(associated(cpatch%gpp_c13                   )) deallocate(cpatch%gpp_c13                   )          
 
       if(associated(cpatch%fmean_npp_c13            )) deallocate(cpatch%fmean_npp_c13            )         
-      if(associated(cpatch%fmean_leaf_growth_resp_c13    )) deallocate(cpatch%fmean_leaf_growth_resp_c13    )          
-      if(associated(cpatch%fmean_root_growth_resp_c13    )) deallocate(cpatch%fmean_root_growth_resp_c13    )          
-      if(associated(cpatch%fmean_sapa_growth_resp_c13    )) deallocate(cpatch%fmean_sapa_growth_resp_c13    )          
-      if(associated(cpatch%fmean_sapb_growth_resp_c13    )) deallocate(cpatch%fmean_sapb_growth_resp_c13    )          
-      if(associated(cpatch%fmean_storage_resp_c13   )) deallocate(cpatch%fmean_storage_resp_c13   )          
+      if(associated(cpatch%fmean_leaf_growth_resp_c13    )) deallocate(cpatch%fmean_leaf_growth_resp_c13    )
+      if(associated(cpatch%fmean_root_growth_resp_c13    )) deallocate(cpatch%fmean_root_growth_resp_c13    )
+      if(associated(cpatch%fmean_sapa_growth_resp_c13    )) deallocate(cpatch%fmean_sapa_growth_resp_c13    )
+      if(associated(cpatch%fmean_sapb_growth_resp_c13    )) deallocate(cpatch%fmean_sapb_growth_resp_c13    )
+      if(associated(cpatch%fmean_leaf_storage_resp_c13   )) deallocate(cpatch%fmean_leaf_storage_resp_c13   )
+      if(associated(cpatch%fmean_root_storage_resp_c13   )) deallocate(cpatch%fmean_root_storage_resp_c13   )
+      if(associated(cpatch%fmean_sapa_storage_resp_c13   )) deallocate(cpatch%fmean_sapa_storage_resp_c13   )
+      if(associated(cpatch%fmean_sapb_storage_resp_c13   )) deallocate(cpatch%fmean_sapb_storage_resp_c13   )
       if(associated(cpatch%fmean_leaf_resp_c13      )) deallocate(cpatch%fmean_leaf_resp_c13      )          
       if(associated(cpatch%fmean_root_resp_c13      )) deallocate(cpatch%fmean_root_resp_c13      )          
       if(associated(cpatch%fmean_gpp_c13            )) deallocate(cpatch%fmean_gpp_c13            )            
       if(associated(cpatch%fmean_plresp_c13         )) deallocate(cpatch%fmean_plresp_c13         )       
       
       if(associated(cpatch%dmean_npp_c13            )) deallocate(cpatch%dmean_npp_c13            )         
-      if(associated(cpatch%dmean_leaf_growth_resp_c13    )) deallocate(cpatch%dmean_leaf_growth_resp_c13    )          
-      if(associated(cpatch%dmean_root_growth_resp_c13    )) deallocate(cpatch%dmean_root_growth_resp_c13    )          
-      if(associated(cpatch%dmean_sapa_growth_resp_c13    )) deallocate(cpatch%dmean_sapa_growth_resp_c13    )          
-      if(associated(cpatch%dmean_sapb_growth_resp_c13    )) deallocate(cpatch%dmean_sapb_growth_resp_c13    )          
-      if(associated(cpatch%dmean_storage_resp_c13   )) deallocate(cpatch%dmean_storage_resp_c13   )          
+      if(associated(cpatch%dmean_leaf_growth_resp_c13    )) deallocate(cpatch%dmean_leaf_growth_resp_c13    )
+      if(associated(cpatch%dmean_root_growth_resp_c13    )) deallocate(cpatch%dmean_root_growth_resp_c13    )
+      if(associated(cpatch%dmean_sapa_growth_resp_c13    )) deallocate(cpatch%dmean_sapa_growth_resp_c13    )
+      if(associated(cpatch%dmean_sapb_growth_resp_c13    )) deallocate(cpatch%dmean_sapb_growth_resp_c13    )
+      if(associated(cpatch%dmean_leaf_storage_resp_c13   )) deallocate(cpatch%dmean_leaf_storage_resp_c13   )
+      if(associated(cpatch%dmean_root_storage_resp_c13   )) deallocate(cpatch%dmean_root_storage_resp_c13   )
+      if(associated(cpatch%dmean_sapa_storage_resp_c13   )) deallocate(cpatch%dmean_sapa_storage_resp_c13   )
+      if(associated(cpatch%dmean_sapb_storage_resp_c13   )) deallocate(cpatch%dmean_sapb_storage_resp_c13   )
       if(associated(cpatch%dmean_leaf_resp_c13      )) deallocate(cpatch%dmean_leaf_resp_c13      )          
       if(associated(cpatch%dmean_root_resp_c13      )) deallocate(cpatch%dmean_root_resp_c13      )
       if(associated(cpatch%dmean_gpp_c13            )) deallocate(cpatch%dmean_gpp_c13            )
@@ -9285,11 +9588,14 @@ module ed_state_vars
       if(associated(cpatch%mmean_bleaf_c13            )) deallocate(cpatch%mmean_bleaf_c13          )          
       if(associated(cpatch%mmean_broot_c13            )) deallocate(cpatch%mmean_broot_c13          )          
       if(associated(cpatch%mmean_bstorage_c13         )) deallocate(cpatch%mmean_bstorage_c13       )          
-      if(associated(cpatch%mmean_leaf_growth_resp_c13 )) deallocate(cpatch%mmean_leaf_growth_resp_c13    )          
-      if(associated(cpatch%mmean_root_growth_resp_c13 )) deallocate(cpatch%mmean_root_growth_resp_c13    )          
-      if(associated(cpatch%mmean_sapa_growth_resp_c13 )) deallocate(cpatch%mmean_sapa_growth_resp_c13    )          
-      if(associated(cpatch%mmean_sapb_growth_resp_c13 )) deallocate(cpatch%mmean_sapb_growth_resp_c13    )          
-      if(associated(cpatch%mmean_storage_resp_c13     )) deallocate(cpatch%mmean_storage_resp_c13   )          
+      if(associated(cpatch%mmean_leaf_growth_resp_c13 )) deallocate(cpatch%mmean_leaf_growth_resp_c13    )
+      if(associated(cpatch%mmean_root_growth_resp_c13 )) deallocate(cpatch%mmean_root_growth_resp_c13    )
+      if(associated(cpatch%mmean_sapa_growth_resp_c13 )) deallocate(cpatch%mmean_sapa_growth_resp_c13    )
+      if(associated(cpatch%mmean_sapb_growth_resp_c13 )) deallocate(cpatch%mmean_sapb_growth_resp_c13    )
+      if(associated(cpatch%mmean_leaf_storage_resp_c13)) deallocate(cpatch%mmean_leaf_storage_resp_c13   )
+      if(associated(cpatch%mmean_root_storage_resp_c13)) deallocate(cpatch%mmean_root_storage_resp_c13   )
+      if(associated(cpatch%mmean_sapa_storage_resp_c13)) deallocate(cpatch%mmean_sapa_storage_resp_c13   )
+      if(associated(cpatch%mmean_sapb_storage_resp_c13)) deallocate(cpatch%mmean_sapb_storage_resp_c13   )
       if(associated(cpatch%mmean_leaf_maintenance_c13 )) deallocate(cpatch%mmean_leaf_maintenance_c13      )          
       if(associated(cpatch%mmean_root_maintenance_c13 )) deallocate(cpatch%mmean_root_maintenance_c13      )
       if(associated(cpatch%mmean_leaf_drop_c13        )) deallocate(cpatch%mmean_leaf_drop_c13      )          
@@ -9982,6 +10288,7 @@ module ed_state_vars
       integer                                      :: n
       !------------------------------------------------------------------------------------!
 
+
       !------------------------------------------------------------------------------------!
       !     Map the indices between the input and the output vectors.                      !
       !------------------------------------------------------------------------------------!
@@ -10009,14 +10316,15 @@ module ed_state_vars
                                 ,1,isite%patch(i)%ncohorts,1,osite%patch(o)%ncohorts)
       end do                                          
       !------------------------------------------------------------------------------------!
-                                                      
+
+
       !------------------------------------------------------------------------------------!
       !      We break the subroutines into smaller pieces so Fortran doesn't complain...   !
       !------------------------------------------------------------------------------------!
       call copy_sitetype_mask_inst (isite,osite,z,lmask,isize,osize)
       call copy_sitetype_mask_fmean(isite,osite,z,lmask,isize,osize)
       if (writing_long) call copy_sitetype_mask_dmean(isite,osite,z,lmask,isize,osize)
-      if (writing_eorq) call copy_sitetype_mask_mmean(isite,osite,z,lmask,isize,osize)      
+      if (writing_eorq) call copy_sitetype_mask_mmean(isite,osite,z,lmask,isize,osize)
       if (writing_dcyc) call copy_sitetype_mask_qmean(isite,osite,z,lmask,isize,osize)
       !------------------------------------------------------------------------------------!
                                                       
@@ -10658,6 +10966,7 @@ module ed_state_vars
       !------------------------------------------------------------------------------------!
 
 
+
       do n=1,ndcycle
          !----- Scalars. ------------------------------------------------------------------!
          osite%qmean_rh            (n,1:z)  = pack(isite%qmean_rh             (n,:),lmask)
@@ -10868,7 +11177,10 @@ module ed_state_vars
          opatch%root_growth_resp      (oco) = ipatch%root_growth_resp      (ico)
          opatch%sapa_growth_resp      (oco) = ipatch%sapa_growth_resp      (ico)
          opatch%sapb_growth_resp      (oco) = ipatch%sapb_growth_resp      (ico)
-         opatch%storage_respiration   (oco) = ipatch%storage_respiration   (ico)
+         opatch%leaf_storage_resp     (oco) = ipatch%leaf_storage_resp     (ico)
+         opatch%root_storage_resp     (oco) = ipatch%root_storage_resp     (ico)
+         opatch%sapa_storage_resp     (oco) = ipatch%sapa_storage_resp     (ico)
+         opatch%sapb_storage_resp     (oco) = ipatch%sapb_storage_resp     (ico)
          opatch%monthly_dndt          (oco) = ipatch%monthly_dndt          (ico)
          opatch%monthly_dlnndt        (oco) = ipatch%monthly_dlnndt        (ico)
          opatch%krdepth               (oco) = ipatch%krdepth               (ico)
@@ -10931,7 +11243,10 @@ module ed_state_vars
          opatch%fmean_root_growth_resp(oco) = ipatch%fmean_root_growth_resp(ico)
          opatch%fmean_sapa_growth_resp(oco) = ipatch%fmean_sapa_growth_resp(ico)
          opatch%fmean_sapb_growth_resp(oco) = ipatch%fmean_sapb_growth_resp(ico)
-         opatch%fmean_storage_resp    (oco) = ipatch%fmean_storage_resp    (ico)
+         opatch%fmean_leaf_storage_resp(oco) = ipatch%fmean_leaf_storage_resp(ico)
+         opatch%fmean_root_storage_resp(oco) = ipatch%fmean_root_storage_resp(ico)
+         opatch%fmean_sapa_storage_resp(oco) = ipatch%fmean_sapa_storage_resp(ico)
+         opatch%fmean_sapb_storage_resp(oco) = ipatch%fmean_sapb_storage_resp(ico)
          opatch%fmean_plresp          (oco) = ipatch%fmean_plresp          (ico)
          opatch%fmean_leaf_energy     (oco) = ipatch%fmean_leaf_energy     (ico)
          opatch%fmean_leaf_water      (oco) = ipatch%fmean_leaf_water      (ico)
@@ -10950,6 +11265,9 @@ module ed_state_vars
          opatch%fmean_fs_open         (oco) = ipatch%fmean_fs_open         (ico)
          opatch%fmean_fsw             (oco) = ipatch%fmean_fsw             (ico)
          opatch%fmean_fsn             (oco) = ipatch%fmean_fsn             (ico)
+         opatch%fmean_a_open          (oco) = ipatch%fmean_a_open          (ico)
+         opatch%fmean_a_closed        (oco) = ipatch%fmean_a_closed        (ico)
+         opatch%fmean_a_net           (oco) = ipatch%fmean_a_net           (ico)
          opatch%fmean_A_light         (oco) = ipatch%fmean_A_light         (ico)
          opatch%fmean_A_rubp          (oco) = ipatch%fmean_A_rubp          (ico)
          opatch%fmean_A_co2           (oco) = ipatch%fmean_A_co2           (ico)
@@ -10980,6 +11298,8 @@ module ed_state_vars
          opatch%fmean_vapor_wc        (oco) = ipatch%fmean_vapor_wc        (ico)
          opatch%fmean_intercepted_aw  (oco) = ipatch%fmean_intercepted_aw  (ico)
          opatch%fmean_wshed_wg        (oco) = ipatch%fmean_wshed_wg        (ico)
+         opatch%fmean_lai             (oco) = ipatch%fmean_lai             (ico)
+         opatch%fmean_bdead           (oco) = ipatch%fmean_bdead           (ico)
          !---------------------------------------------------------------------------------!
                                                       
                                                       
@@ -11029,7 +11349,10 @@ module ed_state_vars
             opatch%dmean_root_growth_resp(oco) = ipatch%dmean_root_growth_resp(ico)
             opatch%dmean_sapa_growth_resp(oco) = ipatch%dmean_sapa_growth_resp(ico)
             opatch%dmean_sapb_growth_resp(oco) = ipatch%dmean_sapb_growth_resp(ico)
-            opatch%dmean_storage_resp    (oco) = ipatch%dmean_storage_resp    (ico)
+            opatch%dmean_leaf_storage_resp(oco) = ipatch%dmean_leaf_storage_resp(ico)
+            opatch%dmean_root_storage_resp(oco) = ipatch%dmean_root_storage_resp(ico)
+            opatch%dmean_sapa_storage_resp(oco) = ipatch%dmean_sapa_storage_resp(ico)
+            opatch%dmean_sapb_storage_resp(oco) = ipatch%dmean_sapb_storage_resp(ico)
             opatch%dmean_plresp          (oco) = ipatch%dmean_plresp          (ico)
             opatch%dmean_leaf_energy     (oco) = ipatch%dmean_leaf_energy     (ico)
             opatch%dmean_leaf_water      (oco) = ipatch%dmean_leaf_water      (ico)
@@ -11048,6 +11371,9 @@ module ed_state_vars
             opatch%dmean_fs_open         (oco) = ipatch%dmean_fs_open         (ico)
             opatch%dmean_fsw             (oco) = ipatch%dmean_fsw             (ico)
             opatch%dmean_fsn             (oco) = ipatch%dmean_fsn             (ico)
+            opatch%dmean_a_open          (oco) = ipatch%dmean_a_open          (ico)
+            opatch%dmean_a_closed        (oco) = ipatch%dmean_a_closed        (ico)
+            opatch%dmean_a_net           (oco) = ipatch%dmean_a_net           (ico)
             opatch%dmean_A_light         (oco) = ipatch%dmean_A_light         (ico)
             opatch%dmean_A_rubp          (oco) = ipatch%dmean_A_rubp          (ico)
             opatch%dmean_A_co2           (oco) = ipatch%dmean_A_co2           (ico)
@@ -11112,7 +11438,10 @@ module ed_state_vars
             opatch%mmean_root_growth_resp(oco) = ipatch%mmean_root_growth_resp(ico)
             opatch%mmean_sapa_growth_resp(oco) = ipatch%mmean_sapa_growth_resp(ico)
             opatch%mmean_sapb_growth_resp(oco) = ipatch%mmean_sapb_growth_resp(ico)
-            opatch%mmean_storage_resp    (oco) = ipatch%mmean_storage_resp    (ico)
+            opatch%mmean_leaf_storage_resp(oco) = ipatch%mmean_leaf_storage_resp(ico)
+            opatch%mmean_root_storage_resp(oco) = ipatch%mmean_root_storage_resp(ico)
+            opatch%mmean_sapa_storage_resp(oco) = ipatch%mmean_sapa_storage_resp(ico)
+            opatch%mmean_sapb_storage_resp(oco) = ipatch%mmean_sapb_storage_resp(ico)
             opatch%mmean_plresp          (oco) = ipatch%mmean_plresp          (ico)
             opatch%mmean_leaf_energy     (oco) = ipatch%mmean_leaf_energy     (ico)
             opatch%mmean_leaf_water      (oco) = ipatch%mmean_leaf_water      (ico)
@@ -11131,6 +11460,9 @@ module ed_state_vars
             opatch%mmean_fs_open         (oco) = ipatch%mmean_fs_open         (ico)
             opatch%mmean_fsw             (oco) = ipatch%mmean_fsw             (ico)
             opatch%mmean_fsn             (oco) = ipatch%mmean_fsn             (ico)
+            opatch%mmean_a_open          (oco) = ipatch%mmean_a_open          (ico)
+            opatch%mmean_a_closed        (oco) = ipatch%mmean_a_closed        (ico)
+            opatch%mmean_a_net           (oco) = ipatch%mmean_a_net           (ico)
             opatch%mmean_A_light         (oco) = ipatch%mmean_A_light         (ico)
             opatch%mmean_A_rubp          (oco) = ipatch%mmean_A_rubp          (ico)
             opatch%mmean_A_co2           (oco) = ipatch%mmean_A_co2           (ico)
@@ -11206,7 +11538,10 @@ module ed_state_vars
                opatch%qmean_root_growth_resp(n,oco) = ipatch%qmean_root_growth_resp(n,ico)
                opatch%qmean_sapa_growth_resp(n,oco) = ipatch%qmean_sapa_growth_resp(n,ico)
                opatch%qmean_sapb_growth_resp(n,oco) = ipatch%qmean_sapb_growth_resp(n,ico)
-               opatch%qmean_storage_resp    (n,oco) = ipatch%qmean_storage_resp    (n,ico)
+               opatch%qmean_leaf_storage_resp(n,oco) = ipatch%qmean_leaf_storage_resp(n,ico)
+               opatch%qmean_root_storage_resp(n,oco) = ipatch%qmean_root_storage_resp(n,ico)
+               opatch%qmean_sapa_storage_resp(n,oco) = ipatch%qmean_sapa_storage_resp(n,ico)
+               opatch%qmean_sapb_storage_resp(n,oco) = ipatch%qmean_sapb_storage_resp(n,ico)
                opatch%qmean_plresp          (n,oco) = ipatch%qmean_plresp          (n,ico)
                opatch%qmean_leaf_energy     (n,oco) = ipatch%qmean_leaf_energy     (n,ico)
                opatch%qmean_leaf_water      (n,oco) = ipatch%qmean_leaf_water      (n,ico)
@@ -11225,6 +11560,9 @@ module ed_state_vars
                opatch%qmean_fs_open         (n,oco) = ipatch%qmean_fs_open         (n,ico)
                opatch%qmean_fsw             (n,oco) = ipatch%qmean_fsw             (n,ico)
                opatch%qmean_fsn             (n,oco) = ipatch%qmean_fsn             (n,ico)
+               opatch%qmean_a_open          (n,oco) = ipatch%qmean_a_open          (n,ico)
+               opatch%qmean_a_closed        (n,oco) = ipatch%qmean_a_closed        (n,ico)
+               opatch%qmean_a_net           (n,oco) = ipatch%qmean_a_net           (n,ico)
                opatch%qmean_A_light         (n,oco) = ipatch%qmean_A_light         (n,ico)
                opatch%qmean_A_rubp          (n,oco) = ipatch%qmean_A_rubp          (n,ico)
                opatch%qmean_A_co2           (n,oco) = ipatch%qmean_A_co2           (n,ico)
@@ -11308,7 +11646,10 @@ module ed_state_vars
             opatch%root_growth_resp_c13      (oco) = ipatch%root_growth_resp_c13      (ico)          
             opatch%sapa_growth_resp_c13      (oco) = ipatch%sapa_growth_resp_c13      (ico)          
             opatch%sapb_growth_resp_c13      (oco) = ipatch%sapb_growth_resp_c13      (ico)          
-            opatch%storage_respiration_c13   (oco) = ipatch%storage_respiration_c13   (ico)          
+            opatch%leaf_storage_resp_c13     (oco) = ipatch%leaf_storage_resp_c13      (ico)          
+            opatch%root_storage_resp_c13     (oco) = ipatch%root_storage_resp_c13      (ico)          
+            opatch%sapa_storage_resp_c13     (oco) = ipatch%sapa_storage_resp_c13      (ico)          
+            opatch%sapb_storage_resp_c13     (oco) = ipatch%sapb_storage_resp_c13      (ico)          
             opatch%leaf_maintenance_c13      (oco) = ipatch%leaf_maintenance_c13      (ico)          
             opatch%root_maintenance_c13      (oco) = ipatch%root_maintenance_c13      (ico)          
             opatch%leaf_drop_c13             (oco) = ipatch%leaf_drop_c13             (ico)          
@@ -11316,24 +11657,30 @@ module ed_state_vars
             opatch%root_respiration_c13      (oco) = ipatch%root_respiration_c13      (ico)          
             opatch%gpp_c13                   (oco) = ipatch%gpp_c13                   (ico)          
 
-            opatch%fmean_npp_c13                   (oco) = ipatch%fmean_npp_c13                   (ico)         
-            opatch%fmean_leaf_growth_resp_c13    (oco) = ipatch%fmean_leaf_growth_resp_c13    (ico)          
-            opatch%fmean_root_growth_resp_c13    (oco) = ipatch%fmean_root_growth_resp_c13    (ico)          
-            opatch%fmean_sapa_growth_resp_c13    (oco) = ipatch%fmean_sapa_growth_resp_c13    (ico)          
-            opatch%fmean_sapb_growth_resp_c13    (oco) = ipatch%fmean_sapb_growth_resp_c13    (ico)          
-            opatch%fmean_storage_resp_c13   (oco) = ipatch%fmean_storage_resp_c13   (ico)          
+            opatch%fmean_npp_c13                 (oco) = ipatch%fmean_npp_c13                 (ico)
+            opatch%fmean_leaf_growth_resp_c13    (oco) = ipatch%fmean_leaf_growth_resp_c13    (ico)
+            opatch%fmean_root_growth_resp_c13    (oco) = ipatch%fmean_root_growth_resp_c13    (ico)
+            opatch%fmean_sapa_growth_resp_c13    (oco) = ipatch%fmean_sapa_growth_resp_c13    (ico)
+            opatch%fmean_sapb_growth_resp_c13    (oco) = ipatch%fmean_sapb_growth_resp_c13    (ico)
+            opatch%fmean_leaf_storage_resp_c13   (oco) = ipatch%fmean_leaf_storage_resp_c13   (ico)
+            opatch%fmean_root_storage_resp_c13   (oco) = ipatch%fmean_root_storage_resp_c13   (ico)
+            opatch%fmean_sapa_storage_resp_c13   (oco) = ipatch%fmean_sapa_storage_resp_c13   (ico)
+            opatch%fmean_sapb_storage_resp_c13   (oco) = ipatch%fmean_sapb_storage_resp_c13   (ico)
             opatch%fmean_leaf_resp_c13      (oco) = ipatch%fmean_leaf_resp_c13      (ico)          
             opatch%fmean_root_resp_c13      (oco) = ipatch%fmean_root_resp_c13      (ico)          
             opatch%fmean_gpp_c13                   (oco) = ipatch%fmean_gpp_c13                   (ico)            
             opatch%fmean_plresp_c13                (oco) = ipatch%fmean_plresp_c13                (ico)       
 
             if (writing_long) then                       
-               opatch%dmean_npp_c13                   (oco) = ipatch%dmean_npp_c13                   (ico)         
-               opatch%dmean_leaf_growth_resp_c13    (oco) = ipatch%dmean_leaf_growth_resp_c13    (ico)          
-               opatch%dmean_root_growth_resp_c13    (oco) = ipatch%dmean_root_growth_resp_c13    (ico)          
-               opatch%dmean_sapa_growth_resp_c13    (oco) = ipatch%dmean_sapa_growth_resp_c13    (ico)          
-               opatch%dmean_sapb_growth_resp_c13    (oco) = ipatch%dmean_sapb_growth_resp_c13    (ico)          
-               opatch%dmean_storage_resp_c13   (oco) = ipatch%dmean_storage_resp_c13   (ico)          
+               opatch%dmean_npp_c13                   (oco) = ipatch%dmean_npp_c13                   (ico)
+               opatch%dmean_leaf_growth_resp_c13    (oco) = ipatch%dmean_leaf_growth_resp_c13    (ico)
+               opatch%dmean_root_growth_resp_c13    (oco) = ipatch%dmean_root_growth_resp_c13    (ico)
+               opatch%dmean_sapa_growth_resp_c13    (oco) = ipatch%dmean_sapa_growth_resp_c13    (ico)
+               opatch%dmean_sapb_growth_resp_c13    (oco) = ipatch%dmean_sapb_growth_resp_c13    (ico)
+               opatch%dmean_leaf_storage_resp_c13   (oco) = ipatch%dmean_leaf_storage_resp_c13   (ico)
+               opatch%dmean_root_storage_resp_c13   (oco) = ipatch%dmean_root_storage_resp_c13   (ico)
+               opatch%dmean_sapa_storage_resp_c13   (oco) = ipatch%dmean_sapa_storage_resp_c13   (ico)
+               opatch%dmean_sapb_storage_resp_c13   (oco) = ipatch%dmean_sapb_storage_resp_c13   (ico)
                opatch%dmean_leaf_resp_c13      (oco) = ipatch%dmean_leaf_resp_c13      (ico)          
                opatch%dmean_root_resp_c13      (oco) = ipatch%dmean_root_resp_c13      (ico)
                opatch%dmean_gpp_c13                   (oco) = ipatch%dmean_gpp_c13                   (ico)
@@ -11341,15 +11688,18 @@ module ed_state_vars
             end if
             
             if (writing_eorq) then
-               opatch%mmean_npp_c13                   (oco) = ipatch%mmean_npp_c13                   (ico)         
-               opatch%mmean_bleaf_c13                 (oco) = ipatch%mmean_bleaf_c13                 (ico)          
-               opatch%mmean_broot_c13                 (oco) = ipatch%mmean_broot_c13                 (ico)          
-               opatch%mmean_bstorage_c13              (oco) = ipatch%mmean_bstorage_c13              (ico)          
-               opatch%mmean_leaf_growth_resp_c13    (oco) = ipatch%mmean_leaf_growth_resp_c13    (ico)          
-               opatch%mmean_root_growth_resp_c13    (oco) = ipatch%mmean_root_growth_resp_c13    (ico)          
-               opatch%mmean_sapa_growth_resp_c13    (oco) = ipatch%mmean_sapa_growth_resp_c13    (ico)          
-               opatch%mmean_sapb_growth_resp_c13    (oco) = ipatch%mmean_sapb_growth_resp_c13    (ico)          
-               opatch%mmean_storage_resp_c13   (oco) = ipatch%mmean_storage_resp_c13   (ico)          
+               opatch%mmean_npp_c13                   (oco) = ipatch%mmean_npp_c13                   (ico)
+               opatch%mmean_bleaf_c13                 (oco) = ipatch%mmean_bleaf_c13                 (ico)
+               opatch%mmean_broot_c13                 (oco) = ipatch%mmean_broot_c13                 (ico)
+               opatch%mmean_bstorage_c13              (oco) = ipatch%mmean_bstorage_c13              (ico)
+               opatch%mmean_leaf_growth_resp_c13    (oco) = ipatch%mmean_leaf_growth_resp_c13    (ico)
+               opatch%mmean_root_growth_resp_c13    (oco) = ipatch%mmean_root_growth_resp_c13    (ico)
+               opatch%mmean_sapa_growth_resp_c13    (oco) = ipatch%mmean_sapa_growth_resp_c13    (ico)
+               opatch%mmean_sapb_growth_resp_c13    (oco) = ipatch%mmean_sapb_growth_resp_c13    (ico)
+               opatch%mmean_leaf_storage_resp_c13   (oco) = ipatch%mmean_leaf_storage_resp_c13   (ico)
+               opatch%mmean_root_storage_resp_c13   (oco) = ipatch%mmean_root_storage_resp_c13   (ico)
+               opatch%mmean_sapa_storage_resp_c13   (oco) = ipatch%mmean_sapa_storage_resp_c13   (ico)
+               opatch%mmean_sapb_storage_resp_c13   (oco) = ipatch%mmean_sapb_storage_resp_c13   (ico)
                opatch%mmean_leaf_maintenance_c13      (oco) = ipatch%mmean_leaf_maintenance_c13      (ico)          
                opatch%mmean_root_maintenance_c13      (oco) = ipatch%mmean_root_maintenance_c13      (ico)
                opatch%mmean_leaf_drop_c13             (oco) = ipatch%mmean_leaf_drop_c13             (ico)          
@@ -11532,7 +11882,10 @@ module ed_state_vars
       opatch%root_growth_resp      (1:z) = pack(ipatch%root_growth_resp          ,lmask)
       opatch%sapa_growth_resp      (1:z) = pack(ipatch%sapa_growth_resp          ,lmask)
       opatch%sapb_growth_resp      (1:z) = pack(ipatch%sapb_growth_resp          ,lmask)
-      opatch%storage_respiration   (1:z) = pack(ipatch%storage_respiration       ,lmask)
+      opatch%leaf_storage_resp     (1:z) = pack(ipatch%leaf_storage_resp         ,lmask)
+      opatch%root_storage_resp     (1:z) = pack(ipatch%root_storage_resp         ,lmask)
+      opatch%sapa_storage_resp     (1:z) = pack(ipatch%sapa_storage_resp         ,lmask)
+      opatch%sapb_storage_resp     (1:z) = pack(ipatch%sapb_storage_resp         ,lmask)
       opatch%monthly_dndt          (1:z) = pack(ipatch%monthly_dndt              ,lmask)
       opatch%monthly_dlnndt        (1:z) = pack(ipatch%monthly_dlnndt            ,lmask)
       opatch%krdepth               (1:z) = pack(ipatch%krdepth                   ,lmask)
@@ -11635,11 +11988,14 @@ module ed_state_vars
          opatch%today_leaf_resp_c13       (1:z) = pack(ipatch%today_leaf_resp_c13       ,lmask)          
          opatch%today_root_resp_c13       (1:z) = pack(ipatch%today_root_resp_c13       ,lmask)          
          opatch%today_gpp_c13             (1:z) = pack(ipatch%today_gpp_c13             ,lmask)          
-         opatch%growth_leaf_resp_c13      (1:z) = pack(ipatch%leaf_growth_resp_c13      ,lmask)          
-         opatch%growth_root_resp_c13      (1:z) = pack(ipatch%root_growth_resp_c13      ,lmask)          
-         opatch%growth_sapa_resp_c13      (1:z) = pack(ipatch%sapa_growth_resp_c13      ,lmask)          
-         opatch%growth_sapb_resp_c13      (1:z) = pack(ipatch%sapb_growth_resp_c13      ,lmask)          
-         opatch%storage_respiration_c13   (1:z) = pack(ipatch%storage_respiration_c13   ,lmask)          
+         opatch%leaf_growth_resp_c13      (1:z) = pack(ipatch%leaf_growth_resp_c13      ,lmask)          
+         opatch%root_growth_resp_c13      (1:z) = pack(ipatch%root_growth_resp_c13      ,lmask)          
+         opatch%sapa_growth_resp_c13      (1:z) = pack(ipatch%sapa_growth_resp_c13      ,lmask)          
+         opatch%sapb_growth_resp_c13      (1:z) = pack(ipatch%sapb_growth_resp_c13      ,lmask)          
+         opatch%leaf_storage_resp_c13     (1:z) = pack(ipatch%leaf_storage_resp_c13     ,lmask)          
+         opatch%root_storage_resp_c13     (1:z) = pack(ipatch%root_storage_resp_c13     ,lmask)          
+         opatch%sapa_storage_resp_c13     (1:z) = pack(ipatch%sapa_storage_resp_c13     ,lmask)          
+         opatch%sapb_storage_resp_c13     (1:z) = pack(ipatch%sapb_storage_resp_c13     ,lmask)          
          opatch%leaf_maintenance_c13      (1:z) = pack(ipatch%leaf_maintenance_c13      ,lmask)          
          opatch%root_maintenance_c13      (1:z) = pack(ipatch%root_maintenance_c13      ,lmask)          
          opatch%leaf_drop_c13             (1:z) = pack(ipatch%leaf_drop_c13             ,lmask)          
@@ -11688,7 +12044,10 @@ module ed_state_vars
       opatch%fmean_root_growth_resp(1:z) = pack(ipatch%fmean_root_growth_resp    ,lmask)
       opatch%fmean_sapa_growth_resp(1:z) = pack(ipatch%fmean_sapa_growth_resp    ,lmask)
       opatch%fmean_sapb_growth_resp(1:z) = pack(ipatch%fmean_sapb_growth_resp    ,lmask)
-      opatch%fmean_storage_resp    (1:z) = pack(ipatch%fmean_storage_resp        ,lmask)
+      opatch%fmean_leaf_storage_resp(1:z) = pack(ipatch%fmean_leaf_storage_resp  ,lmask)
+      opatch%fmean_root_storage_resp(1:z) = pack(ipatch%fmean_root_storage_resp  ,lmask)
+      opatch%fmean_sapa_storage_resp(1:z) = pack(ipatch%fmean_sapa_storage_resp  ,lmask)
+      opatch%fmean_sapb_storage_resp(1:z) = pack(ipatch%fmean_sapb_storage_resp  ,lmask)
       opatch%fmean_plresp          (1:z) = pack(ipatch%fmean_plresp              ,lmask)
       opatch%fmean_leaf_energy     (1:z) = pack(ipatch%fmean_leaf_energy         ,lmask)
       opatch%fmean_leaf_water      (1:z) = pack(ipatch%fmean_leaf_water          ,lmask)
@@ -11707,6 +12066,9 @@ module ed_state_vars
       opatch%fmean_fs_open         (1:z) = pack(ipatch%fmean_fs_open             ,lmask)
       opatch%fmean_fsw             (1:z) = pack(ipatch%fmean_fsw                 ,lmask)
       opatch%fmean_fsn             (1:z) = pack(ipatch%fmean_fsn                 ,lmask)
+      opatch%fmean_a_open          (1:z) = pack(ipatch%fmean_a_open              ,lmask)
+      opatch%fmean_a_closed        (1:z) = pack(ipatch%fmean_a_closed            ,lmask)
+      opatch%fmean_a_net           (1:z) = pack(ipatch%fmean_a_net               ,lmask)
       opatch%fmean_A_light         (1:z) = pack(ipatch%fmean_A_light             ,lmask)
       opatch%fmean_A_rubp          (1:z) = pack(ipatch%fmean_A_rubp              ,lmask)
       opatch%fmean_A_co2           (1:z) = pack(ipatch%fmean_A_co2               ,lmask)
@@ -11737,6 +12099,8 @@ module ed_state_vars
       opatch%fmean_vapor_wc        (1:z) = pack(ipatch%fmean_vapor_wc            ,lmask)
       opatch%fmean_intercepted_aw  (1:z) = pack(ipatch%fmean_intercepted_aw      ,lmask)
       opatch%fmean_wshed_wg        (1:z) = pack(ipatch%fmean_wshed_wg            ,lmask)
+      opatch%fmean_lai             (1:z) = pack(ipatch%fmean_lai                 ,lmask)
+      opatch%fmean_bdead           (1:z) = pack(ipatch%fmean_bdead               ,lmask)
       !------------------------------------------------------------------------------------!
       
       !----- C Isotope Vars ---------------------------------------------------------------!
@@ -11747,12 +12111,15 @@ module ed_state_vars
          end if            
       end if
       if (c13af > 0) then
-         opatch%fmean_npp_c13                   (1:z) = pack(ipatch%fmean_npp_c13                   ,lmask)         
-         opatch%fmean_leaf_growth_resp_c13    (1:z) = pack(ipatch%fmean_leaf_growth_resp_c13    ,lmask)          
-         opatch%fmean_root_growth_resp_c13    (1:z) = pack(ipatch%fmean_root_growth_resp_c13    ,lmask)          
-         opatch%fmean_sapa_growth_resp_c13    (1:z) = pack(ipatch%fmean_sapa_growth_resp_c13    ,lmask)          
-         opatch%fmean_sapb_growth_resp_c13    (1:z) = pack(ipatch%fmean_sapb_growth_resp_c13    ,lmask)          
-         opatch%fmean_storage_resp_c13   (1:z) = pack(ipatch%fmean_storage_resp_c13   ,lmask)          
+         opatch%fmean_npp_c13                   (1:z) = pack(ipatch%fmean_npp_c13                   ,lmask)
+         opatch%fmean_leaf_growth_resp_c13    (1:z) = pack(ipatch%fmean_leaf_growth_resp_c13    ,lmask)
+         opatch%fmean_root_growth_resp_c13    (1:z) = pack(ipatch%fmean_root_growth_resp_c13    ,lmask)
+         opatch%fmean_sapa_growth_resp_c13    (1:z) = pack(ipatch%fmean_sapa_growth_resp_c13    ,lmask)
+         opatch%fmean_sapb_growth_resp_c13    (1:z) = pack(ipatch%fmean_sapb_growth_resp_c13    ,lmask)
+         opatch%fmean_leaf_storage_resp_c13    (1:z) = pack(ipatch%fmean_leaf_storage_resp_c13    ,lmask)
+         opatch%fmean_root_storage_resp_c13    (1:z) = pack(ipatch%fmean_root_storage_resp_c13    ,lmask)
+         opatch%fmean_sapa_storage_resp_c13    (1:z) = pack(ipatch%fmean_sapa_storage_resp_c13    ,lmask)
+         opatch%fmean_sapb_storage_resp_c13    (1:z) = pack(ipatch%fmean_sapb_storage_resp_c13    ,lmask)
          opatch%fmean_leaf_resp_c13      (1:z) = pack(ipatch%fmean_leaf_resp_c13      ,lmask)          
          opatch%fmean_root_resp_c13      (1:z) = pack(ipatch%fmean_root_resp_c13      ,lmask)          
          opatch%fmean_gpp_c13                   (1:z) = pack(ipatch%fmean_gpp_c13                   ,lmask)            
@@ -11813,7 +12180,10 @@ module ed_state_vars
       opatch%dmean_root_growth_resp(1:z) = pack(ipatch%dmean_root_growth_resp    ,lmask)
       opatch%dmean_sapa_growth_resp(1:z) = pack(ipatch%dmean_sapa_growth_resp    ,lmask)
       opatch%dmean_sapb_growth_resp(1:z) = pack(ipatch%dmean_sapb_growth_resp    ,lmask)
-      opatch%dmean_storage_resp    (1:z) = pack(ipatch%dmean_storage_resp        ,lmask)
+      opatch%dmean_leaf_storage_resp(1:z) = pack(ipatch%dmean_leaf_storage_resp  ,lmask)
+      opatch%dmean_root_storage_resp(1:z) = pack(ipatch%dmean_root_storage_resp  ,lmask)
+      opatch%dmean_sapa_storage_resp(1:z) = pack(ipatch%dmean_sapa_storage_resp  ,lmask)
+      opatch%dmean_sapb_storage_resp(1:z) = pack(ipatch%dmean_sapb_storage_resp  ,lmask)
       opatch%dmean_plresp          (1:z) = pack(ipatch%dmean_plresp              ,lmask)
       opatch%dmean_leaf_energy     (1:z) = pack(ipatch%dmean_leaf_energy         ,lmask)
       opatch%dmean_leaf_water      (1:z) = pack(ipatch%dmean_leaf_water          ,lmask)
@@ -11832,6 +12202,9 @@ module ed_state_vars
       opatch%dmean_fs_open         (1:z) = pack(ipatch%dmean_fs_open             ,lmask)
       opatch%dmean_fsw             (1:z) = pack(ipatch%dmean_fsw                 ,lmask)
       opatch%dmean_fsn             (1:z) = pack(ipatch%dmean_fsn                 ,lmask)
+      opatch%dmean_a_open          (1:z) = pack(ipatch%dmean_a_open              ,lmask)
+      opatch%dmean_a_closed        (1:z) = pack(ipatch%dmean_a_closed            ,lmask)
+      opatch%dmean_a_net           (1:z) = pack(ipatch%dmean_a_net               ,lmask)
       opatch%dmean_A_light         (1:z) = pack(ipatch%dmean_A_light             ,lmask)
       opatch%dmean_A_rubp          (1:z) = pack(ipatch%dmean_A_rubp              ,lmask)
       opatch%dmean_A_co2           (1:z) = pack(ipatch%dmean_A_co2               ,lmask)
@@ -11874,11 +12247,14 @@ module ed_state_vars
       end if
       if (c13af > 0) then
          opatch%dmean_npp_c13                   (1:z) = pack(ipatch%dmean_npp_c13                   ,lmask)         
-         opatch%dmean_leaf_growth_resp_c13    (1:z) = pack(ipatch%dmean_leaf_growth_resp_c13    ,lmask)          
-         opatch%dmean_root_growth_resp_c13    (1:z) = pack(ipatch%dmean_root_growth_resp_c13    ,lmask)          
-         opatch%dmean_sapa_growth_resp_c13    (1:z) = pack(ipatch%dmean_sapa_growth_resp_c13    ,lmask)          
-         opatch%dmean_sapb_growth_resp_c13    (1:z) = pack(ipatch%dmean_sapb_growth_resp_c13    ,lmask)          
-         opatch%dmean_storage_resp_c13   (1:z) = pack(ipatch%dmean_storage_resp_c13   ,lmask)          
+         opatch%dmean_leaf_growth_resp_c13    (1:z) = pack(ipatch%dmean_leaf_growth_resp_c13    ,lmask)
+         opatch%dmean_root_growth_resp_c13    (1:z) = pack(ipatch%dmean_root_growth_resp_c13    ,lmask)
+         opatch%dmean_sapa_growth_resp_c13    (1:z) = pack(ipatch%dmean_sapa_growth_resp_c13    ,lmask)
+         opatch%dmean_sapb_growth_resp_c13    (1:z) = pack(ipatch%dmean_sapb_growth_resp_c13    ,lmask)
+         opatch%dmean_leaf_storage_resp_c13    (1:z) = pack(ipatch%dmean_leaf_storage_resp_c13    ,lmask)
+         opatch%dmean_root_storage_resp_c13    (1:z) = pack(ipatch%dmean_root_storage_resp_c13    ,lmask)
+         opatch%dmean_sapa_storage_resp_c13    (1:z) = pack(ipatch%dmean_sapa_storage_resp_c13    ,lmask)
+         opatch%dmean_sapb_storage_resp_c13    (1:z) = pack(ipatch%dmean_sapb_storage_resp_c13    ,lmask)
          opatch%dmean_leaf_resp_c13      (1:z) = pack(ipatch%dmean_leaf_resp_c13      ,lmask)          
          opatch%dmean_root_resp_c13      (1:z) = pack(ipatch%dmean_root_resp_c13      ,lmask)
          opatch%dmean_gpp_c13                   (1:z) = pack(ipatch%dmean_gpp_c13                   ,lmask)
@@ -11941,7 +12317,10 @@ module ed_state_vars
       opatch%mmean_root_growth_resp(1:z) = pack(ipatch%mmean_root_growth_resp    ,lmask)
       opatch%mmean_sapa_growth_resp(1:z) = pack(ipatch%mmean_sapa_growth_resp    ,lmask)
       opatch%mmean_sapb_growth_resp(1:z) = pack(ipatch%mmean_sapb_growth_resp    ,lmask)
-      opatch%mmean_storage_resp    (1:z) = pack(ipatch%mmean_storage_resp        ,lmask)
+      opatch%mmean_leaf_storage_resp(1:z) = pack(ipatch%mmean_leaf_storage_resp  ,lmask)
+      opatch%mmean_root_storage_resp(1:z) = pack(ipatch%mmean_root_storage_resp  ,lmask)
+      opatch%mmean_sapa_storage_resp(1:z) = pack(ipatch%mmean_sapa_storage_resp  ,lmask)
+      opatch%mmean_sapb_storage_resp(1:z) = pack(ipatch%mmean_sapb_storage_resp  ,lmask)
       opatch%mmean_plresp          (1:z) = pack(ipatch%mmean_plresp              ,lmask)
       opatch%mmean_leaf_energy     (1:z) = pack(ipatch%mmean_leaf_energy         ,lmask)
       opatch%mmean_leaf_water      (1:z) = pack(ipatch%mmean_leaf_water          ,lmask)
@@ -11960,6 +12339,9 @@ module ed_state_vars
       opatch%mmean_fs_open         (1:z) = pack(ipatch%mmean_fs_open             ,lmask)
       opatch%mmean_fsw             (1:z) = pack(ipatch%mmean_fsw                 ,lmask)
       opatch%mmean_fsn             (1:z) = pack(ipatch%mmean_fsn                 ,lmask)
+      opatch%mmean_a_open          (1:z) = pack(ipatch%mmean_a_open              ,lmask)
+      opatch%mmean_a_closed        (1:z) = pack(ipatch%mmean_a_closed            ,lmask)
+      opatch%mmean_a_net           (1:z) = pack(ipatch%mmean_a_net               ,lmask)
       opatch%mmean_A_light         (1:z) = pack(ipatch%mmean_A_light             ,lmask)
       opatch%mmean_A_rubp          (1:z) = pack(ipatch%mmean_A_rubp              ,lmask)
       opatch%mmean_A_co2           (1:z) = pack(ipatch%mmean_A_co2               ,lmask)
@@ -12033,12 +12415,15 @@ module ed_state_vars
          opatch%mmean_npp_c13                   (1:z) = pack(ipatch%mmean_npp_c13                   ,lmask)         
          opatch%mmean_bleaf_c13                 (1:z) = pack(ipatch%mmean_bleaf_c13                 ,lmask)
          opatch%mmean_broot_c13                 (1:z) = pack(ipatch%mmean_broot_c13                 ,lmask)          
-         opatch%mmean_bstorage_c13              (1:z) = pack(ipatch%mmean_bstorage_c13              ,lmask)          
-         opatch%mmean_gleaf_rowth_resp_c13      (1:z) = pack(ipatch%mmean_leaf_growth_resp_c13      ,lmask)          
-         opatch%mmean_groot_rowth_resp_c13      (1:z) = pack(ipatch%mmean_root_growth_resp_c13      ,lmask)          
-         opatch%mmean_gsapa_rowth_resp_c13      (1:z) = pack(ipatch%mmean_sapa_growth_resp_c13      ,lmask)          
-         opatch%mmean_gsapb_rowth_resp_c13      (1:z) = pack(ipatch%mmean_sapb_growth_resp_c13      ,lmask)          
-         opatch%mmean_storage_resp_c13          (1:z) = pack(ipatch%mmean_storage_resp_c13          ,lmask)          
+         opatch%mmean_bstorage_c13              (1:z) = pack(ipatch%mmean_bstorage_c13              ,lmask)
+         opatch%mmean_leaf_growth_resp_c13      (1:z) = pack(ipatch%mmean_leaf_growth_resp_c13      ,lmask)
+         opatch%mmean_root_growth_resp_c13      (1:z) = pack(ipatch%mmean_root_growth_resp_c13      ,lmask)
+         opatch%mmean_sapa_growth_resp_c13      (1:z) = pack(ipatch%mmean_sapa_growth_resp_c13      ,lmask)
+         opatch%mmean_sapb_growth_resp_c13      (1:z) = pack(ipatch%mmean_sapb_growth_resp_c13      ,lmask)
+         opatch%mmean_leaf_storage_resp_c13     (1:z) = pack(ipatch%mmean_leaf_storage_resp_c13      ,lmask)
+         opatch%mmean_root_storage_resp_c13     (1:z) = pack(ipatch%mmean_root_storage_resp_c13      ,lmask)
+         opatch%mmean_sapa_storage_resp_c13     (1:z) = pack(ipatch%mmean_sapa_storage_resp_c13      ,lmask)
+         opatch%mmean_sapb_storage_resp_c13     (1:z) = pack(ipatch%mmean_sapb_storage_resp_c13      ,lmask)
          opatch%mmean_leaf_maintenance_c13      (1:z) = pack(ipatch%mmean_leaf_maintenance_c13      ,lmask)          
          opatch%mmean_root_maintenance_c13      (1:z) = pack(ipatch%mmean_root_maintenance_c13      ,lmask)
          opatch%mmean_leaf_drop_c13             (1:z) = pack(ipatch%mmean_leaf_drop_c13             ,lmask)          
@@ -12089,7 +12474,10 @@ module ed_state_vars
          opatch%qmean_root_growth_resp(n,1:z) = pack(ipatch%qmean_root_growth_resp(n,:),lmask)
          opatch%qmean_sapa_growth_resp(n,1:z) = pack(ipatch%qmean_sapa_growth_resp(n,:),lmask)
          opatch%qmean_sapb_growth_resp(n,1:z) = pack(ipatch%qmean_sapb_growth_resp(n,:),lmask)
-         opatch%qmean_storage_resp  (n,1:z) = pack(ipatch%qmean_storage_resp  (n,:),lmask)
+         opatch%qmean_leaf_storage_resp(n,1:z) = pack(ipatch%qmean_leaf_storage_resp(n,:),lmask)
+         opatch%qmean_root_storage_resp(n,1:z) = pack(ipatch%qmean_root_storage_resp(n,:),lmask)
+         opatch%qmean_sapa_storage_resp(n,1:z) = pack(ipatch%qmean_sapa_storage_resp(n,:),lmask)
+         opatch%qmean_sapb_storage_resp(n,1:z) = pack(ipatch%qmean_sapb_storage_resp(n,:),lmask)
          opatch%qmean_plresp        (n,1:z) = pack(ipatch%qmean_plresp        (n,:),lmask)
          opatch%qmean_leaf_energy   (n,1:z) = pack(ipatch%qmean_leaf_energy   (n,:),lmask)
          opatch%qmean_leaf_water    (n,1:z) = pack(ipatch%qmean_leaf_water    (n,:),lmask)
@@ -12108,6 +12496,9 @@ module ed_state_vars
          opatch%qmean_fs_open       (n,1:z) = pack(ipatch%qmean_fs_open       (n,:),lmask)
          opatch%qmean_fsw           (n,1:z) = pack(ipatch%qmean_fsw           (n,:),lmask)
          opatch%qmean_fsn           (n,1:z) = pack(ipatch%qmean_fsn           (n,:),lmask)
+         opatch%qmean_a_open        (n,1:z) = pack(ipatch%qmean_a_open        (n,:),lmask)
+         opatch%qmean_a_closed      (n,1:z) = pack(ipatch%qmean_a_closed      (n,:),lmask)
+         opatch%qmean_a_net         (n,1:z) = pack(ipatch%qmean_a_net         (n,:),lmask)
          opatch%qmean_A_light       (n,1:z) = pack(ipatch%qmean_A_light       (n,:),lmask)
          opatch%qmean_A_rubp        (n,1:z) = pack(ipatch%qmean_A_rubp        (n,:),lmask)
          opatch%qmean_A_co2         (n,1:z) = pack(ipatch%qmean_A_co2         (n,:),lmask)
@@ -12988,7 +13379,7 @@ module ed_state_vars
          nvar=nvar+1                                  
          call vtable_edio_r(npts,cgrid%zbar                                                &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'ZBAR :11:hist:anal')     
+                           ,'ZBAR :11:hist:anal:opti') 
          call metadata_edio(nvar,igr,'Polygon average water table depth','[m]','(ipoly)')
       end if                                          
                                                       
@@ -13036,7 +13427,7 @@ module ed_state_vars
       if (associated(cgrid%total_agb)) then           
          nvar=nvar+1                                  
          call vtable_edio_r(npts,cgrid%total_agb,nvar,igr,init,cgrid%pyglob_id, &
-              var_len,var_len_global,max_ptrs,'TOTAL_AGB :11:hist:anal:year') 
+              var_len,var_len_global,max_ptrs,'TOTAL_AGB :11:hist:anal:year:opti') 
          call metadata_edio(nvar,igr,'Polygon Total Above Ground Biomass','[kgC/m2]','ipoly')
       end if                                          
                                                       
@@ -13286,7 +13677,7 @@ module ed_state_vars
          nvar = nvar + 1                              
          call vtable_edio_r(npts,cgrid%fast_soil_c                                         &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FAST_SOIL_C_PY     :11:hist:anal:dail')
+                           ,'FAST_SOIL_C_PY     :11:hist:anal:dail:opti')
          call metadata_edio(nvar,igr,'Soil Carbon (Fast pool)'                             &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
@@ -13294,7 +13685,7 @@ module ed_state_vars
          nvar = nvar + 1                              
          call vtable_edio_r(npts,cgrid%slow_soil_c                                         &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'SLOW_SOIL_C_PY     :11:hist:anal:dail')
+                           ,'SLOW_SOIL_C_PY     :11:hist:anal:dail:opti')
          call metadata_edio(nvar,igr,'Soil Carbon (Slow pool)'                             &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
@@ -13302,7 +13693,7 @@ module ed_state_vars
          nvar = nvar + 1                              
          call vtable_edio_r(npts,cgrid%struct_soil_c                                       &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'STRUCT_SOIL_C_PY   :11:hist:anal:dail')
+                           ,'STRUCT_SOIL_C_PY   :11:hist:anal:dail:opti')
          call metadata_edio(nvar,igr,'Soil Carbon (Structural pool)'                       &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
@@ -13386,11 +13777,11 @@ module ed_state_vars
       !------------------------------------------------------------------------------------!
       !      Decide whether to write the sub-daily means to the history file.              !
       !------------------------------------------------------------------------------------!
-      if (history_fast) then                          
-         fast_keys = 'hist:anal'                      
-      else                                            
-         fast_keys = 'anal'                           
-      end if                                          
+      if (history_fast) then
+         fast_keys = 'hist:anal:opti'
+      else
+         fast_keys = 'anal:opti'
+      end if
       !------------------------------------------------------------------------------------!
                                                       
                                                       
@@ -13400,10 +13791,8 @@ module ed_state_vars
       !     This is the 1-D block.  All variables must have the number of points defined   !
       ! by npts.                                                                           !
       !------------------------------------------------------------------------------------!
-      npts = cgrid%npolygons                          
-                                                      
-                                                      
-                                                      
+      npts = cgrid%npolygons
+
       if (associated(cgrid%fmean_gpp             )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_gpp                                           &
@@ -13458,13 +13847,13 @@ module ed_state_vars
                            ,'Sub-daily mean - Leaf growth respiration'                     &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if
-      if (associated(cgrid%fmean_storage_resp    )) then
-         nvar = nvar+1                                
-         call vtable_edio_r(npts,cgrid%fmean_storage_resp                                  &
+      if (associated(cgrid%fmean_leaf_growth_resp_c13 )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_leaf_growth_resp_c13                          &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_STORAGE_RESP_PY      :11:opti:'//trim(fast_keys)     )
+                           ,'FMEAN_LEAF_GROWTH_RESP_C13_PY   :11:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Sub-daily mean - Storage respiration'                         &
+                           ,'Sub-daily mean - Leaf growth respiration'                     &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if
       if (associated(cgrid%fmean_root_growth_resp )) then
@@ -13472,6 +13861,15 @@ module ed_state_vars
          call vtable_edio_r(npts,cgrid%fmean_root_growth_resp                              &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'FMEAN_ROOT_GROWTH_RESP_PY   :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Root growth respiration'                     &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_root_growth_resp_c13 )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_root_growth_resp_c13                          &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_ROOT_GROWTH_RESP_C13_PY   :11:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Root growth respiration'                     &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -13485,6 +13883,15 @@ module ed_state_vars
                            ,'Sub-daily mean - Aboveground sapwood growth respiration'      &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if
+      if (associated(cgrid%fmean_sapa_growth_resp_c13 )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_sapa_growth_resp_c13                          &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_SAPA_GROWTH_RESP_C13_PY   :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Aboveground sapwood growth respiration'      &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
       if (associated(cgrid%fmean_sapb_growth_resp )) then
          nvar = nvar+1
          call vtable_edio_r(npts,cgrid%fmean_sapb_growth_resp                              &
@@ -13494,15 +13901,87 @@ module ed_state_vars
                            ,'Sub-daily mean - Belowground sapwood growth respiration'      &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if
-      if (associated(cgrid%fmean_storage_resp    )) then
+      if (associated(cgrid%fmean_sapb_growth_resp_c13 )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cgrid%fmean_storage_resp                                  &
+         call vtable_edio_r(npts,cgrid%fmean_sapb_growth_resp_c13                          &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'FMEAN_STORAGE_RESP_PY      :11:'//trim(fast_keys)     )
+                           ,'FMEAN_SAPB_GROWTH_RESP_C13_PY   :11:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Sub-daily mean - Storage respiration'                         &
+                           ,'Sub-daily mean - Belowground sapwood growth respiration'      &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
-      end if                                          
+      end if
+      if (associated(cgrid%fmean_leaf_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_leaf_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_LEAF_STORAGE_RESP_PY      :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Leaf storage respiration'                    &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_leaf_storage_resp_c13    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_leaf_storage_resp_c13                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_LEAF_STORAGE_RESP_C13_PY   :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Leaf storage respiration'                    &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_root_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_ROOT_STORAGE_RESP_PY      :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Root storage respiration'                    &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_root_storage_resp_c13    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_root_storage_resp_c13                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_ROOT_STORAGE_RESP_C13_PY    :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Root storage respiration'                    &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_sapa_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_SAPA_STORAGE_RESP_PY      :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Aboveground Sapwood storage respiration'     &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_sapa_storage_resp_c13    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_sapa_storage_resp_c13                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_SAPA_STORAGE_RESP_C13_PY  :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Aboveground Sapwood storage respiration'     &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_sapb_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_SAPB_STORAGE_RESP_PY      :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Belowground Sapwood storage respiration'     &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_sapb_storage_resp_c13    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_sapb_storage_resp_c13                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_SAPB_STORAGE_RESP_C13_PY  :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Belowground Sapwood storage respiration'     &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
       if (associated(cgrid%fmean_plresp          )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_plresp                                        &
@@ -13664,6 +14143,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Nitrogen stress'                             &
                            ,'[         --]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_A_open          )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_A_open                                        &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_A_OPEN_PY          :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Assimilation rate (no soil moist. stress)'   &
+                           ,'[umol/m2/s]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_A_closed        )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_A_closed                                      &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_A_CLOSED_PY        :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Minimum assimilation rate'                   &
+                           ,'[umol/m2/s]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_A_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_A_net                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_A_NET_PY          :11:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Actual assimilation rate'                    &
+                           ,'[umol/m2/s]','(ipoly)'            )
       end if
       if (associated(cgrid%fmean_A_light         )) then
          nvar = nvar+1
@@ -14537,11 +15043,28 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Skin temperature'                            &
                            ,'[          K]','(ipoly)'            )
-      end if                                          
-      !------------------------------------------------------------------------------------!
-                                                      
-      return                                          
-   end subroutine filltab_edtype_p11fmean             
+      end if
+      if (associated(cgrid%fmean_lai)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_lai                                           &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_LAI_PY  :11:'//trim(fast_keys)  )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - LAI'					   &
+                           ,'[           m2/m2]','(ipoly)'            )
+      end if
+      if (associated(cgrid%fmean_skin_temp)) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%fmean_bdead                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_BDEAD_PY  :11:'//trim(fast_keys)  )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Dead biomass'                                &
+                           ,'[          kg/plant]','(ipoly)'            )
+      end if
+
+      return
+   end subroutine filltab_edtype_p11fmean
    !=======================================================================================!
    !=======================================================================================!
                                                       
@@ -14775,13 +15298,40 @@ module ed_state_vars
                            ,'Daily mean - Belowground sapwood growth respiration'          &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if
-      if (associated(cgrid%dmean_storage_resp    )) then
+      if (associated(cgrid%dmean_leaf_storage_resp    )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cgrid%dmean_storage_resp                                  &
+         call vtable_edio_r(npts,cgrid%dmean_leaf_storage_resp                             &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'DMEAN_STORAGE_RESP_PY      :11:'//trim(dail_keys)     )
+                           ,'DMEAN_LEAF_STORAGE_RESP_PY      :11:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Daily mean - Storage respiration'                             &
+                           ,'Daily mean - Leaf storage respiration'                        &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_root_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_ROOT_STORAGE_RESP_PY      :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Root Storage respiration'                        &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_sapa_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_SAPB_STORAGE_RESP_PY      :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Aboveground Sapwood Storage respiration'         &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_sapb_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_SAPB_STORAGE_RESP_PY      :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Belowground Sapwood Storage respiration'         &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if                                          
       if (associated(cgrid%dmean_plresp          )) then
@@ -14945,6 +15495,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Nitrogen stress'                                 &
                            ,'[         --]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_A_open          )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_A_open                                        &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_A_OPEN_PY          :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Assimilation rate (no soil moist. stress)'       &
+                           ,'[umol/m2/s]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_A_closed        )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_A_closed                                      &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_A_CLOSED_PY        :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Minimum assimilation rate'                       &
+                           ,'[umol/m2/s]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_A_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_A_net                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_A_NET_PY          :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Actual assimilation rate'                        &
+                           ,'[umol/m2/s]','(ipoly)'            )
       end if
       if (associated(cgrid%dmean_A_light         )) then
          nvar = nvar+1
@@ -15912,13 +16489,40 @@ module ed_state_vars
                            ,'Monthly mean - Belowground sapwood growth respiration'        &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if
-      if (associated(cgrid%mmean_storage_resp    )) then
+      if (associated(cgrid%mmean_leaf_storage_resp    )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cgrid%mmean_storage_resp                                  &
+         call vtable_edio_r(npts,cgrid%mmean_leaf_storage_resp                             &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'MMEAN_STORAGE_RESP_PY      :11:'//trim(eorq_keys))
+                           ,'MMEAN_LEAF_STORAGE_RESP_PY      :11:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
-                           ,'Monthly mean - Storage respiration'                           &
+                           ,'Monthly mean - Leaf Storage respiration'                      &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%mmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%mmean_root_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_ROOT_STORAGE_RESP_PY      :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Root storage respiration'                      &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%mmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%mmean_sapa_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_SAPA_STORAGE_RESP_PY      :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Aboveground Sapwood storage respiration'       &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if
+      if (associated(cgrid%mmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%mmean_sapb_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_SAPB_STORAGE_RESP_PY      :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Belowground Sapwood Storage respiration'       &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if                                          
       if (associated(cgrid%mmean_plresp          )) then
@@ -16082,6 +16686,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Nitrogen stress'                               &
                            ,'[         --]','(ipoly)'            )
+      end if
+      if (associated(cgrid%mmean_A_open          )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%mmean_A_open                                        &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_A_OPEN_PY          :11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Assimilation rate (no soil moist. stress)'     &
+                           ,'[umol/m2/s]','(ipoly)'            )
+      end if
+      if (associated(cgrid%mmean_A_closed        )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%mmean_A_closed                                      &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_A_CLOSED_PY        :11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Minimum assimilation rate'                     &
+                           ,'[umol/m2/s]','(ipoly)'            )
+      end if
+      if (associated(cgrid%mmean_A_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%mmean_A_net                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_A_NET_PY          :11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Actual assimilation rate'                      &
+                           ,'[umol/m2/s]','(ipoly)'            )
       end if
       if (associated(cgrid%mmean_A_light         )) then
          nvar = nvar+1
@@ -17434,13 +18065,40 @@ module ed_state_vars
                            ,'Mean diel - Belowground Sapwood Growth respiration'           &
                            ,'[  kgC/m2/yr]','(ndcycle,ipoly)'    )
       end if
-      if (associated(cgrid%qmean_storage_resp    )) then
+      if (associated(cgrid%qmean_leaf_storage_resp    )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cgrid%qmean_storage_resp                                  &
+         call vtable_edio_r(npts,cgrid%qmean_leaf_storage_resp                             &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'QMEAN_STORAGE_RESP_PY     :-11:'//trim(eorq_keys)     )
+                           ,'QMEAN_LEAF_STORAGE_RESP_PY     :-11:'//trim(eorq_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Mean diel - Storage respiration'                              &
+                           ,'Mean diel - Leaf storage respiration'                         &
+                           ,'[  kgC/m2/yr]','(ndcycle,ipoly)'    )
+      end if
+      if (associated(cgrid%qmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%qmean_root_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'QMEAN_ROOT_STORAGE_RESP_PY     :-11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Root Storage respiration'                         &
+                           ,'[  kgC/m2/yr]','(ndcycle,ipoly)'    )
+      end if
+      if (associated(cgrid%qmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%qmean_sapa_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'QMEAN_SAPA_STORAGE_RESP_PY     :-11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Aboveground Sapwood Storage respiration'          &
+                           ,'[  kgC/m2/yr]','(ndcycle,ipoly)'    )
+      end if
+      if (associated(cgrid%qmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%qmean_sapb_storage_resp                             &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'QMEAN_SAPB_STORAGE_RESP_PY     :-11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Belowground Sapwood Storage respiration'          &
                            ,'[  kgC/m2/yr]','(ndcycle,ipoly)'    )
       end if                                          
       if (associated(cgrid%qmean_plresp          )) then
@@ -17604,6 +18262,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Mean diel - Nitrogen stress'                                  &
                            ,'[         --]','(ndcycle,ipoly)'    )
+      end if
+      if (associated(cgrid%qmean_A_open          )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%qmean_A_open                                        &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'QMEAN_A_OPEN_PY          :-11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Assimilation rate (no soil moist. stress)'        &
+                           ,'[umol/m2/s]','(ndcycle,ipoly)'      )
+      end if
+      if (associated(cgrid%qmean_A_closed        )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%qmean_A_closed                                      &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'QMEAN_A_CLOSED_PY        :-11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Minimum assimilation rate'                        &
+                           ,'[umol/m2/s]','(ndcycle,ipoly)'      )
+      end if
+      if (associated(cgrid%qmean_A_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%qmean_A_net                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'QMEAN_A_NET_PY          :-11:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Actual assimilation rate'                         &
+                           ,'[umol/m2/s]','(ndcycle,ipoly)'      )
       end if
       if (associated(cgrid%qmean_A_light         )) then
          nvar = nvar+1
@@ -18657,26 +19342,26 @@ module ed_state_vars
       !------------------------------------------------------------------------------------!
       !      Decide whether to write fast, daily, and monthly mean variables to history.   !
       !------------------------------------------------------------------------------------!
-      if (history_fast) then                          
-         fast_keys = 'hist:anal'                      
-      else                                            
-         fast_keys = 'anal'                           
-      end if                                          
-      if (history_dail) then                          
-         dail_keys = 'hist:dail'                      
-      else                                            
-         dail_keys = 'dail'                           
-      end if                                          
-      if (history_eorq) then                          
-         eorq_keys = 'hist:mont:dcyc'                 
-      else                                            
-         eorq_keys = 'mont:dcyc'                      
-      end if                                          
+      if (history_fast) then
+         fast_keys = 'hist:anal:opti'
+      else
+         fast_keys = 'anal:opti'
+      end if
+      if (history_dail) then
+         dail_keys = 'hist:dail'
+      else
+         dail_keys = 'dail'
+      end if
+      if (history_eorq) then
+         eorq_keys = 'hist:mont:dcyc'
+      else
+         eorq_keys = 'mont:dcyc'
+      end if
       !------------------------------------------------------------------------------------!
-                                                      
-                                                      
-                                                      
-                                                      
+
+
+
+
       !------------------------------------------------------------------------------------!
       !------------------------------------------------------------------------------------!
       !     This is the 2-D block, with soil layers.  All variables must have the number   !
@@ -19126,9 +19811,7 @@ module ed_state_vars
          eorq_keys = 'mont:dcyc'                      
       end if                                          
       !------------------------------------------------------------------------------------!
-                                                      
-                                                      
-                                                      
+
       !------------------------------------------------------------------------------------!
       !------------------------------------------------------------------------------------!
       !     This is the 3-D block, with PFT and size class.  All variables must have the   !
@@ -19155,7 +19838,7 @@ module ed_state_vars
          nvar = nvar + 1                              
          call vtable_edio_r(npts,cgrid%lai                                                 &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'LAI_PY         :146:hist:anal:dail')
+                           ,'LAI_PY         :146:hist:anal:dail:opti')
          call metadata_edio(nvar,igr,'Leaf area index'                                     &
                            ,'[m2leaf/m2]','(n_pft,n_dbh,ipoly)')
       end if                                          
@@ -26223,10 +26906,31 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if
 
-      if (associated(cpatch%storage_respiration)) then
+      if (associated(cpatch%leaf_storage_resp)) then
          nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%storage_respiration,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'STORAGE_RESPIRATION :41:hist:anal') 
+           call vtable_edio_r(npts,cpatch%leaf_storage_resp,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'LEAF_STORAGE_RESP :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if
+
+      if (associated(cpatch%root_storage_resp)) then
+         nvar=nvar+1
+           call vtable_edio_r(npts,cpatch%root_storage_resp,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'ROOT_STORAGE_RESP :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if
+
+      if (associated(cpatch%sapa_storage_resp)) then
+         nvar=nvar+1
+           call vtable_edio_r(npts,cpatch%sapa_storage_resp,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'SAPA_STORAGE_RESP :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if
+
+      if (associated(cpatch%sapb_storage_resp)) then
+         nvar=nvar+1
+           call vtable_edio_r(npts,cpatch%sapb_storage_resp,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'SAPB_STORAGE_RESP :41:hist:anal') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if
 
@@ -26758,13 +27462,34 @@ module ed_state_vars
            var_len,var_len_global,max_ptrs,'SAPB_GROWTH_RESP_C13 :41:hist:anal') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if                                          
-
-      if (associated(cpatch%storage_respiration_c13)) then
+      if (associated(cpatch%leaf_storage_resp_c13)) then 
          nvar=nvar+1                                  
-           call vtable_edio_r(npts,cpatch%storage_respiration_c13,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'STORAGE_RESPIRATION_C13 :41:hist:anal') 
+           call vtable_edio_r(npts,cpatch%leaf_storage_resp_c13,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'LEAF_STORAGE_RESP_C13 :41:hist:anal') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if                                          
+
+      if (associated(cpatch%root_storage_resp_c13)) then 
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,cpatch%root_storage_resp_c13,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'ROOT_STORAGE_RESP_C13 :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if                                          
+
+      if (associated(cpatch%sapa_storage_resp_c13)) then 
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,cpatch%sapa_storage_resp_c13,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'SAPA_STORAGE_RESP_C13 :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if                                          
+
+      if (associated(cpatch%sapb_storage_resp_c13)) then 
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,cpatch%sapb_storage_resp_c13,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'SAPB_STORAGE_RESP_C13 :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if                                          
+
       !------------------------------------------------------------------------------------!
 
       return                                          
@@ -26901,13 +27626,40 @@ module ed_state_vars
                            ,'Sub-daily mean - Belowground sapwood growth respiration'      &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if
-      if (associated(cpatch%fmean_storage_resp    )) then
+      if (associated(cpatch%fmean_leaf_storage_resp    )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%fmean_storage_resp                                 &
+         call vtable_edio_r(npts,cpatch%fmean_leaf_storage_resp                            &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_STORAGE_RESP_CO      :41:'//trim(fast_keys)     )
+                           ,'FMEAN_LEAF_STORAGE_RESP_CO      :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Sub-daily mean - Storage respiration'                         &
+                           ,'Sub-daily mean - Leaf Storage respiration'                    &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_root_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_ROOT_STORAGE_RESP_CO      :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Root Storage respiration'                    &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_sapa_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_SAPA_STORAGE_RESP_CO      :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Aboveground Sapwood Storage respiration'     &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_sapb_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_SAPB_STORAGE_RESP_CO      :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Belowground Sapwood Storage respiration'     &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if                                          
       if (associated(cpatch%fmean_plresp          )) then
@@ -27071,6 +27823,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Nitrogen stress'                             &
                            ,'[         --]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_a_open         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_a_open                                       &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_A_OPEN_CO             :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Assimilation rate (no soil moist. stress)'   &
+                           ,'[ umol/m2l/s]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_a_closed       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_a_closed                                     &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_A_CLOSED_CO           :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Minimum assimilation rate'                   &
+                           ,'[ umol/m2l/s]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_a_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%fmean_a_net                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_A_NET_CO               :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Actual assimilation rate'                    &
+                           ,'[ umol/m2l/s]','(icohort)'            )
       end if
       if (associated(cpatch%fmean_a_light         )) then
          nvar = nvar+1
@@ -27417,15 +28196,42 @@ module ed_state_vars
                            ,'Sub-daily mean - Growth respiration'                          &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if
-      if (associated(cpatch%fmean_storage_resp_c13    )) then
+      if (associated(cpatch%fmean_leaf_storage_resp_c13)) then
          nvar = nvar+1                                
-         call vtable_edio_r(npts,cpatch%fmean_storage_resp_c13                             &
+         call vtable_edio_r(npts,cpatch%fmean_leaf_storage_resp_c13                        &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'FMEAN_STORAGE_RESP_C13_CO      :41:'//trim(fast_keys)     )
+                           ,'FMEAN_LEAF_STORAGE_RESP_C13_CO  :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Sub-daily mean - Storage respiration'                         &
+                           ,'Sub-daily mean - Growth respiration'                          &
                            ,'[  kgC/m2/yr]','(icohort)'            )
-      end if                                          
+      end if
+      if (associated(cpatch%fmean_root_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%fmean_root_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_ROOT_STORAGE_RESP_C13_CO  :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Growth respiration'                          &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_sapa_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%fmean_sapa_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_SAPA_STORAGE_RESP_C13_CO  :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - storage respiration'                          &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%fmean_sapb_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%fmean_sapb_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'FMEAN_SAPB_STORAGE_RESP_C13_CO  :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - storage respiration'                          &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
       if (associated(cpatch%fmean_plresp_c13          )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_plresp_c13                                   &
@@ -27639,13 +28445,40 @@ module ed_state_vars
                            ,'Daily mean - Belowground sapwood growth respiration'          &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if
-      if (associated(cpatch%dmean_storage_resp    )) then
+      if (associated(cpatch%dmean_leaf_storage_resp    )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%dmean_storage_resp                                 &
+         call vtable_edio_r(npts,cpatch%dmean_leaf_storage_resp                            &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_STORAGE_RESP_CO      :41:'//trim(dail_keys)     )
+                           ,'DMEAN_LEAF_STORAGE_RESP_CO      :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Daily mean - Storage respiration'                             &
+                           ,'Daily mean - Leaf Storage respiration'                        &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_root_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_ROOT_STORAGE_RESP_CO      :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Root storage respiration'                        &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_sapa_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_SAPA_STORAGE_RESP_CO      :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Aboveground Sapwood Storage respiration'         &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_sapb_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_SAPB_STORAGE_RESP_CO      :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Belowground Sapwood Storage respiration'         &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if                                          
       if (associated(cpatch%dmean_plresp          )) then
@@ -27809,6 +28642,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Nitrogen stress'                                 &
                            ,'[         --]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_a_open         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_a_open                                       &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_A_OPEN_CO             :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Assimilation rate (no soil moist. stress)'       &
+                           ,'[ umol/m2l/s]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_a_closed       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_a_closed                                     &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_A_CLOSED_CO           :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Minimum assimilation rate'                       &
+                           ,'[ umol/m2l/s]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_a_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_a_net                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_A_NET_CO               :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Actual assimilation rate'                        &
+                           ,'[ umol/m2l/s]','(icohort)'            )
       end if
       if (associated(cpatch%dmean_a_light         )) then
          nvar = nvar+1
@@ -28159,15 +29019,42 @@ module ed_state_vars
                            ,'Daily mean - Growth respiration'                              &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if
-      if (associated(cpatch%dmean_storage_resp_c13    )) then
+      if (associated(cpatch%dmean_leaf_storage_resp_c13)) then
          nvar = nvar+1                                
-         call vtable_edio_r(npts,cpatch%dmean_storage_resp_c13                             &
+         call vtable_edio_r(npts,cpatch%dmean_leaf_storage_resp_c13                         &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_STORAGE_RESP_C13_CO      :41:'//trim(dail_keys)     )
+                           ,'DMEAN_LEAF_STORAGE_RESP_C13_CO  :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Daily mean - Storage respiration'                             &
+                           ,'Daily mean - storage respiration'                              &
                            ,'[  kgC/m2/yr]','(icohort)'            )
-      end if                                          
+      end if
+      if (associated(cpatch%dmean_root_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%dmean_root_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_ROOT_STORAGE_RESP_C13_CO  :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - storage respiration'                              &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_sapa_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%dmean_sapa_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_SAPA_STORAGE_RESP_C13_CO  :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - storage respiration'                              &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_sapb_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%dmean_sapb_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_SAPB_STORAGE_RESP_C13_CO  :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - storage respiration'                              &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
       if (associated(cpatch%dmean_plresp_c13          )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_plresp_c13                                   &
@@ -28317,13 +29204,40 @@ module ed_state_vars
                            ,'Monthly mean - Belowground sapwood growth respiration'        &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if
-      if (associated(cpatch%mmean_storage_resp    )) then
+      if (associated(cpatch%mmean_leaf_storage_resp    )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%mmean_storage_resp                                 &
+         call vtable_edio_r(npts,cpatch%mmean_leaf_storage_resp                            &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_STORAGE_RESP_CO      :41:'//trim(eorq_keys))
+                           ,'MMEAN_LEAF_STORAGE_RESP_CO      :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
-                           ,'Monthly mean - Storage respiration'                           &
+                           ,'Monthly mean - Leaf Storage respiration'                      &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%mmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_root_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_ROOT_STORAGE_RESP_CO      :41:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Root Storage respiration'                      &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%mmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_sapa_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_SAPA_STORAGE_RESP_CO      :41:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Aboveground Sapwood Storage respiration'       &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%mmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_sapb_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_SAPB_STORAGE_RESP_CO      :41:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Belowground Sapwood Storage respiration'       &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if                                          
       if (associated(cpatch%mmean_plresp          )) then
@@ -28487,6 +29401,33 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Nitrogen stress'                               &
                            ,'[         --]','(icohort)'            )
+      end if
+      if (associated(cpatch%mmean_a_open         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_a_open                                       &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_A_OPEN_CO             :41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Assimilation rate (no soil moist. stress)'     &
+                           ,'[ umol/m2l/s]','(icohort)'            )
+      end if
+      if (associated(cpatch%mmean_a_closed       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_a_closed                                     &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_A_CLOSED_CO           :41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Minimum assimilation rate'                     &
+                           ,'[ umol/m2l/s]','(icohort)'            )
+      end if
+      if (associated(cpatch%mmean_a_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%mmean_a_net                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_A_NET_CO               :41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Actual assimilation rate'                      &
+                           ,'[ umol/m2l/s]','(icohort)'            )
       end if
       if (associated(cpatch%mmean_a_light         )) then
          nvar = nvar+1
@@ -29045,16 +29986,43 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Growth respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
-      end if                                          
-      if (associated(cpatch%mmean_storage_resp_c13    )) then
+      end if
+      if (associated(cpatch%mmean_leaf_storage_resp_c13)) then
          nvar = nvar+1                                
-         call vtable_edio_r(npts,cpatch%mmean_storage_resp_c13                             &
+         call vtable_edio_r(npts,cpatch%mmean_leaf_storage_resp_c13                         &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'MMEAN_STORAGE_RESP_C13_CO      :41:'//trim(eorq_keys))
+                           ,'MMEAN_LEAF_STORAGE_RESP_C13_CO  :41:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
-                           ,'Monthly mean - Storage respiration'                           &
+                           ,'Monthly mean - storage respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if                                          
+      if (associated(cpatch%mmean_root_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%mmean_root_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_ROOT_STORAGE_RESP_C13_CO  :41:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - storage respiration'                            &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if                                          
+      if (associated(cpatch%mmean_sapa_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%mmean_sapa_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_SAPA_STORAGE_RESP_C13_CO  :41:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - storage respiration'                            &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if                                          
+      if (associated(cpatch%mmean_sapb_storage_resp_c13)) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cpatch%mmean_sapb_storage_resp_c13                         &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'MMEAN_SAPB_STORAGE_RESP_C13_CO  :41:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Storage respiration'                            &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
       if (associated(cpatch%mmean_plresp_c13          )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%mmean_plresp_c13                                   &
@@ -29253,13 +30221,40 @@ module ed_state_vars
                            ,'Mean diel - Belowground sapwood growth respiration'           &
                            ,'[  kgC/m2/yr]','(ndcycle,icohort)'    )
       end if
-      if (associated(cpatch%qmean_storage_resp    )) then
+      if (associated(cpatch%qmean_leaf_storage_resp    )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%qmean_storage_resp                                 &
+         call vtable_edio_r(npts,cpatch%qmean_leaf_storage_resp                            &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'QMEAN_STORAGE_RESP_CO     :-41:'//trim(eorq_keys)     )
+                           ,'QMEAN_LEAF_STORAGE_RESP_CO     :-41:'//trim(eorq_keys)     )
          call metadata_edio(nvar,igr                                                       &
-                           ,'Mean diel - Storage respiration'                              &
+                           ,'Mean diel - Leaf Storage respiration'                         &
+                           ,'[  kgC/m2/yr]','(ndcycle,icohort)'    )
+      end if
+      if (associated(cpatch%qmean_root_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_root_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'QMEAN_ROOT_STORAGE_RESP_CO     :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Root Storage respiration'                         &
+                           ,'[  kgC/m2/yr]','(ndcycle,icohort)'    )
+      end if
+      if (associated(cpatch%qmean_sapa_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_sapa_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'QMEAN_SAPA_STORAGE_RESP_CO     :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Aboveground Sapwood Storage respiration'          &
+                           ,'[  kgC/m2/yr]','(ndcycle,icohort)'    )
+      end if
+      if (associated(cpatch%qmean_sapb_storage_resp    )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_sapb_storage_resp                            &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'QMEAN_SAPB_STORAGE_RESP_CO     :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Belowground Sapwood Storage respiration'          &
                            ,'[  kgC/m2/yr]','(ndcycle,icohort)'    )
       end if                                          
       if (associated(cpatch%qmean_plresp          )) then
@@ -29424,7 +30419,34 @@ module ed_state_vars
                            ,'Mean diel - Nitrogen stress'                                  &
                            ,'[         --]','(ndcycle,icohort)'    )
       end if
-      if (associated(cpatch%fmean_a_light         )) then
+      if (associated(cpatch%qmean_a_open         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_a_open                                       &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'QMEAN_A_OPEN_CO             :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Assimilation rate (no soil moist. stress)'     &
+                           ,'[ umol/m2l/s]','(ndcycle,icohort)'            )
+      end if
+      if (associated(cpatch%qmean_a_closed       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_a_closed                                     &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'QMEAN_A_CLOSED_CO           :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Minimum assimilation rate'                     &
+                           ,'[ umol/m2l/s]','(ndcycle,icohort)'            )
+      end if
+      if (associated(cpatch%qmean_a_net           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%qmean_a_net                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'QMEAN_A_NET_CO              :-41:'//trim(eorq_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Mean diel - Actual assimilation rate'                      &
+                           ,'[ umol/m2l/s]','(ndcycle,icohort)'            )
+      end if
+      if (associated(cpatch%qmean_a_light         )) then
          nvar = nvar+1
          call vtable_edio_r(npts,cpatch%qmean_a_light                                      &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &

@@ -185,7 +185,6 @@ subroutine alloc_c13 (cpatch,ico,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb,dai
       write(*,*) ' today_gpp       :', cpatch%today_gpp(ico)         , cpatch%today_gpp_c13(ico)
       write(*,*) ' today_leaf_resp :', cpatch%today_leaf_resp(ico)   , cpatch%today_leaf_resp_c13(ico)
       write(*,*) ' today_root_resp :', cpatch%today_root_resp(ico)   , cpatch%today_root_resp_c13(ico)
-      write(*,*) ' growth_resp     :', cpatch%growth_respiration(ico), cpatch%growth_respiration_c13(ico)
       write(*,*) ' '
       write(*,*) '- Variable Name: ---- Input Val ---- Var Will Be --- Xfer to Var ---'
       write(*,*) ' bleaf           :', cpatch%bleaf(ico)    , cpatch%bleaf(ico)     + tr_bleaf    , tr_bleaf    
@@ -1154,6 +1153,30 @@ real function photo_h2tc(d13C_atm,  can_co2,fs_open,  lsfc_co2_open,  lsfc_co2_c
    return
 end function photo_h2tc
 !==========================================================================================!
+
+
+!==========================================================================================!
+real function hotc(heavy,total)
+   use consts_coms, only : tiny_num    ! intent(in)
+   implicit none
+   !------ Arguments ----------------------------------------------------------------------!
+   real              :: heavy       ! C-13
+   real              :: total       ! C-12 + C-13
+   !---------------------------------------------------------------------------------------!
+
+   ! This function computes the safe ratio of heavy to total carbon.
+   if (total > tiny_num) then
+      hotc = heavy/total
+   else
+      hotc = 0.0
+   end if
+   
+   return
+end function hotc
+!==========================================================================================!
+
+
+
 
 !==========================================================================================!
 real(kind=8) function resp_h2tc(rtype,heavy,total)

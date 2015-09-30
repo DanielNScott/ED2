@@ -5361,12 +5361,16 @@ subroutine overwrite_with_xml_config(thisnode)
 end subroutine overwrite_with_xml_config
 !==========================================================================================!
 !==========================================================================================!
+
+
+
+
+!==========================================================================================!
 ! The following subroutine is called after the XML read
 ! This initializes all variables that are immediately dependant on parameters,  and
 ! fills in parameters that are have variables initialization methods (such as mort3 and sla
 ! which is either a parameter or dependant on other parameters depending on the PFT)
 !=========================================================================================!
-
 subroutine ed_params_dependents()
 
    use ed_max_dims , only  : n_pft,str_len
@@ -5768,9 +5772,9 @@ subroutine ed_params_dependents()
    !     Following Moorcroft et al. (2001), we use the same shape for both leaf and root   !
    ! respiration.                                                                          !
    !---------------------------------------------------------------------------------------!
-   !----- Temperature [Â°C] below which root metabolic activity begins to rapidly decline. -!
+   !----- Temperature [°C] below which root metabolic activity begins to rapidly decline. -!
    rrf_low_temp(1:17)  = rd_low_temp(1:17)
-   !----- Temperature [Â°C] above which root metabolic activity begins to rapidly decline. -!
+   !----- Temperature [°C] above which root metabolic activity begins to rapidly decline. -!
    rrf_high_temp(1:17) = rd_high_temp(1:17)
    !----- Decay factor for the exponential correction. ------------------------------------!
    rrf_decay_e(1:17)   = rd_decay_e(1:17)
@@ -5788,16 +5792,16 @@ subroutine ed_params_dependents()
    mort3(1)  = m3_scale * ( m3_slope * (1. - rho( 1) / rho( 4)) )
    mort3(2)  = m3_scale * ( m3_slope * (1. - rho( 2) / rho( 4)) )
    mort3(3)  = m3_scale * ( m3_slope * (1. - rho( 3) / rho( 4)) )
-   !mort3(4)  = mort3_pft_init(4)
-   !mort3(5)  = mort3_pft_init(5)
-   !mort3(6)  = mort3_pft_init(6)
-   !mort3(7)  = mort3_pft_init(7)
-   !mort3(8)  = mort3_pft_init(8)
-   !mort3(9)  = mort3_pft_init(9)
-   !mort3(10) = mort3_pft_init(10)
-   !mort3(11) = mort3_pft_init(11)
-   !mort3(12) = mort3_pft_init(12)
-   !mort3(13) = mort3_pft_init(13)
+   mort3(4)  = mort3_pft_init(4)
+   mort3(5)  = mort3_pft_init(5)
+   mort3(6)  = mort3_pft_init(6)
+   mort3(7)  = mort3_pft_init(7)
+   mort3(8)  = mort3_pft_init(8)
+   mort3(9)  = mort3_pft_init(9)
+   mort3(10) = mort3_pft_init(10)
+   mort3(11) = mort3_pft_init(11)
+   mort3(12) = mort3_pft_init(12)
+   mort3(13) = mort3_pft_init(13)
    mort3(14) = m3_scale * ( m3_slope * (1. - rho(14) / rho( 4)) )
    mort3(15) = m3_scale * ( m3_slope * (1. - rho(15) / rho( 4)) )
    mort3(16) = m3_scale * ( m3_slope * (1. - rho(16) / rho( 4)) )
@@ -6269,7 +6273,7 @@ subroutine ed_params_dependents()
 
       !------------------------------------------------------------------------------------!
       !    The definition of the minimum recruitment size is the minimum amount of biomass !
-      ! in kgC/mÂ² is available for new recruits.  For the time being we use the near-bare  !
+      ! in kgC/m² is available for new recruits.  For the time being we use the near-bare  !
       ! ground state value as the minimum recruitment size, but this may change depending  !
       ! on how well it goes.                                                               !
       !------------------------------------------------------------------------------------!
@@ -6406,11 +6410,357 @@ subroutine ed_params_dependents()
    !---------------------------------------------------------------------------------------!
 
    !---------------------------------------------------------------------------------------!
-   !     Minimum water mass at the leaf surface.  This is given in kg/mÂ²leaf rather than   !
-   ! kg/mÂ²ground, so we scale it with LAI.                                                 !
+   !     Minimum water mass at the leaf surface.  This is given in kg/m²leaf rather than   !
+   ! kg/m²ground, so we scale it with LAI.                                                 !
    !---------------------------------------------------------------------------------------!
-   rk4min_veg_lwater = -rk4leaf_drywhc            ! Minimum leaf water mass     [kg/mÂ²leaf]
+   rk4min_veg_lwater = -rk4leaf_drywhc            ! Minimum leaf water mass     [kg/m²leaf]
    !---------------------------------------------------------------------------------------!
 
    
 end subroutine ed_params_dependents
+!==========================================================================================!
+!==========================================================================================!
+
+
+
+
+
+
+!==========================================================================================!
+! The following subroutine is called after the XML read
+! This initializes all variables that are immediately dependant on parameters,  and
+! fills in parameters that are have variables initialization methods (such as mort3 and sla
+! which is either a parameter or dependant on other parameters depending on the PFT)
+!=========================================================================================!
+subroutine ed_params_deps_min()
+
+   use ed_max_dims , only  : n_pft,str_len
+   use ed_misc_coms, only  : iallom, igrass, ibigleaf
+   use detailed_coms, only : idetailed
+   use canopy_radiation_coms , only :                          &
+                                      leaf_reflect_nir            & ! intent(out)
+                                    , leaf_trans_nir              & ! intent(out)
+                                    , leaf_scatter_nir            & ! intent(out)
+                                    , leaf_reflect_vis            & ! intent(out)
+                                    , leaf_trans_vis              & ! intent(out)
+                                    , leaf_scatter_vis            & ! intent(out)
+                                    , leaf_scatter_tir            & ! intent(out)
+                                    , leaf_backscatter_vis        & ! intent(out)
+                                    , leaf_backscatter_nir        & ! intent(out)
+                                    , leaf_backscatter_tir        & ! intent(out)
+                                    , leaf_emiss_tir              & ! intent(out)
+                                    , orient_factor               & ! intent(out)
+                                    , phi1                        & ! intent(out)
+                                    , phi2                        & ! intent(out)
+                                    , mu_bar                      & ! intent(out)
+                                    , wood_reflect_nir            & ! intent(out)
+                                    , wood_trans_nir              & ! intent(out)
+                                    , wood_scatter_nir            & ! intent(out)
+                                    , wood_reflect_vis            & ! intent(out)
+                                    , wood_trans_vis              & ! intent(out)
+                                    , wood_scatter_vis            & ! intent(out)
+                                    , wood_scatter_tir            & ! intent(out)
+                                    , wood_backscatter_vis        & ! intent(out)
+                                    , wood_backscatter_nir        & ! intent(out)
+                                    , wood_backscatter_tir        & ! intent(out)
+                                    , wood_emiss_tir              ! ! intent(out)
+   
+   use physiology_coms , only: iphysiol,            &
+                               klowco2,             &
+                               klowco28,            & 
+                               klowco2in,           &
+                               vmfact_hw,           &
+                               vmfact_co
+   
+   use pft_coms       , only : Vm_low_temp             & !
+                             , Vm_high_temp            & !
+                             , Vm_decay_e              & !
+                             , Vm0                     & !
+                             , Vm_hor                  & !
+                             , Vm_q10                  & !
+                             , Rd_low_temp             & !
+                             , Rd_high_temp            & !
+                             , Rd_decay_e              & !
+                             , Rd0                     & !
+                             , Rd_hor                  & !
+                             , Rd_q10                  & !
+                             , dark_respiration_factor & !
+                             , rrf_low_temp            & !
+                             , rrf_high_temp           & !
+                             , rrf_decay_e             & !
+                             , rrf_hor                 & !
+                             , rrf_q10                 & !
+                             , rho                     & !
+                             , mort3                   & !
+                             , mort2                   & !
+                             , m3_scale                & !
+                             , m3_slope                & !
+                             , mort3_pft_init          & !
+                             , cbr_severe_stress       & !
+                             , SLA                     & !
+                             , sla_pft_init            & !
+                             , sla_scale               & !
+                             , sla_inter               & !
+                             , sla_slope               & !
+                             , sapwood_ratio           & 
+                             , qsw                     &
+                             , q                       &
+                             , min_dbh                 &
+                             , dbh_crit                &
+                             , dbh_adult               &
+                             , hgt_min                 &
+                             , hgt_max                 & 
+                             , hgt_ref                 &
+                             , dbh_bigleaf             & 
+                             , is_tropical             &
+                             , b1Ht                  & !
+                             , b2Ht                  & !
+                             , b1Bs_small            & !
+                             , b2Bs_small            & !
+                             , b1Bs_large            & !
+                             , b2Bs_large            & !
+                             , b1Ca                  & !
+                             , b2Ca                  & !
+                             , b1Bl_small            & !
+                             , b2Bl_small            & !
+                             , b1Bl_large            & !
+                             , b2Bl_large            & !
+                             , C2B                   & !
+                             , bleaf_adult           & !
+                             , min_bdead             & !
+                             , bdead_crit            & !
+                             , wat_dry_ratio_ngrn    & !
+                             , delta_c               & !
+                             , init_density          & !
+                             , init_laimax           & !
+                             , one_plant_c           & !
+                             , min_recruit_size      & !
+                             , min_cohort_size       & !
+                             , negligible_nplant     & !
+                             , c2n_recruit           & !
+                             , c2n_leaf              & !
+                             , c2n_stem              & !
+                             , veg_hcap_min          & !
+                             , leaf_turnover_rate    & !
+                             , pft_name16
+                           
+   use disturb_coms, only : treefall_disturbance_rate  & ! intent(inout)
+                               , time2canopy                ! ! intent(in)
+                                      
+   use consts_coms    , only : t00                  & ! intent(out)
+                             , mmcod                & ! intent(in)
+                             , onethird             & !
+                             , onesixth             &
+                             , wdnsi8               & 
+                             , lnexp_max
+
+   use phenology_coms, only : turnamp_window           & ! intent(out)
+                            , turnamp_wgt              & ! intent(out)
+                            , turnamp_min              & ! intent(out)
+                            , turnamp_max              & ! intent(out)
+                            , radto_min                & ! intent(out)
+                            , radto_max                & ! intent(out)
+                            , llspan_window            & ! intent(out)
+                            , llspan_wgt               & ! intent(out)
+                            , vm0_window               & ! intent(out)
+                            , vm0_wgt                  & ! intent(out)
+                            , radslp                   & 
+                            , radint
+
+   use allometry     , only : dbh2bd, size2bl, h2dbh, dbh2h
+   
+   use decomp_coms  , only : f_labile
+
+   use soil_coms     , only : water_stab_thresh       & 
+                            , tiny_sfcwater_mass      &
+                            , snowmin
+
+   use canopy_air_coms, only : leaf_drywhc             &
+                            , leaf_maxwhc
+
+   use rk4_coms       , only : rk4water_stab_thresh    &
+                             , rk4tiny_sfcw_mass       & 
+                             , rk4leaf_drywhc          &
+                             , rk4leaf_maxwhc          & 
+                             , rk4snowmin              &
+                             , rk4tiny_sfcw_depth      &
+                             , rk4min_veg_lwater
+   
+   use ed_therm_lib         , only : calc_veg_hcap        ! ! subroutine
+
+
+   implicit none
+   
+   !----- Local variables. ----------------------------------------------------------------!
+   integer                           :: ipft
+   real                              :: aux
+   real                              :: aquad
+   real                              :: bquad
+   real                              :: cquad
+   real                              :: discr
+   real                              :: lambda_ref
+   real                              :: lambda_eff
+   real                              :: leff_neg
+   real                              :: leff_pos
+   real                              :: dbh
+   real                              :: huge_dbh
+   real                              :: huge_height
+   real                              :: bleaf_min
+   real                              :: broot_min
+   real                              :: bsapwood_min
+   real                              :: balive_min
+   real                              :: bdead_min
+   real                              :: bleaf_max
+   real                              :: broot_max
+   real                              :: bsapwood_max
+   real                              :: balive_max
+   real                              :: bdead_max
+   real                              :: bleaf_bl
+   real                              :: broot_bl
+   real                              :: bsapwood_bl
+   real                              :: balive_bl
+   real                              :: bdead_bl
+   real                              :: leaf_hcap_min
+   real                              :: wood_hcap_min
+   real                              :: lai_min
+   real                              :: min_plant_dens
+   real                              :: bleaf_sapling
+   real                              :: init_bleaf
+   
+   ! ======================================================================================!
+   ! Photosynthesis and Respiration Dependents
+   ! ======================================================================================!
+   Vm0(6)                    = Vm0(6)  * vmfact_co
+   Vm0(7)                    = Vm0(7)  * vmfact_co
+   Vm0(8)                    = Vm0(8)  * vmfact_co
+   Vm0(9)                    = Vm0(9)  * vmfact_hw
+   Vm0(10)                   = Vm0(10) * vmfact_hw
+   Vm0(11)                   = Vm0(11) * vmfact_hw
+   
+   !---------------------------------------------------------------------------------------!
+   !    Respiration terms.  Here we must check whether this will run Foley-based or        !
+   ! Collatz-based photosynthesis, because the respiration/Vm ratio is constant in the     !
+   ! former but not in the latter.                                                         !
+   !---------------------------------------------------------------------------------------!
+   select case (iphysiol)
+   case (0,1)
+      !------ This should be simply gamma times Vm0. --------------------------------------!
+      Rd0         (1:17) = dark_respiration_factor(1:17) * Vm0(1:17)
+
+   case (2,3)
+      !------------------------------------------------------------------------------------!
+      !     Collatz-based method.  They have the gamma at 25 C, but because the Q10 bases  !
+      ! are different for Vm and respiration (at least for C3), we must convert it to the  !
+      ! ratio at 15C.                                                                      !
+      !------------------------------------------------------------------------------------!
+      Rd0         (1:17) = dark_respiration_factor(1:17) * Vm0(1:17)                       &
+                         * Vm_q10(1:17) / Rd_q10(1:17)
+   end select
+   !---------------------------------------------------------------------------------------!
+
+   min_plant_dens = onesixth * minval(init_density)
+   do ipft = 1,n_pft
+
+      !----- Find the DBH and carbon pools associated with a newly formed recruit. --------!
+      dbh          = h2dbh(hgt_min(ipft),ipft)
+      bleaf_min    = size2bl(dbh,hgt_min(ipft),ipft) 
+      broot_min    = bleaf_min * q(ipft)
+      bsapwood_min = bleaf_min * qsw(ipft) * hgt_min(ipft)
+      balive_min   = bleaf_min + broot_min + bsapwood_min
+      bdead_min    = dbh2bd(dbh,ipft)
+      !------------------------------------------------------------------------------------!
+
+
+      !------------------------------------------------------------------------------------!
+      !   Find the maximum bleaf and bdead supported.  This is to find the negligible      !
+      ! nplant so we ensure that the cohort is always terminated if its mortality rate is  !
+      ! very high.                                                                         !
+      !------------------------------------------------------------------------------------!
+      huge_dbh     = 3. * dbh_crit(ipft)
+      huge_height  = dbh2h(ipft, dbh_crit(ipft))
+      bleaf_max    = size2bl(huge_dbh,huge_height,ipft)
+      broot_max    = bleaf_max * q(ipft)
+      bsapwood_max = bleaf_max * qsw(ipft) * huge_height
+      balive_max   = bleaf_max + broot_max + bsapwood_max
+      bdead_max    = dbh2bd(huge_dbh,ipft)
+      !------------------------------------------------------------------------------------!
+
+
+      !------------------------------------------------------------------------------------!
+      !    Biomass of one individual plant at recruitment.                                 !
+      !------------------------------------------------------------------------------------!
+      bleaf_bl          = size2bl(dbh_bigleaf(ipft),hgt_min(ipft),ipft) 
+      broot_bl          = bleaf_bl * q(ipft)
+      bsapwood_bl       = bleaf_bl * qsw(ipft) * hgt_max(ipft)
+      balive_bl         = bleaf_bl + broot_bl + bsapwood_bl
+      bdead_bl          = dbh2bd(dbh_bigleaf(ipft),ipft)
+      !------------------------------------------------------------------------------------!
+
+
+      !------------------------------------------------------------------------------------!
+      !     Find the carbon value for one plant.  If SAS approximation, we define it as    !
+      ! the carbon of a seedling, and for the big leaf case we assume the typical big leaf !
+      ! plant size.                                                                        !
+      !------------------------------------------------------------------------------------!
+      select case (ibigleaf)
+      case (0)
+         one_plant_c(ipft) = bdead_min + balive_min
+      case (1)
+         one_plant_c(ipft) = bdead_bl  + balive_bl
+      end select
+      !------------------------------------------------------------------------------------!
+
+
+      !------------------------------------------------------------------------------------!
+      !    The definition of the minimum recruitment size is the minimum amount of biomass !
+      ! in kgC/m² is available for new recruits.  For the time being we use the near-bare  !
+      ! ground state value as the minimum recruitment size, but this may change depending  !
+      ! on how well it goes.                                                               !
+      !------------------------------------------------------------------------------------!
+      min_recruit_size(ipft) = min_plant_dens * one_plant_c(ipft)
+      !------------------------------------------------------------------------------------!
+
+
+      !------------------------------------------------------------------------------------!
+      !    Minimum size (measured as biomass of living and structural tissues) allowed in  !
+      ! a cohort.  Cohorts with less biomass than this are going to be terminated.         !
+      !------------------------------------------------------------------------------------! 
+      min_cohort_size(ipft)  = 0.1 * min_recruit_size(ipft)
+      !------------------------------------------------------------------------------------! 
+
+
+
+      !------------------------------------------------------------------------------------! 
+      !    The following variable is the absolute minimum cohort population that a cohort  !
+      ! can have.  This should be used only to avoid nplant=0, but IMPORTANT: this will    !
+      ! lead to a ridiculously small cohort almost guaranteed to be extinct and SHOULD BE  !
+      ! USED ONLY IF THE AIM IS TO ELIMINATE THE COHORT.                                   !
+      !------------------------------------------------------------------------------------! 
+      negligible_nplant(ipft) = onesixth * min_cohort_size(ipft) / (bdead_max + balive_max)
+      !------------------------------------------------------------------------------------! 
+
+
+      !----- Find the recruit carbon to nitrogen ratio. -----------------------------------!
+      c2n_recruit(ipft)      = (balive_min + bdead_min)                                    &
+                             / (balive_min * ( f_labile(ipft) / c2n_leaf(ipft)             &
+                             + (1.0 - f_labile(ipft)) / c2n_stem(ipft))                    &
+                             + bdead_min/c2n_stem(ipft))
+      !------------------------------------------------------------------------------------! 
+
+      !------------------------------------------------------------------------------------!
+      !     The following variable is the minimum heat capacity of either the leaf, or the !
+      ! branches, or the combined pool that is solved by the biophysics.  Value is in      !
+      ! J/m2/K.  Because leaves are the pools that can determine the fate of the tree, and !
+      ! all PFTs have leaves (but not branches), we only consider the leaf heat capacity   !
+      ! only for the minimum value.                                                        !
+      !------------------------------------------------------------------------------------!
+      call calc_veg_hcap(bleaf_min,bdead_min,bsapwood_min,init_density(ipft),ipft          &
+                        ,leaf_hcap_min,wood_hcap_min)
+      veg_hcap_min(ipft) = onesixth * leaf_hcap_min
+      lai_min            = onesixth * init_density(ipft) * bleaf_min * sla(ipft)
+      !------------------------------------------------------------------------------------!
+   end do
+
+end subroutine ed_params_deps_min
+!==========================================================================================!
+!==========================================================================================!

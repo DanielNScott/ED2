@@ -764,11 +764,19 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
       cpatch%fmean_sapb_growth_resp (ico) = cpatch%fmean_sapb_growth_resp  (ico)           &
                                           + cpatch%sapb_growth_resp        (ico)           &
                                           *  dtlsm_o_frqsum * yr_day
-      cpatch%fmean_storage_resp(ico) = cpatch%fmean_storage_resp (ico)                     &
-                                     + cpatch%storage_respiration(ico) * dtlsm_o_frqsum    &
-                                     * yr_day
-                                     * yr_day
-      if (c13af > 0) then !!!DSC!!!
+      cpatch%fmean_leaf_storage_resp(ico) = cpatch%fmean_leaf_storage_resp (ico)           &
+                                          + cpatch%leaf_storage_resp(ico) * dtlsm_o_frqsum &
+                                          * yr_day
+      cpatch%fmean_root_storage_resp(ico) = cpatch%fmean_root_storage_resp (ico)           &
+                                          + cpatch%root_storage_resp(ico) * dtlsm_o_frqsum &
+                                          * yr_day
+      cpatch%fmean_sapa_storage_resp(ico) = cpatch%fmean_sapa_storage_resp (ico)           &
+                                          + cpatch%sapa_storage_resp(ico) * dtlsm_o_frqsum &
+                                          * yr_day
+      cpatch%fmean_sapb_storage_resp(ico) = cpatch%fmean_sapb_storage_resp (ico)           &
+                                          + cpatch%sapb_storage_resp(ico) * dtlsm_o_frqsum &
+                                          * yr_day
+      if (c13af > 0) then
          cpatch%fmean_leaf_growth_resp_c13(ico) = cpatch%fmean_leaf_growth_resp_c13 (ico)  &
                                                 + cpatch%leaf_growth_resp_c13(ico)         &
                                                 * dtlsm_o_frqsum                           &
@@ -785,10 +793,23 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                                                 + cpatch%sapb_growth_resp_c13(ico)         &
                                                 * dtlsm_o_frqsum                           &
                                                 * yr_day
-         cpatch%fmean_storage_resp_c13(ico)  = cpatch%fmean_storage_resp_c13 (ico)         &
-                                             + cpatch%storage_respiration_c13(ico)         &
-                                             * dtlsm_o_frqsum                              &
-                                             * yr_day
+
+         cpatch%fmean_leaf_storage_resp_c13(ico) = cpatch%fmean_leaf_storage_resp_c13 (ico) &
+                                                 + cpatch%leaf_storage_resp_c13(ico)        &
+                                                 * dtlsm_o_frqsum                           &
+                                                 * yr_day
+         cpatch%fmean_root_storage_resp_c13(ico) = cpatch%fmean_root_storage_resp_c13 (ico) &
+                                                 + cpatch%root_storage_resp_c13(ico)        &
+                                                 * dtlsm_o_frqsum                           &
+                                                 * yr_day
+         cpatch%fmean_sapa_storage_resp_c13(ico) = cpatch%fmean_sapa_storage_resp_c13 (ico) &
+                                                 + cpatch%sapa_storage_resp_c13(ico)        &
+                                                 * dtlsm_o_frqsum                           &
+                                                 * yr_day
+         cpatch%fmean_sapb_storage_resp_c13(ico) = cpatch%fmean_sapb_storage_resp_c13 (ico) &
+                                                 + cpatch%sapb_storage_resp_c13(ico)        &
+                                                 * dtlsm_o_frqsum                           &
+                                                 * yr_day
       end if
       !------------------------------------------------------------------------------------!
 

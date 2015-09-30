@@ -29,13 +29,13 @@ module rk4_coms
       real(kind=8)                        :: can_shv      ! Specific humidity    [   kg/kg]
       real(kind=8)                        :: can_ssh      ! Sat. spec. humidity  [   kg/kg]
       real(kind=8)                        :: can_rhv      ! Relative humidity    [     ---]
-      real(kind=8)                        :: can_co2      ! CO_2                 [µmol/mol]
+      real(kind=8)                        :: can_co2      ! CO_2                 [Âµmol/mol]
       real(kind=8)                        :: can_depth    ! Canopy depth         [       m]
-      real(kind=8)                        :: can_rhos     ! Canopy air density   [   kg/m³]
+      real(kind=8)                        :: can_rhos     ! Canopy air density   [   kg/mÂ³]
       real(kind=8)                        :: can_prss     ! Pressure             [      Pa]
       real(kind=8)                        :: can_exner    ! Exner function       [  J/kg/K]
       real(kind=8)                        :: can_cp       ! Specific heat        [  J/kg/K]
-      real(kind=8)                        :: can_co2_c13  ! CO_2 C-13            [µmol/mol]
+      real(kind=8)                        :: can_co2_c13  ! CO_2 C-13            [Âµmol/mol]
       !-----------------------------------------------------------------------------------!
 
       !------ Above Canopy Air Variables --------------------------------------------------!
@@ -83,11 +83,11 @@ module rk4_coms
 
 
       !----- Soil variables. --------------------------------------------------------------!
-      real(kind=8), dimension(:), pointer :: soil_energy  ! Internal energy       [   J/m³]
+      real(kind=8), dimension(:), pointer :: soil_energy  ! Internal energy       [   J/mÂ³]
       real(kind=8), dimension(:), pointer :: soil_mstpot  ! Soil matric potential [      m]
       real(kind=8), dimension(:), pointer :: soil_tempk   ! Specific humidity     [      K]
       real(kind=8), dimension(:), pointer :: soil_fracliq ! Liquid fraction       [   ----]
-      real(kind=8), dimension(:), pointer :: soil_water   ! Water content         [  m³/m³]
+      real(kind=8), dimension(:), pointer :: soil_water   ! Water content         [  mÂ³/mÂ³]
       !------------------------------------------------------------------------------------!
 
 
@@ -96,8 +96,8 @@ module rk4_coms
       integer                             :: nlev_sfcwater    ! # of layers       [   ----]
       integer                             :: flag_sfcwater    ! Status flag       [  -----]
       real(kind=8), dimension(:), pointer :: sfcwater_depth   ! Depth             [      m]
-      real(kind=8), dimension(:), pointer :: sfcwater_mass    ! Mass              [  kg/m²]
-      real(kind=8), dimension(:), pointer :: sfcwater_energy  ! Internal energy   [   J/m²]
+      real(kind=8), dimension(:), pointer :: sfcwater_mass    ! Mass              [  kg/mÂ²]
+      real(kind=8), dimension(:), pointer :: sfcwater_energy  ! Internal energy   [   J/mÂ²]
       real(kind=8), dimension(:), pointer :: sfcwater_tempk   ! Temperature       [      K]
       real(kind=8), dimension(:), pointer :: sfcwater_fracliq ! Liquid fraction   [   ----]
       !------------------------------------------------------------------------------------!
@@ -105,8 +105,8 @@ module rk4_coms
 
 
       !----- Virtual layer variables. -----------------------------------------------------!
-      real(kind=8)                        :: virtual_water    ! Mass              [  kg/m²]
-      real(kind=8)                        :: virtual_energy   ! Internal energy   [  kg/m²]
+      real(kind=8)                        :: virtual_water    ! Mass              [  kg/mÂ²]
+      real(kind=8)                        :: virtual_energy   ! Internal energy   [  kg/mÂ²]
       real(kind=8)                        :: virtual_depth    ! Depth             [      m]
       real(kind=8)                        :: virtual_tempk    ! Temperature       [      K]
       real(kind=8)                        :: virtual_fracliq  ! Liquid fraction   [      K]
@@ -126,13 +126,13 @@ module rk4_coms
 
       !----- Characteristic scale. --------------------------------------------------------!
       real(kind=8)                        :: ustar  ! Momentum                    [    m/s]
-      real(kind=8)                        :: cstar  ! Carbon mixing ratio         [µmol/m³]
+      real(kind=8)                        :: cstar  ! Carbon mixing ratio         [Âµmol/mÂ³]
       real(kind=8)                        :: tstar  ! Temperature                 [      K]
       real(kind=8)                        :: qstar  ! Water vapour spec. humidity [  kg/kg]
       real(kind=8)                        :: estar  ! Eq. potential temperature   [      K]
       real(kind=8)                        :: zeta   ! z / Obukhov length          [    ---]
       real(kind=8)                        :: ribulk ! Bulk Richardson number      [    ---]
-      real(kind=8)                        :: c13star! Carbon mixing ratio         [µmol/m³]
+      real(kind=8)                        :: c13star! Carbon mixing ratio         [Âµmol/mÂ³]
       !------------------------------------------------------------------------------------!
 
 
@@ -154,7 +154,7 @@ module rk4_coms
 
 
 
-      !----- Heterotrophic respiration.[µmol/m²/s] ----------------------------------------!
+      !----- Heterotrophic respiration.[Âµmol/mÂ²/s] ----------------------------------------!
       real(kind=8)                        :: cwd_rh
       real(kind=8)                        :: rh
       real(kind=8)                        :: cwd_rh_c13
@@ -164,83 +164,87 @@ module rk4_coms
 
 
       !----- Leaf (cohort-level) variables. -----------------------------------------------!
-      real(kind=8), pointer, dimension(:) :: leaf_energy     ! Internal energy  [     J/m²]
-      real(kind=8), pointer, dimension(:) :: leaf_water      ! Sfc. water mass  [    kg/m²]
+      real(kind=8), pointer, dimension(:) :: leaf_energy     ! Internal energy  [     J/mÂ²]
+      real(kind=8), pointer, dimension(:) :: leaf_water      ! Sfc. water mass  [    kg/mÂ²]
       real(kind=8), pointer, dimension(:) :: leaf_temp       ! Temperature      [        K]
       real(kind=8), pointer, dimension(:) :: leaf_fliq       ! Liquid fraction  [      ---]
-      real(kind=8), pointer, dimension(:) :: leaf_hcap       ! Heat capacity    [   J/m²/K]
+      real(kind=8), pointer, dimension(:) :: leaf_hcap       ! Heat capacity    [   J/mÂ²/K]
       real(kind=8), pointer, dimension(:) :: leaf_reynolds   ! Reynolds number  [      ---]
       real(kind=8), pointer, dimension(:) :: leaf_grashof    ! Grashof number   [      ---]
       real(kind=8), pointer, dimension(:) :: leaf_nussfree   ! Nusselt # (free) [      ---]
       real(kind=8), pointer, dimension(:) :: leaf_nussforc   ! Nusselt # (forc.)[      ---]
       real(kind=8), pointer, dimension(:) :: lint_shv        ! Interc. sp. hum. [    kg/kg]
       logical     , pointer, dimension(:) :: leaf_resolvable ! resolve leaves?  [      T|F]
-      real(kind=8), pointer, dimension(:) :: leaf_gbh        ! Bnd.lyr. condct. [ J/K/m²/s]
-      real(kind=8), pointer, dimension(:) :: leaf_gbw        ! Bnd.lyr. condct. [  kg/m²/s]
-      real(kind=8), pointer, dimension(:) :: gsw_open        ! Sto. cond. (op.) [ J/K/m²/s]
-      real(kind=8), pointer, dimension(:) :: gsw_closed      ! Sto. cond. (cl.) [  kg/m²/s]
-      real(kind=8), pointer, dimension(:) :: rshort_l        ! Absorbed SWRad.  [   J/m²/s]
-      real(kind=8), pointer, dimension(:) :: rlong_l         ! Absorbed LWRad.  [   J/m²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_gbh        ! Bnd.lyr. condct. [ J/K/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_gbw        ! Bnd.lyr. condct. [  kg/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: gsw_open        ! Sto. cond. (op.) [ J/K/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: gsw_closed      ! Sto. cond. (cl.) [  kg/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: rshort_l        ! Absorbed SWRad.  [   J/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: rlong_l         ! Absorbed LWRad.  [   J/mÂ²/s]
       !------------------------------------------------------------------------------------!
 
 
       !----- Wood (cohort-level) variables. -----------------------------------------------!
-      real(kind=8), pointer, dimension(:) :: wood_energy     ! Internal energy  [     J/m²]
-      real(kind=8), pointer, dimension(:) :: wood_water      ! Sfc. water mass  [    kg/m²]
+      real(kind=8), pointer, dimension(:) :: wood_energy     ! Internal energy  [     J/mÂ²]
+      real(kind=8), pointer, dimension(:) :: wood_water      ! Sfc. water mass  [    kg/mÂ²]
       real(kind=8), pointer, dimension(:) :: wood_temp       ! Temperature      [        K]
       real(kind=8), pointer, dimension(:) :: wood_fliq       ! Liquid fraction  [      ---]
-      real(kind=8), pointer, dimension(:) :: wood_hcap       ! Heat capacity    [   J/m²/K]
+      real(kind=8), pointer, dimension(:) :: wood_hcap       ! Heat capacity    [   J/mÂ²/K]
       real(kind=8), pointer, dimension(:) :: wood_reynolds   ! Reynolds number  [      ---]
       real(kind=8), pointer, dimension(:) :: wood_grashof    ! Grashof number   [      ---]
       real(kind=8), pointer, dimension(:) :: wood_nussfree   ! Nusselt # (free) [      ---]
       real(kind=8), pointer, dimension(:) :: wood_nussforc   ! Nusselt # (forc.)[      ---]
       logical     , pointer, dimension(:) :: wood_resolvable ! resolve wood?    [      T|F]
-      real(kind=8), pointer, dimension(:) :: wood_gbh        ! Bnd.lyr. condct. [ J/K/m²/s]
-      real(kind=8), pointer, dimension(:) :: wood_gbw        ! Bnd.lyr. condct. [  kg/m²/s]
-      real(kind=8), pointer, dimension(:) :: rshort_w        ! Absorbed SWRad.  [   J/m²/s]
-      real(kind=8), pointer, dimension(:) :: rlong_w         ! Absorbed LWRad.  [   J/m²/s]
+      real(kind=8), pointer, dimension(:) :: wood_gbh        ! Bnd.lyr. condct. [ J/K/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: wood_gbw        ! Bnd.lyr. condct. [  kg/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: rshort_w        ! Absorbed SWRad.  [   J/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: rlong_w         ! Absorbed LWRad.  [   J/mÂ²/s]
       !------------------------------------------------------------------------------------!
 
 
 
       !----- Leaf+branchwood (cohort-level) variables. ------------------------------------!
-      real(kind=8), pointer, dimension(:) :: veg_energy      ! Internal energy  [     J/m²]
-      real(kind=8), pointer, dimension(:) :: veg_water       ! Sfc. water mass  [    kg/m²]
-      real(kind=8), pointer, dimension(:) :: veg_hcap        ! Heat capacity    [   J/m²/K]
+      real(kind=8), pointer, dimension(:) :: veg_energy      ! Internal energy  [     J/mÂ²]
+      real(kind=8), pointer, dimension(:) :: veg_water       ! Sfc. water mass  [    kg/mÂ²]
+      real(kind=8), pointer, dimension(:) :: veg_hcap        ! Heat capacity    [   J/mÂ²/K]
       logical     , pointer, dimension(:) :: veg_resolvable  ! resolve leaves?  [      T|F]
       !------------------------------------------------------------------------------------!
 
 
 
       !----- General cohort-level properties. ---------------------------------------------!
-      real(kind=8), pointer, dimension(:) :: nplant       ! Plant density       [ plant/m²]
+      real(kind=8), pointer, dimension(:) :: nplant       ! Plant density       [ plant/mÂ²]
       real(kind=8), pointer, dimension(:) :: veg_wind      ! Cohort-level wind  [      m/s]
-      real(kind=8), pointer, dimension(:) :: lai          ! Leaf area index     [    m²/m²]
-      real(kind=8), pointer, dimension(:) :: wai          ! Wood area index     [    m²/m²]
-      real(kind=8), pointer, dimension(:) :: tai          ! Tree area index     [    m²/m²]
-      real(kind=8), pointer, dimension(:) :: crown_area   ! Crown area          [    m²/m²]
+      real(kind=8), pointer, dimension(:) :: lai          ! Leaf area index     [    mÂ²/mÂ²]
+      real(kind=8), pointer, dimension(:) :: wai          ! Wood area index     [    mÂ²/mÂ²]
+      real(kind=8), pointer, dimension(:) :: tai          ! Tree area index     [    mÂ²/mÂ²]
+      real(kind=8), pointer, dimension(:) :: crown_area   ! Crown area          [    mÂ²/mÂ²]
       real(kind=8), pointer, dimension(:) :: elongf       ! Elongation factor   [     ----]
-      real(kind=8), pointer, dimension(:) :: psi_open     ! Water demand (op.)  [kg/m²lf/s]
-      real(kind=8), pointer, dimension(:) :: psi_closed   ! Water demand (clos.)[kg/m²lf/s]
+      real(kind=8), pointer, dimension(:) :: psi_open     ! Water demand (op.)  [kg/mÂ²lf/s]
+      real(kind=8), pointer, dimension(:) :: psi_closed   ! Water demand (clos.)[kg/mÂ²lf/s]
       real(kind=8), pointer, dimension(:) :: fs_open      ! Frac. of op. stom.  [      ---]
-      real(kind=8), pointer, dimension(:) :: gpp          ! Gross primary prod. [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: leaf_resp    ! Leaf respiration    [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: root_resp    ! Root respiration    [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: storage_resp ! Storage respiration [µmol/m²/s]
-      
-      real(kind=8), pointer, dimension(:) :: leaf_growth_resp !                 [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: root_growth_resp !                 [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: sapa_growth_resp !                 [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: sapb_growth_resp !                 [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: gpp_c13      ! Gross primary prod. [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: leaf_resp_c13    ! Isotopologue    [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: root_resp_c13    ! Isotopologue    [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: storage_resp_c13 ! Isotopologue    [µmol/m²/s]
-      
-      real(kind=8), pointer, dimension(:) :: leaf_growth_resp_c13  !            [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: root_growth_resp_c13  !            [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: sapa_growth_resp_c13  !            [µmol/m²/s]
-      real(kind=8), pointer, dimension(:) :: sapb_growth_resp_c13  !            [µmol/m²/s]
+      real(kind=8), pointer, dimension(:) :: gpp          ! Gross primary prod. [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_resp    ! Leaf respiration    [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: root_resp    ! Root respiration    [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_storage_resp ! Storage resp   [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: root_storage_resp ! Storage resp   [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapa_storage_resp ! Storage resp   [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapb_storage_resp ! Storage resp   [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_growth_resp !                 [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: root_growth_resp !                 [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapa_growth_resp !                 [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapb_growth_resp !                 [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: gpp_c13      ! Gross primary prod. [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_resp_c13    ! Isotopologue    [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: root_resp_c13    ! Isotopologue    [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_growth_resp_c13  !            [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: root_growth_resp_c13  !            [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapa_growth_resp_c13  !            [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapb_growth_resp_c13  !            [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: leaf_storage_resp_c13 !            [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: root_storage_resp_c13 !            [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapa_storage_resp_c13 !            [Âµmol/mÂ²/s]
+      real(kind=8), pointer, dimension(:) :: sapb_storage_resp_c13 !            [Âµmol/mÂ²/s]
 
 
       !------ Variables used for hybrid stepping -----------------------------------------!
@@ -430,17 +434,17 @@ module rk4_coms
       real(kind=8), dimension(:)  , pointer :: avail_h2o_lyr
       !----- Integral of available water factor from top to this layer [n/d]. -------------!
       real(kind=8), dimension(:)  , pointer :: avail_h2o_int
-      !----- Extracted water by transpiration [kg/m²]. ------------------------------------!
+      !----- Extracted water by transpiration [kg/mÂ²]. ------------------------------------!
       real(kind=8), dimension(:,:), pointer :: extracted_water
       !----- Thermal conductivity [W/m/K]. ------------------------------------------------!
       real(kind=8), dimension(:)  , pointer :: th_cond_s
       real(kind=8), dimension(:)  , pointer :: th_cond_p
-      !----- Sensible heat flux at staggered layer (k = k-1/2) [W/m²]. --------------------!
+      !----- Sensible heat flux at staggered layer (k = k-1/2) [W/mÂ²]. --------------------!
       real(kind=8), dimension(:)  , pointer :: h_flux_g
       real(kind=8), dimension(:)  , pointer :: h_flux_s
-      !----- Water flux at staggered layers (k = k-1/2) [kg/m²/s]. ------------------------!
+      !----- Water flux at staggered layers (k = k-1/2) [kg/mÂ²/s]. ------------------------!
       real(kind=8), dimension(:)  , pointer :: w_flux_g
-      !----- Latent heat flux at staggered layers (k=k-1/2) [W/m²]. -----------------------!
+      !----- Latent heat flux at staggered layers (k=k-1/2) [W/mÂ²]. -----------------------!
       real(kind=8), dimension(:)  , pointer :: qw_flux_g
       !----- Tests to check if the soil is too dry or too wet. ----------------------------!
       logical     , dimension(:)  , pointer :: drysoil
@@ -455,14 +459,14 @@ module rk4_coms
       ! version of canopy air space prognostic variables (specific enthalpy, water vapour   !
       ! specific humidity and CO2 mixing ratio) into extensive variables.                   ! 
       !-------------------------------------------------------------------------------------!
-      real(kind=8) :: wcapcan  ! Water capacity                             [  kg_air/m²gnd]
-      real(kind=8) :: hcapcan  ! Enthalpy capacity                          [  kg_air/m²gnd]
-      real(kind=8) :: ccapcan  ! CO2 capacity                               [ mol_air/m²gnd]
-      real(kind=8) :: wcapcani ! Inverse of water capacity                  [  m²gnd/kg_air]
-      real(kind=8) :: hcapcani ! Inverse of enthalpy capacity               [  m²gnd/kg_air]
-      real(kind=8) :: ccapcani ! Inverse of CO2 capacity                    [ m²gnd/mol_air]
-      real(kind=8) :: c13capcan  ! 13CO2 capacity                           [ mol_air/m²gnd]
-      real(kind=8) :: c13capcani ! Inverse of 13CO2 capacity                [ m²gnd/mol_air]
+      real(kind=8) :: wcapcan  ! Water capacity                             [  kg_air/mÂ²gnd]
+      real(kind=8) :: hcapcan  ! Enthalpy capacity                          [  kg_air/mÂ²gnd]
+      real(kind=8) :: ccapcan  ! CO2 capacity                               [ mol_air/mÂ²gnd]
+      real(kind=8) :: wcapcani ! Inverse of water capacity                  [  mÂ²gnd/kg_air]
+      real(kind=8) :: hcapcani ! Inverse of enthalpy capacity               [  mÂ²gnd/kg_air]
+      real(kind=8) :: ccapcani ! Inverse of CO2 capacity                    [ mÂ²gnd/mol_air]
+      real(kind=8) :: c13capcan  ! 13CO2 capacity                           [ mol_air/mÂ²gnd]
+      real(kind=8) :: c13capcani ! Inverse of 13CO2 capacity                [ mÂ²gnd/mol_air]
 
 
       
@@ -706,8 +710,8 @@ module rk4_coms
    real(kind=8) :: rk4max_can_shv       ! Maximum canopy    specific humidity   [kg/kg_air]
    real(kind=8) :: rk4min_can_rhv       ! Minimum canopy    relative humidity   [      ---]
    real(kind=8) :: rk4max_can_rhv       ! Maximum canopy    relative humidity   [      ---]
-   real(kind=8) :: rk4min_can_co2       ! Minimum canopy    CO2 mixing ratio    [ µmol/mol]
-   real(kind=8) :: rk4max_can_co2       ! Maximum canopy    CO2 mixing ratio    [ µmol/mol]
+   real(kind=8) :: rk4min_can_co2       ! Minimum canopy    CO2 mixing ratio    [ Âµmol/mol]
+   real(kind=8) :: rk4max_can_co2       ! Maximum canopy    CO2 mixing ratio    [ Âµmol/mol]
    real(kind=8) :: rk4min_soil_temp     ! Minimum soil      temperature         [        K]
    real(kind=8) :: rk4max_soil_temp     ! Maximum soil      temperature         [        K]
    real(kind=8) :: rk4min_veg_temp      ! Minimum leaf      temperature         [        K]
@@ -715,12 +719,12 @@ module rk4_coms
    real(kind=8) :: rk4min_sfcw_temp     ! Minimum snow/pond temperature         [        K]
    real(kind=8) :: rk4max_sfcw_temp     ! Maximum snow/pond temperature         [        K]
    !----- The following variables have units different from the actual value. -------------!
-   real(kind=8) :: rk4min_veg_lwater    ! Maximum leaf      surface water mass  [kg/m²leaf]
-   real(kind=8) :: rk4min_sfcw_moist    ! Maximum snow/pond water mass          [m³/m³soil]
-   real(kind=8) :: rk4min_virt_moist    ! Minimum virtual pool mass             [m³/m³soil]
+   real(kind=8) :: rk4min_veg_lwater    ! Maximum leaf      surface water mass  [kg/mÂ²leaf]
+   real(kind=8) :: rk4min_sfcw_moist    ! Maximum snow/pond water mass          [mÂ³/mÂ³soil]
+   real(kind=8) :: rk4min_virt_moist    ! Minimum virtual pool mass             [mÂ³/mÂ³soil]
    !----- The following variables will be defined in sfcdata_ed (ed_init.f90). ------------!
-   real(kind=8) :: rk4min_sfcw_mass     ! Minimum snow/pond    mass             [    kg/m²]
-   real(kind=8) :: rk4min_virt_water    ! Minimum virtual pool mass             [    kg/m²]
+   real(kind=8) :: rk4min_sfcw_mass     ! Minimum snow/pond    mass             [    kg/mÂ²]
+   real(kind=8) :: rk4min_virt_water    ! Minimum virtual pool mass             [    kg/mÂ²]
 
    !----- MOVED THE FOLLOWING BLOCK TO RK4AUX BECAUSE WITH SMP WE NEED MULTIPLES
    !----- The following variables will be defined every time step. ------------------------!
@@ -734,11 +738,11 @@ module rk4_coms
 
 
    !----- The following variables are double precision version of some bounds. ------------!
-   real(kind=8) :: rk4tiny_sfcw_mass     ! Min. non-negligible snow/pond mass   [    kg/m²]
-   real(kind=8) :: rk4water_stab_thresh  ! Min. mass for a layer to be stable   [    kg/m²]
-   real(kind=8) :: rk4snowmin            ! Min. snow mass required for new lyr  [    kg/m²]
-   real(kind=8) :: rk4leaf_drywhc        ! Min. non-negligible leaf water mass  [kg/m²leaf]
-   real(kind=8) :: rk4leaf_maxwhc        ! Max. leaf water mass possible        [kg/m²leaf]
+   real(kind=8) :: rk4tiny_sfcw_mass     ! Min. non-negligible snow/pond mass   [    kg/mÂ²]
+   real(kind=8) :: rk4water_stab_thresh  ! Min. mass for a layer to be stable   [    kg/mÂ²]
+   real(kind=8) :: rk4snowmin            ! Min. snow mass required for new lyr  [    kg/mÂ²]
+   real(kind=8) :: rk4leaf_drywhc        ! Min. non-negligible leaf water mass  [kg/mÂ²leaf]
+   real(kind=8) :: rk4leaf_maxwhc        ! Max. leaf water mass possible        [kg/mÂ²leaf]
    real(kind=8) :: rk4tiny_sfcw_depth    ! Minimum snow/pond depth              [        m]
    !---------------------------------------------------------------------------------------!
 
@@ -746,8 +750,8 @@ module rk4_coms
   !---------------------------------------------------------------------------------------!
   !     The following variables are going to be allocated at the first time step, and     !
    ! they will be re-calculated every time the integrator is called.                       !
-   ! rk4min_soil_water                  ! Minimum soil moisture                 [    m³/m³]!
-   ! rk4max_soil_water                  ! Maximum soil moisture                 [    m³/m³]!
+   ! rk4min_soil_water                  ! Minimum soil moisture                 [    mÂ³/mÂ³]!
+   ! rk4max_soil_water                  ! Maximum soil moisture                 [    mÂ³/mÂ³]!
    !---------------------------------------------------------------------------------------!
 !   real(kind=8), dimension(:), allocatable :: rk4min_soil_water
 !   real(kind=8), dimension(:), allocatable :: rk4max_soil_water
@@ -1287,16 +1291,23 @@ module rk4_coms
       allocate(y%root_growth_resp (maxcohort))
       allocate(y%sapa_growth_resp (maxcohort))
       allocate(y%sapb_growth_resp (maxcohort))
-      allocate(y%storage_resp     (maxcohort))
+      allocate(y%leaf_storage_resp(maxcohort))
+      allocate(y%root_storage_resp(maxcohort))
+      allocate(y%sapa_storage_resp(maxcohort))
+      allocate(y%sapb_storage_resp(maxcohort))
+
       allocate(y%gpp_c13          (maxcohort))
       allocate(y%leaf_resp_c13    (maxcohort))
       allocate(y%root_resp_c13    (maxcohort))
-      allocate(y%storage_resp_c13 (maxcohort))
       
-      allocate(y%leaf_rowth_resp_c13  (maxcohort))
-      allocate(y%root_rowth_resp_c13  (maxcohort))
-      allocate(y%sapa_rowth_resp_c13  (maxcohort))
-      allocate(y%sapb_rowth_resp_c13  (maxcohort))
+      allocate(y%leaf_growth_resp_c13   (maxcohort))
+      allocate(y%root_growth_resp_c13   (maxcohort))
+      allocate(y%sapa_growth_resp_c13   (maxcohort))
+      allocate(y%sapb_growth_resp_c13   (maxcohort))
+      allocate(y%leaf_storage_resp_c13  (maxcohort))
+      allocate(y%root_storage_resp_c13  (maxcohort))
+      allocate(y%sapa_storage_resp_c13  (maxcohort))
+      allocate(y%sapb_storage_resp_c13  (maxcohort))
 
       allocate(y%wflxlc           (maxcohort))
       allocate(y%wflxwc           (maxcohort))
@@ -1397,16 +1408,22 @@ module rk4_coms
       nullify(y%root_growth_resp )
       nullify(y%sapa_growth_resp )
       nullify(y%sapb_growth_resp )
-      nullify(y%storage_resp     )
+      nullify(y%leaf_storage_resp)
+      nullify(y%root_storage_resp)
+      nullify(y%sapa_storage_resp)
+      nullify(y%sapb_storage_resp)
 
       nullify(y%gpp_c13          )
       nullify(y%leaf_resp_c13    )
       nullify(y%root_resp_c13    )
-      nullify(y%storage_resp_c13 )
       nullify(y%leaf_growth_resp_c13  )
       nullify(y%root_growth_resp_c13  )
       nullify(y%sapa_growth_resp_c13  )
       nullify(y%sapb_growth_resp_c13  )
+      nullify(y%leaf_storage_resp_c13  )
+      nullify(y%root_storage_resp_c13  )
+      nullify(y%sapa_storage_resp_c13  )
+      nullify(y%sapb_storage_resp_c13  )
 
       nullify(y%wflxlc           )
       nullify(y%wflxwc           )
@@ -1506,17 +1523,24 @@ module rk4_coms
       if (associated(y%root_growth_resp )) y%root_growth_resp = 0.d0
       if (associated(y%sapa_growth_resp )) y%sapa_growth_resp = 0.d0
       if (associated(y%sapb_growth_resp )) y%sapb_growth_resp = 0.d0
-      if (associated(y%storage_resp     )) y%storage_resp     = 0.d0
+      if (associated(y%leaf_storage_resp)) y%leaf_storage_resp = 0.d0
+      if (associated(y%root_storage_resp)) y%root_storage_resp = 0.d0
+      if (associated(y%sapa_storage_resp)) y%sapa_storage_resp = 0.d0
+      if (associated(y%sapb_storage_resp)) y%sapb_storage_resp = 0.d0
 
       if (associated(y%gpp_c13          )) y%gpp_c13          = 0.d0
       if (associated(y%leaf_resp_c13    )) y%leaf_resp_c13    = 0.d0
       if (associated(y%root_resp_c13    )) y%root_resp_c13    = 0.d0
-      if (associated(y%storage_resp_c13 )) y%storage_resp_c13 = 0.d0
       
       if (associated(y%leaf_growth_resp_c13  )) y%leaf_growth_resp_c13  = 0.d0
       if (associated(y%root_growth_resp_c13  )) y%root_growth_resp_c13  = 0.d0
       if (associated(y%sapa_growth_resp_c13  )) y%sapa_growth_resp_c13  = 0.d0
       if (associated(y%sapb_growth_resp_c13  )) y%sapb_growth_resp_c13  = 0.d0
+
+      if (associated(y%leaf_storage_resp_c13  )) y%leaf_storage_resp_c13  = 0.d0
+      if (associated(y%root_storage_resp_c13  )) y%root_storage_resp_c13  = 0.d0
+      if (associated(y%sapa_storage_resp_c13  )) y%sapa_storage_resp_c13  = 0.d0
+      if (associated(y%sapb_storage_resp_c13  )) y%sapb_storage_resp_c13  = 0.d0
 
       if (associated(y%wflxlc           )) y%wflxlc           = 0.d0
       if (associated(y%wflxwc           )) y%wflxwc           = 0.d0
@@ -1615,16 +1639,24 @@ module rk4_coms
       if (associated(y%root_growth_resp )) deallocate(y%root_growth_resp  )
       if (associated(y%sapa_growth_resp )) deallocate(y%sapa_growth_resp  )
       if (associated(y%sapb_growth_resp )) deallocate(y%sapb_growth_resp  )
-      if (associated(y%storage_resp     )) deallocate(y%storage_resp      )
+      if (associated(y%leaf_storage_resp)) deallocate(y%leaf_storage_resp )
+      if (associated(y%root_storage_resp)) deallocate(y%root_storage_resp )
+      if (associated(y%sapa_storage_resp)) deallocate(y%sapa_storage_resp )
+      if (associated(y%sapb_storage_resp)) deallocate(y%sapb_storage_resp )
+
       if (associated(y%gpp_c13          )) deallocate(y%gpp_c13           )
       if (associated(y%leaf_resp_c13    )) deallocate(y%leaf_resp_c13     )
       if (associated(y%root_resp_c13    )) deallocate(y%root_resp_c13     )
-      if (associated(y%storage_resp_c13 )) deallocate(y%storage_resp_c13  )
 
-      if (associated(y%leaf_growth_resp_c13  )) deallocate(y%leaf_rowth_resp_c13   )
-      if (associated(y%root_growth_resp_c13  )) deallocate(y%root_rowth_resp_c13   )
-      if (associated(y%sapa_growth_resp_c13  )) deallocate(y%sapa_rowth_resp_c13   )
-      if (associated(y%sapb_growth_resp_c13  )) deallocate(y%sapb_rowth_resp_c13   )
+      if (associated(y%leaf_growth_resp_c13  )) deallocate(y%leaf_growth_resp_c13   )
+      if (associated(y%root_growth_resp_c13  )) deallocate(y%root_growth_resp_c13   )
+      if (associated(y%sapa_growth_resp_c13  )) deallocate(y%sapa_growth_resp_c13   )
+      if (associated(y%sapb_growth_resp_c13  )) deallocate(y%sapb_growth_resp_c13   )
+
+      if (associated(y%leaf_storage_resp_c13  )) deallocate(y%leaf_storage_resp_c13   )
+      if (associated(y%root_storage_resp_c13  )) deallocate(y%root_storage_resp_c13   )
+      if (associated(y%sapa_storage_resp_c13  )) deallocate(y%sapa_storage_resp_c13   )
+      if (associated(y%sapb_storage_resp_c13  )) deallocate(y%sapb_storage_resp_c13   )
 
       if (associated(y%wflxlc           )) deallocate(y%wflxlc            )
       if (associated(y%wflxwc           )) deallocate(y%wflxwc            )
