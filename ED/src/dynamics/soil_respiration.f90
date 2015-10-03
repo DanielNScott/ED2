@@ -87,13 +87,6 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
       !------------------------------------------------------------------------------------!
 
 
-      !----- Add this time step to the daily mean root respiration. -----------------------!
-      cpatch%today_root_resp(ico)  = cpatch%today_root_resp(ico)                           &
-                                   + cpatch%root_respiration(ico)
-      !------------------------------------------------------------------------------------!
-
-
-
       !------------------------------------------------------------------------------------!
       !     The following is for output only, we switch the units to kgC/plant/yr.         !
       !------------------------------------------------------------------------------------!

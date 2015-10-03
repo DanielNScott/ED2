@@ -40,7 +40,7 @@ module growth_balive
       use fuse_fiss_utils , only : sort_cohorts           ! ! subroutine
       use ed_misc_coms    , only : igrass                 & ! intent(in)
                                  , growth_resp_scheme     & ! intent(in)
-                                 , dtlsm                  ! ! intent(in)
+                                 , dtlsm                  & ! intent(in)
                                  , ibigleaf               ! ! intent(in)
       use budget_utils    , only : update_budget          ! ! sub-routine
       use consts_coms     , only : day_sec                ! ! intent(in) 
@@ -385,7 +385,7 @@ module growth_balive
       real                          :: salloci
       real                          :: bl
       real                          :: br
-      real                          :: daily_C_gain
+      real                          :: dtlsm_c_gain
       real                          :: carbon_balance
       real                          :: carbon_balance_pot
       real                          :: carbon_balance_lightmax
@@ -435,7 +435,7 @@ module growth_balive
                   !     Compute maintenance costs using actual pools.                      !
                   !------------------------------------------------------------------------!
                   call plant_maintenance(cpatch,ico,cpatch%broot(ico),cpatch%bleaf(ico)    &
-                                        ,tfact,daily_C_gain,csite%avg_daily_temp(ipa))
+                                        ,tfact,dtlsm_c_gain,csite%avg_daily_temp(ipa))
 
                   !------------------------------------------------------------------------!
                   !    For the no vegetation dynamics case, we update the carbon balance   !
@@ -1129,13 +1129,13 @@ module growth_balive
 
 
             !----- NPP allocation in diff pools in KgC/m2/day. ----------------------------!
-            cpatch%today_nppleaf(ico)   = cpatch%today_npp_leaf(ico)                       &
-                                        + tr_bleaf       * cpatch%nplant(ico)
-            cpatch%today_nppfroot(ico)  = cpatch%today_npp_leaf(ico)                       &
-                                        + tr_broot       * cpatch%nplant(ico)
-            cpatch%today_nppsapwood(ico)= cpatch%today_npp_leaf(ico)                       &
+            cpatch%today_nppleaf(ico)   = cpatch%today_nppleaf(ico)                        &
+                                        + tr_bleaf * cpatch%nplant(ico)
+            cpatch%today_nppfroot(ico)  = cpatch%today_nppfroot(ico)                       &
+                                        + tr_broot * cpatch%nplant(ico)
+            cpatch%today_nppsapwood(ico)= cpatch%today_nppsapwood(ico)                     &
                                         + (tr_bsapwooda + tr_bsapwoodb)* cpatch%nplant(ico)
-            cpatch%today_nppdaily(ico)  = cpatch%today_npp_leaf(ico)                       &
+            cpatch%today_nppdaily(ico)  = cpatch%today_nppdaily(ico)                       &
                                         + carbon_balance * cpatch%nplant(ico)
             !------------------------------------------------------------------------------!
             

@@ -5006,20 +5006,14 @@ subroutine fill_history_patch(cpatch,paco_index,ncohorts_global)
                      ,'LINT_CO2_OPEN             ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpatch%lint_co2_closed                                               &
                      ,'LINT_CO2_CLOSED           ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%today_leaf_resp                                               &
-                     ,'TODAY_LEAF_RESP           ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%today_root_resp                                               &
-                     ,'TODAY_ROOT_RESP           ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%today_gpp                                                     &
-                     ,'TODAY_GPP                 ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%today_gpp_pot                                                 &
-                     ,'TODAY_GPP_POT             ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%today_gpp_lightmax                                            &
-                     ,'TODAY_GPP_LIGHTMAX        ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%today_gpp_moistmax                                            &
-                     ,'TODAY_GPP_MOISTMAX        ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%today_gpp_mlmax                                               &
-                     ,'TODAY_GPP_MLMAX           ',dsetrank,iparallel,.true. ,foundvar)
+   call hdf_getslab_r(cpatch%gpp_pot                                                 &
+                     ,'GPP_POT             ',dsetrank,iparallel,.true. ,foundvar)
+   call hdf_getslab_r(cpatch%gpp_lightmax                                            &
+                     ,'GPP_LIGHTMAX        ',dsetrank,iparallel,.true. ,foundvar)
+   call hdf_getslab_r(cpatch%gpp_moistmax                                            &
+                     ,'GPP_MOISTMAX        ',dsetrank,iparallel,.true. ,foundvar)
+   call hdf_getslab_r(cpatch%gpp_mlmax                                               &
+                     ,'GPP_MLMAX           ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpatch%today_nppleaf                                                 &
                      ,'TODAY_NPPLEAF             ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpatch%today_nppfroot                                                &
