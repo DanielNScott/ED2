@@ -130,9 +130,6 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    !---------------------------------------------------------------------------------------!
    !      Most variables start with zero.                                                  !
    !---------------------------------------------------------------------------------------!
-   cpatch%today_leaf_resp       (ico) = 0.0
-   cpatch%today_root_resp       (ico) = 0.0
-   cpatch%today_gpp             (ico) = 0.0
    cpatch%today_nppleaf         (ico) = 0.0
    cpatch%today_nppfroot        (ico) = 0.0
    cpatch%today_nppsapwood      (ico) = 0.0
@@ -140,10 +137,10 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%today_nppseeds        (ico) = 0.0
    cpatch%today_nppwood         (ico) = 0.0
    cpatch%today_nppdaily        (ico) = 0.0
-   cpatch%today_gpp_pot         (ico) = 0.0
-   cpatch%today_gpp_lightmax    (ico) = 0.0
-   cpatch%today_gpp_moistmax    (ico) = 0.0
-   cpatch%today_gpp_mlmax       (ico) = 0.0
+   cpatch%gpp_pot               (ico) = 0.0
+   cpatch%gpp_lightmax          (ico) = 0.0
+   cpatch%gpp_moistmax          (ico) = 0.0
+   cpatch%gpp_mlmax             (ico) = 0.0
    cpatch%light_level           (ico) = 0.0
    cpatch%light_level_beam      (ico) = 0.0
    cpatch%light_level_diff      (ico) = 0.0

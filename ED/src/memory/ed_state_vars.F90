@@ -269,24 +269,18 @@ module ed_state_vars
       !     The following variables are used for growth rates.  They are for internal use  !
       ! only and are meaningless in the output files (they saved only in HISTORY).         !
       !------------------------------------------------------------------------------------!
-      ! Mean leaf respiration rate (umol/m2 ground/s), averaged over 1 day
-      real ,pointer,dimension(:) :: today_leaf_resp
-      ! Mean root respiration rate (umol/m2 ground/s), averaged over 1 day
-      real ,pointer,dimension(:) :: today_root_resp
-      ! Gross primary productivity (GPP) [umol/m2 ground/s], averaged over 1 day
-      real,pointer,dimension(:) :: today_gpp
       ! Potential GPP in the absence of N limitation [umol/m2 ground/s],
       ! averaged over 1 day
-      real ,pointer,dimension(:) :: today_gpp_pot
+      real ,pointer,dimension(:) :: gpp_pot
       ! Maximum GPP if cohort were at the top of the canopy (maximum light)
       ! [umol/m2 ground/s], averaged over 1 day
-      real ,pointer,dimension(:) :: today_gpp_lightmax
+      real ,pointer,dimension(:) :: gpp_lightmax
       ! Maximum GPP if cohort had all soil moisture needed (maximum soil moisture)
       ! [umol/m2 ground/s], averaged over 1 day
-      real ,pointer,dimension(:) :: today_gpp_moistmax
+      real ,pointer,dimension(:) :: gpp_moistmax
       ! Maximum GPP if cohort had maximum soil moisture and maximum light
       ! [umol/m2 ground/s], averaged over 1 day
-      real ,pointer,dimension(:) :: today_gpp_mlmax
+      real ,pointer,dimension(:) :: gpp_mlmax
 
 
       real,pointer,dimension(:) :: today_nppleaf
@@ -4501,13 +4495,11 @@ module ed_state_vars
       allocate(cpatch%lint_shv                     (                    ncohorts))
       allocate(cpatch%lint_co2_open                (                    ncohorts))
       allocate(cpatch%lint_co2_closed              (                    ncohorts))
-      allocate(cpatch%today_leaf_resp              (                    ncohorts))
-      allocate(cpatch%today_root_resp              (                    ncohorts))
-      allocate(cpatch%today_gpp                    (                    ncohorts))
-      allocate(cpatch%today_gpp_pot                (                    ncohorts))
-      allocate(cpatch%today_gpp_lightmax           (                    ncohorts))
-      allocate(cpatch%today_gpp_moistmax           (                    ncohorts))
-      allocate(cpatch%today_gpp_mlmax              (                    ncohorts))
+      allocate(cpatch%gpp                    (                    ncohorts))
+      allocate(cpatch%gpp_pot                (                    ncohorts))
+      allocate(cpatch%gpp_lightmax           (                    ncohorts))
+      allocate(cpatch%gpp_moistmax           (                    ncohorts))
+      allocate(cpatch%gpp_mlmax              (                    ncohorts))
       allocate(cpatch%today_nppleaf                (                    ncohorts))
       allocate(cpatch%today_nppfroot               (                    ncohorts))
       allocate(cpatch%today_nppsapwood             (                    ncohorts))
@@ -6271,13 +6263,11 @@ module ed_state_vars
       nullify(cpatch%lint_shv              )
       nullify(cpatch%lint_co2_open         )
       nullify(cpatch%lint_co2_closed       )
-      nullify(cpatch%today_leaf_resp       )
-      nullify(cpatch%today_root_resp       )
-      nullify(cpatch%today_gpp             )
-      nullify(cpatch%today_gpp_pot         )
-      nullify(cpatch%today_gpp_lightmax    )
-      nullify(cpatch%today_gpp_moistmax    )
-      nullify(cpatch%today_gpp_mlmax       )
+      nullify(cpatch%gpp             )
+      nullify(cpatch%gpp_pot         )
+      nullify(cpatch%gpp_lightmax    )
+      nullify(cpatch%gpp_moistmax    )
+      nullify(cpatch%gpp_mlmax       )
       nullify(cpatch%today_nppleaf         )
       nullify(cpatch%today_nppfroot        )
       nullify(cpatch%today_nppsapwood      )
@@ -8072,13 +8062,10 @@ module ed_state_vars
       if(associated(cpatch%lint_shv            )) deallocate(cpatch%lint_shv            )
       if(associated(cpatch%lint_co2_open       )) deallocate(cpatch%lint_co2_open       )
       if(associated(cpatch%lint_co2_closed     )) deallocate(cpatch%lint_co2_closed     )
-      if(associated(cpatch%today_leaf_resp     )) deallocate(cpatch%today_leaf_resp     )
-      if(associated(cpatch%today_root_resp     )) deallocate(cpatch%today_root_resp     )
-      if(associated(cpatch%today_gpp           )) deallocate(cpatch%today_gpp           )
-      if(associated(cpatch%today_gpp_pot       )) deallocate(cpatch%today_gpp_pot       )
-      if(associated(cpatch%today_gpp_lightmax  )) deallocate(cpatch%today_gpp_lightmax  )
-      if(associated(cpatch%today_gpp_moistmax  )) deallocate(cpatch%today_gpp_moistmax  )
-      if(associated(cpatch%today_gpp_mlmax     )) deallocate(cpatch%today_gpp_mlmax     )
+      if(associated(cpatch%gpp_pot       )) deallocate(cpatch%gpp_pot       )
+      if(associated(cpatch%gpp_lightmax  )) deallocate(cpatch%gpp_lightmax  )
+      if(associated(cpatch%gpp_moistmax  )) deallocate(cpatch%gpp_moistmax  )
+      if(associated(cpatch%gpp_mlmax     )) deallocate(cpatch%gpp_mlmax     )
       if(associated(cpatch%today_nppleaf       )) deallocate(cpatch%today_nppleaf       )
       if(associated(cpatch%today_nppfroot      )) deallocate(cpatch%today_nppfroot      )
       if(associated(cpatch%today_nppsapwood    )) deallocate(cpatch%today_nppsapwood    )
@@ -9896,13 +9883,11 @@ module ed_state_vars
          opatch%lint_shv              (oco) = ipatch%lint_shv              (ico)
          opatch%lint_co2_open         (oco) = ipatch%lint_co2_open         (ico)
          opatch%lint_co2_closed       (oco) = ipatch%lint_co2_closed       (ico)
-         opatch%today_leaf_resp       (oco) = ipatch%today_leaf_resp       (ico)
-         opatch%today_root_resp       (oco) = ipatch%today_root_resp       (ico)
-         opatch%today_gpp             (oco) = ipatch%today_gpp             (ico)
-         opatch%today_gpp_pot         (oco) = ipatch%today_gpp_pot         (ico)
-         opatch%today_gpp_lightmax    (oco) = ipatch%today_gpp_lightmax    (ico)
-         opatch%today_gpp_moistmax    (oco) = ipatch%today_gpp_moistmax    (ico)
-         opatch%today_gpp_mlmax       (oco) = ipatch%today_gpp_mlmax       (ico)
+         opatch%gpp             (oco) = ipatch%gpp             (ico)
+         opatch%gpp_pot         (oco) = ipatch%gpp_pot         (ico)
+         opatch%gpp_lightmax    (oco) = ipatch%gpp_lightmax    (ico)
+         opatch%gpp_moistmax    (oco) = ipatch%gpp_moistmax    (ico)
+         opatch%gpp_mlmax       (oco) = ipatch%gpp_mlmax       (ico)
          opatch%today_nppleaf         (oco) = ipatch%today_nppleaf         (ico)
          opatch%today_nppfroot        (oco) = ipatch%today_nppfroot        (ico)
          opatch%today_nppsapwood      (oco) = ipatch%today_nppsapwood      (ico)
@@ -10487,13 +10472,11 @@ module ed_state_vars
       opatch%lint_shv              (1:z) = pack(ipatch%lint_shv                  ,lmask)
       opatch%lint_co2_open         (1:z) = pack(ipatch%lint_co2_open             ,lmask)
       opatch%lint_co2_closed       (1:z) = pack(ipatch%lint_co2_closed           ,lmask)
-      opatch%today_leaf_resp       (1:z) = pack(ipatch%today_leaf_resp           ,lmask)
-      opatch%today_root_resp       (1:z) = pack(ipatch%today_root_resp           ,lmask)
-      opatch%today_gpp             (1:z) = pack(ipatch%today_gpp                 ,lmask)
-      opatch%today_gpp_pot         (1:z) = pack(ipatch%today_gpp_pot             ,lmask)
-      opatch%today_gpp_lightmax    (1:z) = pack(ipatch%today_gpp_lightmax        ,lmask)
-      opatch%today_gpp_moistmax    (1:z) = pack(ipatch%today_gpp_moistmax        ,lmask)
-      opatch%today_gpp_mlmax       (1:z) = pack(ipatch%today_gpp_mlmax           ,lmask)
+      opatch%gpp             (1:z) = pack(ipatch%gpp                 ,lmask)
+      opatch%gpp_pot         (1:z) = pack(ipatch%gpp_pot             ,lmask)
+      opatch%gpp_lightmax    (1:z) = pack(ipatch%gpp_lightmax        ,lmask)
+      opatch%gpp_moistmax    (1:z) = pack(ipatch%gpp_moistmax        ,lmask)
+      opatch%gpp_mlmax       (1:z) = pack(ipatch%gpp_mlmax           ,lmask)
       opatch%today_nppleaf         (1:z) = pack(ipatch%today_nppleaf             ,lmask)
       opatch%today_nppfroot        (1:z) = pack(ipatch%today_nppfroot            ,lmask)
       opatch%today_nppsapwood      (1:z) = pack(ipatch%today_nppsapwood          ,lmask)
@@ -24674,27 +24657,6 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if
 
-      if (associated(cpatch%today_leaf_resp)) then
-         nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%today_leaf_resp,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_LEAF_RESP :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if
-
-      if (associated(cpatch%today_root_resp)) then
-         nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%today_root_resp,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_ROOT_RESP :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if
-
-      if (associated(cpatch%today_gpp)) then
-         nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%today_gpp,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_GPP :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if
-      
       if (associated(cpatch%today_nppleaf)) then
          nvar=nvar+1
            call vtable_edio_r(npts,cpatch%today_nppleaf,nvar,igr,init,cpatch%coglob_id, &
@@ -24744,31 +24706,31 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
       end if
       
-      if (associated(cpatch%today_gpp_pot)) then
+      if (associated(cpatch%gpp_pot)) then
          nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%today_gpp_pot,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_GPP_POT :41:hist') 
+           call vtable_edio_r(npts,cpatch%gpp_pot,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'GPP_POT :41:hist') 
          call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
       end if
 
-      if (associated(cpatch%today_gpp_lightmax)) then
+      if (associated(cpatch%gpp_lightmax)) then
          nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%today_gpp_lightmax,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_GPP_LIGHTMAX :41:hist') 
+           call vtable_edio_r(npts,cpatch%gpp_lightmax,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'GPP_LIGHTMAX :41:hist') 
          call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
       end if
 
-      if (associated(cpatch%today_gpp_moistmax)) then
+      if (associated(cpatch%gpp_moistmax)) then
          nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%today_gpp_moistmax,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_GPP_MOISTMAX :41:hist') 
+           call vtable_edio_r(npts,cpatch%gpp_moistmax,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'GPP_MOISTMAX :41:hist') 
          call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
       end if
 
-      if (associated(cpatch%today_gpp_mlmax)) then
+      if (associated(cpatch%gpp_mlmax)) then
          nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%today_gpp_mlmax,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_GPP_MLMAX :41:hist') 
+           call vtable_edio_r(npts,cpatch%gpp_mlmax,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'GPP_MLMAX :41:hist') 
          call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
       end if
 

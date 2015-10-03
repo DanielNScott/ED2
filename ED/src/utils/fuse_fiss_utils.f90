@@ -1278,9 +1278,6 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------!
       !    Today variables are extensive.                                                  !
       !------------------------------------------------------------------------------------!
-      cpatch%today_gpp          (recc) = cpatch%today_gpp          (recc)                  &
-                                       + cpatch%today_gpp          (donc)
-                                  
       cpatch%today_nppleaf      (recc) = cpatch%today_nppleaf      (recc)                  &
                                        + cpatch%today_nppleaf      (donc)
                                   
@@ -1302,23 +1299,17 @@ module fuse_fiss_utils
       cpatch%today_nppdaily     (recc) = cpatch%today_nppdaily     (recc)                  &
                                        + cpatch%today_nppdaily     (donc)
                                   
-      cpatch%today_gpp_pot      (recc) = cpatch%today_gpp_pot      (recc)                  &
-                                       + cpatch%today_gpp_pot      (donc)
+      cpatch%gpp_pot      (recc) = cpatch%gpp_pot      (recc)                  &
+                                       + cpatch%gpp_pot      (donc)
 
-      cpatch%today_gpp_lightmax (recc) = cpatch%today_gpp_lightmax (recc)                  &
-                                       + cpatch%today_gpp_lightmax (donc)
+      cpatch%gpp_lightmax (recc) = cpatch%gpp_lightmax (recc)                  &
+                                       + cpatch%gpp_lightmax (donc)
 
-      cpatch%today_gpp_moistmax (recc) = cpatch%today_gpp_moistmax (recc)                  &
-                                       + cpatch%today_gpp_moistmax (donc)
+      cpatch%gpp_moistmax (recc) = cpatch%gpp_moistmax (recc)                  &
+                                       + cpatch%gpp_moistmax (donc)
 
-      cpatch%today_gpp_mlmax    (recc) = cpatch%today_gpp_mlmax    (recc)                  &
-                                       + cpatch%today_gpp_mlmax    (donc)
-
-      cpatch%today_leaf_resp    (recc) = cpatch%today_leaf_resp    (recc)                  &
-                                       + cpatch%today_leaf_resp    (donc)
-
-      cpatch%today_root_resp    (recc) = cpatch%today_root_resp    (recc)                  &
-                                       + cpatch%today_root_resp    (donc)
+      cpatch%gpp_mlmax    (recc) = cpatch%gpp_mlmax    (recc)                  &
+                                       + cpatch%gpp_mlmax    (donc)
       !------------------------------------------------------------------------------------!
 
 

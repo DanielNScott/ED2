@@ -2467,30 +2467,32 @@ module average_utils
                   csite%dmean_Af_decomp(ipa) = csite%today_Af_decomp(ipa)
                end if
 
-               cpatch => csite%patch(ipa)
-               
-               !----- Included a loop so it won't crash with empty cohorts... -------------!
-               cohortloop: do ico=1,cpatch%ncohorts
-                  !------------------------------------------------------------------------!
-                  !     Normalise the variables used to compute carbon balance.            !
-                  !------------------------------------------------------------------------!
-                  cpatch%today_gpp          (ico) = cpatch%today_gpp          (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_pot      (ico) = cpatch%today_gpp_pot      (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_lightmax (ico) = cpatch%today_gpp_lightmax (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_moistmax (ico) = cpatch%today_gpp_moistmax (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_mlmax    (ico) = cpatch%today_gpp_mlmax (ico)           &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_leaf_resp    (ico) = cpatch%today_leaf_resp    (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_root_resp    (ico) = cpatch%today_root_resp    (ico)        &
-                                                  * dtlsm_o_daysec
-                  !------------------------------------------------------------------------!
-               end do cohortloop
-               !---------------------------------------------------------------------------!
+               ! DS: None of these exist anymore & their analogues don't need to be
+               !     normalized if growth_balive -> dtlsm. 
+               !cpatch => csite%patch(ipa)
+               !
+               !!----- Included a loop so it won't crash with empty cohorts... -------------!
+               !cohortloop: do ico=1,cpatch%ncohorts
+               !   !------------------------------------------------------------------------!
+               !   !     Normalise the variables used to compute carbon balance.            !
+               !   !------------------------------------------------------------------------!
+               !   cpatch%today_gpp          (ico) = cpatch%today_gpp          (ico)        &
+               !                                   * dtlsm_o_daysec
+               !   cpatch%today_gpp_pot      (ico) = cpatch%today_gpp_pot      (ico)        &
+               !                                   * dtlsm_o_daysec
+               !   cpatch%today_gpp_lightmax (ico) = cpatch%today_gpp_lightmax (ico)        &
+               !                                   * dtlsm_o_daysec
+               !   cpatch%today_gpp_moistmax (ico) = cpatch%today_gpp_moistmax (ico)        &
+               !                                   * dtlsm_o_daysec
+               !   cpatch%today_gpp_mlmax    (ico) = cpatch%today_gpp_mlmax (ico)           &
+               !                                   * dtlsm_o_daysec
+               !   cpatch%today_leaf_resp    (ico) = cpatch%today_leaf_resp    (ico)        &
+               !                                   * dtlsm_o_daysec
+               !   cpatch%today_root_resp    (ico) = cpatch%today_root_resp    (ico)        &
+               !                                   * dtlsm_o_daysec
+               !   !------------------------------------------------------------------------!
+               !end do cohortloop
+               !!---------------------------------------------------------------------------!
             end do patchloop
             !------------------------------------------------------------------------------!
          end do siteloop
@@ -3111,7 +3113,6 @@ module average_utils
 
                !----- Reset variables stored in patchtype. --------------------------------!
                do ico = 1, cpatch%ncohorts
-                  cpatch%today_gpp          (ico) = 0.0
                   cpatch%today_nppleaf      (ico) = 0.0
                   cpatch%today_nppfroot     (ico) = 0.0
                   cpatch%today_nppsapwood   (ico) = 0.0
@@ -3119,12 +3120,10 @@ module average_utils
                   cpatch%today_nppseeds     (ico) = 0.0
                   cpatch%today_nppwood      (ico) = 0.0
                   cpatch%today_nppdaily     (ico) = 0.0
-                  cpatch%today_gpp_pot      (ico) = 0.0
-                  cpatch%today_gpp_lightmax (ico) = 0.0
-                  cpatch%today_gpp_moistmax (ico) = 0.0
-                  cpatch%today_gpp_mlmax (ico) = 0.0
-                  cpatch%today_leaf_resp    (ico) = 0.0
-                  cpatch%today_root_resp    (ico) = 0.0
+                  cpatch%gpp_pot            (ico) = 0.0
+                  cpatch%gpp_lightmax       (ico) = 0.0
+                  cpatch%gpp_moistmax       (ico) = 0.0
+                  cpatch%gpp_mlmax          (ico) = 0.0
                end do
                !---------------------------------------------------------------------------!
             end do
