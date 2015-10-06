@@ -760,10 +760,10 @@ module growth_balive
 
       !----- Compute daily C uptake [kgC/plant/day]. --------------------------------------!
       if(cpatch%nplant(ico) > tiny(1.0)) then
-         dtlsm_c_gain = umol_2_kgC * day_sec * ( cpatch%gpp(ico)                           &
-                                               - cpatch%leaf_respiration(ico)              &
-                                               - cpatch%root_respiration(ico))             &
-                                             / cpatch%nplant(ico)
+         dtlsm_c_gain = umol_2_kgC * dtlsm * ( cpatch%gpp(ico)                               &
+                                             - cpatch%leaf_respiration(ico)                  &
+                                             - cpatch%root_respiration(ico))                 &
+                                           / cpatch%nplant(ico)
       else
          dtlsm_c_gain = 0.0
       end if
@@ -787,7 +787,8 @@ module growth_balive
       use pft_coms       , only : growth_resp_factor ! ! intent(in)
       use consts_coms    , only : umol_2_kgC         & ! intent(in)
                                 , day_sec            ! ! intent(in)
-      use ed_misc_coms   , only : current_time       ! ! intent(in)
+      use ed_misc_coms   , only : current_time       & ! intent(in)
+                                , dtlsm              ! ! intent(in)
       use ed_max_dims    , only : n_pft              ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -837,10 +838,10 @@ module growth_balive
          !      Calculate potential carbon balance (used for nitrogen demand function).    !
          ! [kgC/plant/day].                                                                !
          !---------------------------------------------------------------------------------!
-         dtlsm_c_gain_pot       = umol_2_kgC * day_sec * ( cpatch%gpp_pot         (ico)    &
-                                                         - cpatch%leaf_respiration(ico)    &
-                                                         - cpatch%root_respiration(ico))   &
-                                                       / cpatch%nplant(ico)
+         dtlsm_c_gain_pot       = umol_2_kgC * dtlsm *( cpatch%gpp_pot         (ico)    &
+                                                      - cpatch%leaf_respiration(ico)    &
+                                                      - cpatch%root_respiration(ico))   &
+                                                     / cpatch%nplant(ico)
          growth_respiration_pot = max(0.0, dtlsm_c_gain_pot * growth_resp_factor(ipft))
          carbon_balance_pot     = dtlsm_c_gain_pot - growth_respiration_pot
          !---------------------------------------------------------------------------------!
@@ -852,7 +853,7 @@ module growth_balive
          ! used for density-dependent mortality.  Units: [kgC/plant/day].                  !
          !---------------------------------------------------------------------------------!
          !------ Full light. --------------------------------------------------------------!
-         dtlsm_c_gain_lightmax       = umol_2_kgC * day_sec                                &
+         dtlsm_c_gain_lightmax       = umol_2_kgC * dtlsm                                  &
                                      * ( cpatch%gpp_lightmax       (ico)                   &
                                        - cpatch%leaf_respiration   (ico)                   &
                                        - cpatch%root_respiration   (ico) )                 &
@@ -861,7 +862,7 @@ module growth_balive
                                               * growth_resp_factor(ipft) )
          carbon_balance_lightmax     = dtlsm_c_gain_lightmax - growth_respiration_lightmax
          !------ Full soil moisture. ------------------------------------------------------!
-         dtlsm_c_gain_moistmax       = umol_2_kgC * day_sec                                &
+         dtlsm_c_gain_moistmax       = umol_2_kgC * dtlsm                                  &
                                      * ( cpatch%gpp_moistmax       (ico)                   &
                                        - cpatch%leaf_respiration   (ico)                   &
                                        - cpatch%root_respiration   (ico) )                 &
@@ -870,7 +871,7 @@ module growth_balive
                                               * growth_resp_factor(ipft) )
          carbon_balance_moistmax     = dtlsm_c_gain_moistmax - growth_respiration_moistmax
          !------ Full soil moisture and light. --------------------------------------------!
-         dtlsm_c_gain_mlmax          = umol_2_kgC * day_sec                                &
+         dtlsm_c_gain_mlmax          = umol_2_kgC * dtlsm                                  &
                                      * ( cpatch%gpp_mlmax          (ico)                   &
                                        - cpatch%leaf_respiration   (ico)                   &
                                        - cpatch%root_respiration   (ico) )                 &
