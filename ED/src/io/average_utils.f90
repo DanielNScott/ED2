@@ -2248,6 +2248,12 @@ module average_utils
                   cpatch%dmean_root_resp     (ico) = cpatch%dmean_root_resp     (ico)      &
                                                    + cpatch%fmean_root_resp     (ico)      &
                                                    * frqsum_o_daysec
+                  cpatch%dmean_leaf_maintenance(ico) = cpatch%dmean_leaf_maintenance(ico)  &
+                                                     + cpatch%leaf_maintenance(ico)        &
+                                                     * frqsum_o_daysec
+                  cpatch%dmean_root_maintenance(ico) = cpatch%dmean_root_maintenance(ico)  &
+                                                     + cpatch%root_maintenance(ico)        &
+                                                     * frqsum_o_daysec
                   cpatch%dmean_leaf_growth_resp(ico) = cpatch%dmean_leaf_growth_resp (ico) &
                                                      + cpatch%fmean_leaf_growth_resp (ico) &
                                                      * frqsum_o_daysec
@@ -3423,6 +3429,8 @@ module average_utils
                   cpatch%dmean_npp               (ico) = 0.0
                   cpatch%dmean_leaf_resp         (ico) = 0.0
                   cpatch%dmean_root_resp         (ico) = 0.0
+                  cpatch%dmean_leaf_maintenance  (ico) = 0.0
+                  cpatch%dmean_root_maintenance  (ico) = 0.0
                   cpatch%dmean_leaf_growth_resp  (ico) = 0.0
                   cpatch%dmean_root_growth_resp  (ico) = 0.0
                   cpatch%dmean_sapa_growth_resp  (ico) = 0.0
@@ -4484,20 +4492,14 @@ module average_utils
                   cpatch%mmean_mort_rate     (:,ico) = cpatch%mmean_mort_rate     (:,ico)  &
                                                      + cpatch%mort_rate           (:,ico)  &
                                                      * ndaysi
-                  cpatch%mmean_leaf_maintenance(ico) = cpatch%mmean_leaf_maintenance(ico)  &
-                                                     + cpatch%leaf_maintenance      (ico)  &
-                                                     * ndaysi
-                  cpatch%mmean_root_maintenance(ico) = cpatch%mmean_root_maintenance(ico)  &
-                                                     + cpatch%root_maintenance      (ico)  &
-                                                     * ndaysi
                   cpatch%mmean_leaf_drop       (ico) = cpatch%mmean_leaf_drop       (ico)  &
                                                      + cpatch%leaf_drop             (ico)  &
                                                      * ndaysi
                   cpatch%mmean_cb              (ico) = cpatch%mmean_cb              (ico)  &
                                                      + ( cpatch%dmean_gpp           (ico)  &
                                                        - cpatch%dmean_plresp        (ico)  &
-                                                       - cpatch%leaf_maintenance    (ico)  &
-                                                       - cpatch%root_maintenance    (ico)  &
+                                                       - cpatch%dmean_leaf_maintenance(ico)  &
+                                                       - cpatch%dmean_root_maintenance(ico)  &
                                                        - cpatch%leaf_drop           (ico)  &
                                                        ) / yr_day * ndaysi
                   !------------------------------------------------------------------------!
@@ -4518,6 +4520,12 @@ module average_utils
                                                      * ndaysi
                   cpatch%mmean_root_resp       (ico) = cpatch%mmean_root_resp       (ico)  &
                                                      + cpatch%dmean_root_resp       (ico)  &
+                                                     * ndaysi
+                  cpatch%mmean_leaf_maintenance(ico) = cpatch%mmean_leaf_maintenance(ico)  &
+                                                     + cpatch%dmean_leaf_maintenance(ico)  &
+                                                     * ndaysi
+                  cpatch%mmean_root_maintenance(ico) = cpatch%mmean_root_maintenance(ico)  &
+                                                     + cpatch%dmean_root_maintenance(ico)  &
                                                      * ndaysi
                   cpatch%mmean_leaf_growth_resp(ico) = cpatch%mmean_leaf_growth_resp(ico)  &
                                                      + cpatch%dmean_leaf_growth_resp(ico)  &
@@ -5437,8 +5445,6 @@ module average_utils
                   cpatch%mmean_broot             (ico) = 0.0
                   cpatch%mmean_bstorage          (ico) = 0.0
                   cpatch%mmean_mort_rate       (:,ico) = 0.0
-                  cpatch%mmean_leaf_maintenance  (ico) = 0.0
-                  cpatch%mmean_root_maintenance  (ico) = 0.0
                   cpatch%mmean_leaf_drop         (ico) = 0.0
                   select case (iddmort_scheme)
                   case (0)
@@ -5450,6 +5456,8 @@ module average_utils
                   cpatch%mmean_npp               (ico) = 0.0
                   cpatch%mmean_leaf_resp         (ico) = 0.0
                   cpatch%mmean_root_resp         (ico) = 0.0
+                  cpatch%mmean_leaf_maintenance  (ico) = 0.0
+                  cpatch%mmean_root_maintenance  (ico) = 0.0
                   cpatch%mmean_leaf_growth_resp  (ico) = 0.0
                   cpatch%mmean_root_growth_resp  (ico) = 0.0
                   cpatch%mmean_sapa_growth_resp  (ico) = 0.0

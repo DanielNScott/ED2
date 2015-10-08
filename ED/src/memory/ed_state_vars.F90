@@ -569,6 +569,8 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_npp
       real,pointer,dimension(:)     :: dmean_leaf_resp
       real,pointer,dimension(:)     :: dmean_root_resp
+      real,pointer,dimension(:)     :: dmean_leaf_maintenance
+      real,pointer,dimension(:)     :: dmean_root_maintenance
       real,pointer,dimension(:)     :: dmean_leaf_growth_resp
       real,pointer,dimension(:)     :: dmean_root_growth_resp
       real,pointer,dimension(:)     :: dmean_sapa_growth_resp
@@ -4646,6 +4648,8 @@ module ed_state_vars
          allocate(cpatch%dmean_npp                 (                    ncohorts))
          allocate(cpatch%dmean_leaf_resp           (                    ncohorts))
          allocate(cpatch%dmean_root_resp           (                    ncohorts))
+         allocate(cpatch%dmean_leaf_maintenance    (                    ncohorts))
+         allocate(cpatch%dmean_root_maintenance    (                    ncohorts))
          allocate(cpatch%dmean_leaf_growth_resp    (                    ncohorts))
          allocate(cpatch%dmean_root_growth_resp    (                    ncohorts))
          allocate(cpatch%dmean_sapa_growth_resp    (                    ncohorts))
@@ -6410,6 +6414,8 @@ module ed_state_vars
       nullify(cpatch%dmean_npp             )
       nullify(cpatch%dmean_leaf_resp       )
       nullify(cpatch%dmean_root_resp       )
+      nullify(cpatch%dmean_leaf_maintenance)
+      nullify(cpatch%dmean_root_maintenance)
       nullify(cpatch%dmean_leaf_growth_resp)
       nullify(cpatch%dmean_root_growth_resp)
       nullify(cpatch%dmean_sapa_growth_resp)
@@ -8210,6 +8216,8 @@ module ed_state_vars
       if(associated(cpatch%dmean_npp           )) deallocate(cpatch%dmean_npp           )
       if(associated(cpatch%dmean_leaf_resp     )) deallocate(cpatch%dmean_leaf_resp     )
       if(associated(cpatch%dmean_root_resp     )) deallocate(cpatch%dmean_root_resp     )
+      if(associated(cpatch%dmean_leaf_maintenance)) deallocate(cpatch%dmean_leaf_maintenance)
+      if(associated(cpatch%dmean_root_maintenance)) deallocate(cpatch%dmean_root_maintenance)
       if(associated(cpatch%dmean_leaf_growth_resp)) deallocate(cpatch%dmean_leaf_growth_resp)
       if(associated(cpatch%dmean_root_growth_resp)) deallocate(cpatch%dmean_root_growth_resp)
       if(associated(cpatch%dmean_sapa_growth_resp)) deallocate(cpatch%dmean_sapa_growth_resp)
@@ -10061,6 +10069,8 @@ module ed_state_vars
             opatch%dmean_npp             (oco) = ipatch%dmean_npp             (ico)
             opatch%dmean_leaf_resp       (oco) = ipatch%dmean_leaf_resp       (ico)
             opatch%dmean_root_resp       (oco) = ipatch%dmean_root_resp       (ico)
+            opatch%dmean_leaf_maintenance(oco) = ipatch%dmean_leaf_maintenance(ico)
+            opatch%dmean_root_maintenance(oco) = ipatch%dmean_root_maintenance(ico)
             opatch%dmean_leaf_growth_resp(oco) = ipatch%dmean_leaf_growth_resp(ico)
             opatch%dmean_root_growth_resp(oco) = ipatch%dmean_root_growth_resp(ico)
             opatch%dmean_sapa_growth_resp(oco) = ipatch%dmean_sapa_growth_resp(ico)
@@ -10714,6 +10724,8 @@ module ed_state_vars
       opatch%dmean_npp             (1:z) = pack(ipatch%dmean_npp                 ,lmask)
       opatch%dmean_leaf_resp       (1:z) = pack(ipatch%dmean_leaf_resp           ,lmask)
       opatch%dmean_root_resp       (1:z) = pack(ipatch%dmean_root_resp           ,lmask)
+      opatch%dmean_leaf_maintenance(1:z) = pack(ipatch%dmean_leaf_maintenance    ,lmask)
+      opatch%dmean_root_maintenance(1:z) = pack(ipatch%dmean_root_maintenance    ,lmask)
       opatch%dmean_leaf_growth_resp(1:z) = pack(ipatch%dmean_leaf_growth_resp    ,lmask)
       opatch%dmean_root_growth_resp(1:z) = pack(ipatch%dmean_root_growth_resp    ,lmask)
       opatch%dmean_sapa_growth_resp(1:z) = pack(ipatch%dmean_sapa_growth_resp    ,lmask)
@@ -20462,7 +20474,7 @@ module ed_state_vars
       if (associated(csite%avg_daily_temp)) then
          nvar=nvar+1
            call vtable_edio_r(npts,csite%avg_daily_temp,nvar,igr,init,csite%paglob_id, &
-           var_len,var_len_global,max_ptrs,'AVG_DAILY_TEMP :31:hist') 
+           var_len,var_len_global,max_ptrs,'AVG_DAILY_TEMP :31:dail:hist') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if  
 
@@ -25035,20 +25047,6 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if
 
-      if (associated(cpatch%leaf_maintenance)) then
-         nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%leaf_maintenance,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'LEAF_MAINTENANCE :41:hist:dail') 
-         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
-      end if
-
-      if (associated(cpatch%root_maintenance)) then
-         nvar=nvar+1
-           call vtable_edio_r(npts,cpatch%root_maintenance,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'ROOT_MAINTENANCE :41:hist:dail') 
-         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
-      end if
-
       if (associated(cpatch%leaf_drop)) then
          nvar=nvar+1
            call vtable_edio_r(npts,cpatch%leaf_drop,nvar,igr,init,cpatch%coglob_id, &
@@ -25217,6 +25215,24 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Root respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%leaf_maintenance       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%leaf_maintenance                                   &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'LEAF_MAINTENANCE         :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Leaf maintenance'                            &
+                           ,'[  kgC/plant ]','(icohort)'            )
+      end if
+      if (associated(cpatch%root_maintenance       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%root_maintenance                                   &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'ROOT_MAINTENANCE         :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Root maintenance'                            &
+                           ,'[  kgC/plant]','(icohort)'            )
       end if
       if (associated(cpatch%fmean_leaf_growth_resp)) then
          nvar = nvar+1
@@ -25869,6 +25885,24 @@ module ed_state_vars
                            ,'DMEAN_ROOT_RESP_CO         :41:'//trim(dail_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Root respiration'                                &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_leaf_maintenance       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_leaf_maintenance                             &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_LEAF_MAINTENANCE_CO         :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Leaf maintenance'                                &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_root_maintenance       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_root_maintenance                             &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_ROOT_MAINTENANCE_CO         :41:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Root maintenance'                                &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if
       if (associated(cpatch%dmean_leaf_growth_resp)) then

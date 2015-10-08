@@ -1788,6 +1788,10 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%dmean_root_resp       (donc)         &
                                              * dnplant
+         cpatch%dmean_leaf_maintenance(recc) = cpatch%dmean_leaf_maintenance(recc) * rnplant     &
+                                             + cpatch%dmean_leaf_maintenance(donc) * dnplant
+         cpatch%dmean_root_maintenance(recc) = cpatch%dmean_root_maintenance(recc) * rnplant     &
+                                             + cpatch%dmean_root_maintenance(donc) * dnplant
          cpatch%dmean_leaf_growth_resp(recc) = cpatch%dmean_leaf_growth_resp(recc)         &
                                              * rnplant                                     &
                                              + cpatch%dmean_leaf_growth_resp(donc)         &
@@ -2105,6 +2109,14 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%mmean_root_resp       (donc)         &
                                              * dnplant
+         cpatch%mmean_leaf_maintenance(recc) = cpatch%mmean_leaf_maintenance(recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%mmean_leaf_maintenance(donc)         &
+                                             * dnplant
+         cpatch%mmean_root_maintenance(recc) = cpatch%mmean_root_maintenance(recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%mmean_root_maintenance(donc)         &
+                                             * dnplant
          cpatch%mmean_leaf_growth_resp(recc) = cpatch%mmean_leaf_growth_resp(recc)         &
                                              * rnplant                                     &
                                              + cpatch%mmean_leaf_growth_resp(donc)         &
@@ -2152,14 +2164,6 @@ module fuse_fiss_utils
          cpatch%mmean_bstorage        (recc) = cpatch%mmean_bstorage        (recc)         &
                                              * rnplant                                     &
                                              + cpatch%mmean_bstorage        (donc)         &
-                                             * dnplant
-         cpatch%mmean_leaf_maintenance(recc) = cpatch%mmean_leaf_maintenance(recc)         &
-                                             * rnplant                                     &
-                                             + cpatch%mmean_leaf_maintenance(donc)         &
-                                             * dnplant
-         cpatch%mmean_root_maintenance(recc) = cpatch%mmean_root_maintenance(recc)         &
-                                             * rnplant                                     &
-                                             + cpatch%mmean_root_maintenance(donc)         &
                                              * dnplant
          cpatch%mmean_leaf_drop       (recc) = cpatch%mmean_leaf_drop       (recc)         &
                                              * rnplant                                     &
