@@ -1621,7 +1621,8 @@ module average_utils
                                       , polygontype         & ! structure
                                       , sitetype            & ! structure
                                       , patchtype           ! ! structure
-      use ed_misc_coms         , only : frqsum              ! ! intent(in)
+      use ed_misc_coms         , only : frqsum              & ! intent(in)
+                                      , dtlsm               ! ! intent(in)
       use consts_coms          , only : day_sec             ! ! intent(in)
       implicit none
 
@@ -1638,12 +1639,13 @@ module average_utils
       !----- Locally saved variables. -----------------------------------------------------!
       logical                            , save       :: find_factors    = .true.
       real                               , save       :: frqsum_o_daysec = 1.e34
+      real                               , save       :: frqsum_o_dtlsm  = 1.e34
       !------------------------------------------------------------------------------------!
-
 
       !----- Compute the normalisation factors. This is done only once. -------------------!
       if (find_factors) then
          frqsum_o_daysec = frqsum / day_sec
+         frqsum_o_dtlsm  = frqsum / dtlsm
          find_factors    = .false.
       end if
       !------------------------------------------------------------------------------------!
@@ -2248,12 +2250,18 @@ module average_utils
                   cpatch%dmean_root_resp     (ico) = cpatch%dmean_root_resp     (ico)      &
                                                    + cpatch%fmean_root_resp     (ico)      &
                                                    * frqsum_o_daysec
+                  !------------------------------------------------------------------------!
+                  ! These almost certianly shouldn't go here, but I'm not sure what to do  ! 
+                  ! with them right now! There don't appear to be other vars which are     !
+                  ! computed on dtlsm time step which are not fmean vars.                  !
+                  !------------------------------------------------------------------------!
                   cpatch%dmean_leaf_maintenance(ico) = cpatch%dmean_leaf_maintenance(ico)  &
                                                      + cpatch%leaf_maintenance(ico)        &
-                                                     * frqsum_o_daysec
+                                                     * frqsum_o_dtlsm
                   cpatch%dmean_root_maintenance(ico) = cpatch%dmean_root_maintenance(ico)  &
                                                      + cpatch%root_maintenance(ico)        &
-                                                     * frqsum_o_daysec
+                                                     * frqsum_o_dtlsm
+                  !------------------------------------------------------------------------!
                   cpatch%dmean_leaf_growth_resp(ico) = cpatch%dmean_leaf_growth_resp (ico) &
                                                      + cpatch%fmean_leaf_growth_resp (ico) &
                                                      * frqsum_o_daysec

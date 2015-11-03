@@ -25074,6 +25074,20 @@ module ed_state_vars
            var_len,var_len_global,max_ptrs,'ROOT_RESPIRATION :41:hist') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if
+      
+      if (associated(cpatch%leaf_maintenance)) then
+         nvar=nvar+1
+           call vtable_edio_r(npts,cpatch%leaf_maintenance,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'LEAF_MAINTENANCE :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[kgC/pl]','NA') 
+      end if
+
+      if (associated(cpatch%root_maintenance)) then
+         nvar=nvar+1
+           call vtable_edio_r(npts,cpatch%root_maintenance,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'ROOT_MAINTENANCE :41:hist:anal') 
+         call metadata_edio(nvar,igr,'No metadata available','[kgC/pl]','NA') 
+      end if
 
       if (associated(cpatch%gpp)) then
          nvar=nvar+1
@@ -25215,24 +25229,6 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Root respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
-      end if
-      if (associated(cpatch%leaf_maintenance       )) then
-         nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%leaf_maintenance                                   &
-                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'LEAF_MAINTENANCE         :41:'//trim(fast_keys)     )
-         call metadata_edio(nvar,igr                                                       &
-                           ,'Sub-daily mean - Leaf maintenance'                            &
-                           ,'[  kgC/plant ]','(icohort)'            )
-      end if
-      if (associated(cpatch%root_maintenance       )) then
-         nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%root_maintenance                                   &
-                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'ROOT_MAINTENANCE         :41:'//trim(fast_keys)     )
-         call metadata_edio(nvar,igr                                                       &
-                           ,'Sub-daily mean - Root maintenance'                            &
-                           ,'[  kgC/plant]','(icohort)'            )
       end if
       if (associated(cpatch%fmean_leaf_growth_resp)) then
          nvar = nvar+1

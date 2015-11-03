@@ -113,7 +113,7 @@ module growth_balive
                   !     Compute maintenance costs using actual pools.                      !
                   !------------------------------------------------------------------------!
                   call plant_maintenance(cpatch,ico,cpatch%broot(ico),cpatch%bleaf(ico)    &
-                                        ,tfact,dtlsm_c_gain,csite%avg_daily_temp(ipa))
+                                        ,tfact,dtlsm_c_gain,csite%can_temp(ipa))
 
 
                   !----- Subtract maintenance costs from pools. ---------------------------!
@@ -435,7 +435,7 @@ module growth_balive
                   !     Compute maintenance costs using actual pools.                      !
                   !------------------------------------------------------------------------!
                   call plant_maintenance(cpatch,ico,cpatch%broot(ico),cpatch%bleaf(ico)    &
-                                        ,tfact,dtlsm_c_gain,csite%avg_daily_temp(ipa))
+                                        ,tfact,dtlsm_c_gain,csite%can_temp(ipa))
 
                   !------------------------------------------------------------------------!
                   !    For the no vegetation dynamics case, we update the carbon balance   !

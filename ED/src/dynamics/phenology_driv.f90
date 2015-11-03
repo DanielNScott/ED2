@@ -229,10 +229,10 @@ subroutine update_phenology(doy, cpoly, isi, lat)
       cpatch => csite%patch(ipa)
 
       !----- Re-initialize litter inputs. -------------------------------------------------!
-      csite%fsc_in(ipa) = 0.0
-      csite%fsn_in(ipa) = 0.0
-      csite%ssc_in(ipa) = 0.0
-      csite%ssl_in(ipa) = 0.0
+      !csite%fsc_in(ipa) = 0.0
+      !csite%fsn_in(ipa) = 0.0
+      !csite%ssc_in(ipa) = 0.0
+      !csite%ssl_in(ipa) = 0.0
 
       !----- Determine what phenology thresholds have been crossed. -----------------------!
       call phenology_thresholds(daylight,csite%soil_tempk(isoil_lev,ipa)                   &

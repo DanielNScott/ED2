@@ -114,7 +114,11 @@ subroutine vegetation_dynamics(new_day,new_month,new_year)
          !     This should be done every day, but after the longer-scale steps.  We update !
          ! the carbon and nitrogen pools, and re-set the daily variables.                  !
          !---------------------------------------------------------------------------------!
-         call update_C_and_N_pools(cgrid)
+      end if
+      
+      call update_C_and_N_pools(cgrid)
+      
+      if (new_day) then
          call zero_ed_today_vars(cgrid)
          !---------------------------------------------------------------------------------!
       end if
