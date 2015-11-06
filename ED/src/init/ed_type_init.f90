@@ -141,6 +141,16 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%gpp_lightmax          (ico) = 0.0
    cpatch%gpp_moistmax          (ico) = 0.0
    cpatch%gpp_mlmax             (ico) = 0.0
+   cpatch%today_npp             (ico) = 0.0
+   cpatch%today_npp_pot         (ico) = 0.0
+   cpatch%today_npp_lightmax    (ico) = 0.0
+   cpatch%today_npp_moistmax    (ico) = 0.0
+   cpatch%today_npp_mlmax       (ico) = 0.0
+   cpatch%growth_resp           (ico) = 0.0
+   cpatch%growth_resp_pot       (ico) = 0.0
+   cpatch%growth_resp_lightmax  (ico) = 0.0
+   cpatch%growth_resp_moistmax  (ico) = 0.0
+   cpatch%growth_resp_mlmax     (ico) = 0.0
    cpatch%light_level           (ico) = 0.0
    cpatch%light_level_beam      (ico) = 0.0
    cpatch%light_level_diff      (ico) = 0.0

@@ -18,7 +18,8 @@ subroutine vegetation_dynamics(new_day,new_month,new_year)
    use ed_state_vars    , only : edgrid_g                   & ! intent(inout)
                                , edtype                     & ! variable type
                                , polygontype                ! ! variable type
-   use growth_balive    , only : dbalive_dt                 ! ! subroutine
+   use growth_balive    , only : dbalive_dt                 & ! subroutine
+                               , update_growth_resp         ! ! subroutine
    use consts_coms      , only : day_sec                    & ! intent(in)
                                , yr_day                     ! ! intent(in)
    use mem_polygons     , only : maxpatch                   ! ! intent(in)
@@ -69,6 +70,7 @@ subroutine vegetation_dynamics(new_day,new_month,new_year)
       if (new_day) then
          !----- Standardise the fast-scale uptake and respiration, for growth rates. ------!
          call normalize_ed_today_vars(cgrid)
+         call update_growth_resp(cgrid)
          !----- Update phenology ----------------------------------------------------------!
          call phenology_driver(cgrid,doy,current_time%month, dtlsm_o_day)
       end if

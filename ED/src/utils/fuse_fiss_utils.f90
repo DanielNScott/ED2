@@ -1310,6 +1310,36 @@ module fuse_fiss_utils
 
       cpatch%gpp_mlmax    (recc) = cpatch%gpp_mlmax    (recc)                  &
                                        + cpatch%gpp_mlmax    (donc)
+                                       
+      cpatch%today_npp          (recc) = cpatch%today_npp          (recc)                  &
+                                       + cpatch%today_npp          (donc)
+
+      cpatch%today_npp_pot      (recc) = cpatch%today_npp_pot      (recc)                  &
+                                       + cpatch%today_npp_pot      (donc)
+
+      cpatch%today_npp_lightmax (recc) = cpatch%today_npp_lightmax (recc)                  &
+                                       + cpatch%today_npp_lightmax (donc)
+
+      cpatch%today_npp_moistmax (recc) = cpatch%today_npp_moistmax (recc)                  &
+                                       + cpatch%today_npp_moistmax (donc)
+
+      cpatch%today_npp_mlmax    (recc) = cpatch%today_npp_mlmax    (recc)                  &
+                                       + cpatch%today_npp_mlmax    (donc)
+                                       
+      cpatch%growth_resp          (recc) = cpatch%growth_resp          (recc)              &
+                                         + cpatch%growth_resp          (donc)
+
+      cpatch%growth_resp_pot      (recc) = cpatch%growth_resp_pot      (recc)              &
+                                         + cpatch%growth_resp_pot      (donc)
+
+      cpatch%growth_resp_lightmax (recc) = cpatch%growth_resp_lightmax (recc)              &
+                                         + cpatch%growth_resp_lightmax (donc)
+
+      cpatch%growth_resp_moistmax (recc) = cpatch%growth_resp_moistmax (recc)              &
+                                         + cpatch%growth_resp_moistmax (donc)
+
+      cpatch%growth_resp_mlmax    (recc) = cpatch%growth_resp_mlmax    (recc)              &
+                                         + cpatch%growth_resp_mlmax    (donc)
       !------------------------------------------------------------------------------------!
 
 
