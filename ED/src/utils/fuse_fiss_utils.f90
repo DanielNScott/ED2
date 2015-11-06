@@ -1428,8 +1428,14 @@ module fuse_fiss_utils
                                        + cpatch%sapa_growth_resp   (donc) * dnplant
       cpatch%sapb_growth_resp   (recc) = cpatch%sapb_growth_resp   (recc) * rnplant        &
                                        + cpatch%sapb_growth_resp   (donc) * dnplant
-      cpatch%storage_respiration(recc) = cpatch%storage_respiration(recc) * rnplant        &
-                                       + cpatch%storage_respiration(donc) * dnplant
+      cpatch%leaf_storage_resp  (recc) = cpatch%leaf_storage_resp  (recc) * rnplant        &
+                                       + cpatch%leaf_storage_resp  (donc) * dnplant
+      cpatch%root_storage_resp  (recc) = cpatch%root_storage_resp  (recc) * rnplant        &
+                                       + cpatch%root_storage_resp  (donc) * dnplant
+      cpatch%sapa_storage_resp  (recc) = cpatch%sapa_storage_resp  (recc) * rnplant        &
+                                       + cpatch%sapa_storage_resp  (donc) * dnplant
+      cpatch%sapb_storage_resp  (recc) = cpatch%sapb_storage_resp  (recc) * rnplant        &
+                                       + cpatch%sapb_storage_resp  (donc) * dnplant
       !------------------------------------------------------------------------------------!
 
 
@@ -1581,9 +1587,21 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%fmean_sapb_growth_resp(donc)         &
                                              * dnplant
-         cpatch%fmean_storage_resp    (recc) = cpatch%fmean_storage_resp    (recc)         &
+         cpatch%fmean_leaf_storage_resp(recc)= cpatch%fmean_leaf_storage_resp(recc)        &
                                              * rnplant                                     &
-                                             + cpatch%fmean_storage_resp    (donc)         &
+                                             + cpatch%fmean_leaf_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%fmean_root_storage_resp(recc)= cpatch%fmean_root_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_root_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%fmean_sapa_storage_resp(recc)= cpatch%fmean_sapa_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_sapa_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%fmean_sapb_storage_resp(recc)= cpatch%fmean_sapb_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_sapb_storage_resp(donc)        &
                                              * dnplant
          cpatch%fmean_plresp          (recc) = cpatch%fmean_plresp          (recc)         &
                                              * rnplant                                     &
@@ -1838,9 +1856,21 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%dmean_sapb_growth_resp(donc)         &
                                              * dnplant
-         cpatch%dmean_storage_resp    (recc) = cpatch%dmean_storage_resp    (recc)         &
+         cpatch%dmean_leaf_storage_resp(recc)= cpatch%dmean_leaf_storage_resp(recc)        &
                                              * rnplant                                     &
-                                             + cpatch%dmean_storage_resp    (donc)         &
+                                             + cpatch%dmean_leaf_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%dmean_root_storage_resp(recc)= cpatch%dmean_root_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_root_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%dmean_sapa_storage_resp(recc)= cpatch%dmean_sapa_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_sapa_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%dmean_sapb_storage_resp(recc)= cpatch%dmean_sapb_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_sapb_storage_resp(donc)        &
                                              * dnplant
          cpatch%dmean_plresp          (recc) = cpatch%dmean_plresp          (recc)         &
                                              * rnplant                                     &
@@ -2163,9 +2193,21 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%mmean_sapb_growth_resp(donc)         &
                                              * dnplant
-         cpatch%mmean_storage_resp    (recc) = cpatch%mmean_storage_resp    (recc)         &
+         cpatch%mmean_leaf_storage_resp(recc)= cpatch%mmean_leaf_storage_resp(recc)        &
                                              * rnplant                                     &
-                                             + cpatch%mmean_storage_resp    (donc)         &
+                                             + cpatch%mmean_leaf_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%mmean_root_storage_resp(recc)= cpatch%mmean_root_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%mmean_root_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%mmean_sapa_storage_resp(recc)= cpatch%mmean_sapa_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%mmean_sapa_storage_resp(donc)        &
+                                             * dnplant
+         cpatch%mmean_sapb_storage_resp(recc)= cpatch%mmean_sapb_storage_resp(recc)        &
+                                             * rnplant                                     &
+                                             + cpatch%mmean_sapb_storage_resp(donc)        &
                                              * dnplant
          cpatch%mmean_plresp          (recc) = cpatch%mmean_plresp          (recc)         &
                                              * rnplant                                     &
@@ -2513,9 +2555,21 @@ module fuse_fiss_utils
                                                * rnplant                                   &
                                                + cpatch%qmean_sapb_growth_resp(:,donc)     &
                                                * dnplant
-         cpatch%qmean_storage_resp    (:,recc) = cpatch%qmean_storage_resp    (:,recc)     &
+         cpatch%qmean_leaf_storage_resp(:,recc)= cpatch%qmean_leaf_storage_resp(:,recc)    &
                                                * rnplant                                   &
-                                               + cpatch%qmean_storage_resp    (:,donc)     &
+                                               + cpatch%qmean_leaf_storage_resp(:,donc)    &
+                                               * dnplant
+         cpatch%qmean_root_storage_resp(:,recc)= cpatch%qmean_root_storage_resp(:,recc)    &
+                                               * rnplant                                   &
+                                               + cpatch%qmean_root_storage_resp(:,donc)    &
+                                               * dnplant
+         cpatch%qmean_sapa_storage_resp(:,recc)= cpatch%qmean_sapa_storage_resp(:,recc)    &
+                                               * rnplant                                   &
+                                               + cpatch%qmean_sapa_storage_resp(:,donc)    &
+                                               * dnplant
+         cpatch%qmean_sapb_storage_resp(:,recc)= cpatch%qmean_sapb_storage_resp(:,recc)    &
+                                               * rnplant                                   &
+                                               + cpatch%qmean_sapb_storage_resp(:,donc)    &
                                                * dnplant
          cpatch%qmean_plresp          (:,recc) = cpatch%qmean_plresp          (:,recc)     &
                                                * rnplant                                   &
@@ -4666,6 +4720,7 @@ module fuse_fiss_utils
       !    Daily means.                                                                    !
       !------------------------------------------------------------------------------------! 
       if (writing_long .and.  (.not. fuse_initial) ) then
+        if ( all(csite%dmean_can_prss > 10.0) ) then
          csite%dmean_A_decomp           (recp) = ( csite%dmean_A_decomp           (recp)   &
                                                  * csite%area                     (recp)   &
                                                  + csite%dmean_A_decomp           (donp)   &
@@ -4987,6 +5042,7 @@ module fuse_fiss_utils
             csite%dmean_sfcw_fliq  (recp)  = csite%dmean_soil_fliq(mzg,recp)
          end if
          !------------------------------------------------------------------------------------!
+		end if
       end if
       !------------------------------------------------------------------------------------!
 
@@ -4994,6 +5050,7 @@ module fuse_fiss_utils
       !    Monthly means.                                                                  !
       !------------------------------------------------------------------------------------! 
       if (writing_eorq .and. (.not. fuse_initial)) then
+        if( all(csite%mmean_can_prss > 10.0) ) then
 
          !---------------------------------------------------------------------------------!
          !    First we find the mean sum of squares, because they depend on the means too, !
@@ -5467,6 +5524,7 @@ module fuse_fiss_utils
             csite%mmean_sfcw_fliq  (recp)  = csite%mmean_soil_fliq(mzg,recp)
          end if
          !------------------------------------------------------------------------------------!
+		end if
       end if
       !------------------------------------------------------------------------------------!
 
@@ -5477,6 +5535,7 @@ module fuse_fiss_utils
       !    Mean diel.                                                                      !
       !------------------------------------------------------------------------------------! 
       if (writing_dcyc .and. (.not. fuse_initial)) then
+        if( all(csite%qmean_can_prss > 10.0) ) then
          !---------------------------------------------------------------------------------!
          !      First we solve the mean sum of squares as they depend on the mean and the  !
          ! original receptor data is lost after fusion takes place.                        !
@@ -5896,6 +5955,7 @@ module fuse_fiss_utils
             !------------------------------------------------------------------------------!
          end do
          !---------------------------------------------------------------------------------!
+		end if
       end if
       !------------------------------------------------------------------------------------!
 
