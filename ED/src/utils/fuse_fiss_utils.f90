@@ -1323,9 +1323,6 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------!
       !    Today variables are extensive.                                                  !
       !------------------------------------------------------------------------------------!
-      cpatch%today_gpp          (recc) = cpatch%today_gpp          (recc)                  &
-                                       + cpatch%today_gpp          (donc)
-                                  
       cpatch%today_nppleaf      (recc) = cpatch%today_nppleaf      (recc)                  &
                                        + cpatch%today_nppleaf      (donc)
                                   
@@ -1347,41 +1344,65 @@ module fuse_fiss_utils
       cpatch%today_nppdaily     (recc) = cpatch%today_nppdaily     (recc)                  &
                                        + cpatch%today_nppdaily     (donc)
                                   
-      cpatch%today_gpp_pot      (recc) = cpatch%today_gpp_pot      (recc)                  &
-                                       + cpatch%today_gpp_pot      (donc)
+      cpatch%gpp_pot      (recc) = cpatch%gpp_pot      (recc)                  &
+                                       + cpatch%gpp_pot      (donc)
 
-      cpatch%today_gpp_lightmax (recc) = cpatch%today_gpp_lightmax (recc)                  &
-                                       + cpatch%today_gpp_lightmax (donc)
+      cpatch%gpp_lightmax (recc) = cpatch%gpp_lightmax (recc)                  &
+                                       + cpatch%gpp_lightmax (donc)
 
-      cpatch%today_gpp_moistmax (recc) = cpatch%today_gpp_moistmax (recc)                  &
-                                       + cpatch%today_gpp_moistmax (donc)
+      cpatch%gpp_moistmax (recc) = cpatch%gpp_moistmax (recc)                  &
+                                       + cpatch%gpp_moistmax (donc)
 
-      cpatch%today_gpp_mlmax    (recc) = cpatch%today_gpp_mlmax    (recc)                  &
-                                       + cpatch%today_gpp_mlmax    (donc)
+      cpatch%gpp_mlmax    (recc) = cpatch%gpp_mlmax    (recc)                  &
+                                       + cpatch%gpp_mlmax    (donc)
+                                       
+      cpatch%today_npp          (recc) = cpatch%today_npp          (recc)                  &
+                                       + cpatch%today_npp          (donc)
 
-      cpatch%today_leaf_resp    (recc) = cpatch%today_leaf_resp    (recc)                  &
-                                       + cpatch%today_leaf_resp    (donc)
+      cpatch%today_npp_pot      (recc) = cpatch%today_npp_pot      (recc)                  &
+                                       + cpatch%today_npp_pot      (donc)
 
-      cpatch%today_root_resp    (recc) = cpatch%today_root_resp    (recc)                  &
-                                       + cpatch%today_root_resp    (donc)
-      if (c_alloc_flg > 0) then
-         cpatch%today_lassim_resp  (recc) = cpatch%today_lassim_resp      (recc)           &
-                                          + cpatch%today_lassim_resp      (donc)
-      end if
-      if (c13af > 0) then
-         cpatch%today_gpp_c13      (recc) = cpatch%today_gpp_c13          (recc)           &
-                                          + cpatch%today_gpp_c13          (donc)
-                                          
-         cpatch%today_leaf_resp_c13(recc) = cpatch%today_leaf_resp_c13    (recc)           &
-                                          + cpatch%today_leaf_resp_c13    (donc)
+      cpatch%today_npp_lightmax (recc) = cpatch%today_npp_lightmax (recc)                  &
+                                       + cpatch%today_npp_lightmax (donc)
 
-         cpatch%today_root_resp_c13(recc) = cpatch%today_root_resp_c13    (recc)           &
-                                          + cpatch%today_root_resp_c13    (donc)
-         if (c_alloc_flg > 0) then
-            cpatch%today_lassim_resp_c13(recc) = cpatch%today_lassim_resp_c13    (recc)    &
-                                               + cpatch%today_lassim_resp_c13    (donc)
-         end if
-      end if
+      cpatch%today_npp_moistmax (recc) = cpatch%today_npp_moistmax (recc)                  &
+                                       + cpatch%today_npp_moistmax (donc)
+
+      cpatch%today_npp_mlmax    (recc) = cpatch%today_npp_mlmax    (recc)                  &
+                                       + cpatch%today_npp_mlmax    (donc)
+                                       
+      cpatch%growth_resp          (recc) = cpatch%growth_resp          (recc)              &
+                                         + cpatch%growth_resp          (donc)
+
+      cpatch%growth_resp_pot      (recc) = cpatch%growth_resp_pot      (recc)              &
+                                         + cpatch%growth_resp_pot      (donc)
+
+      cpatch%growth_resp_lightmax (recc) = cpatch%growth_resp_lightmax (recc)              &
+                                         + cpatch%growth_resp_lightmax (donc)
+
+      cpatch%growth_resp_moistmax (recc) = cpatch%growth_resp_moistmax (recc)              &
+                                         + cpatch%growth_resp_moistmax (donc)
+
+      cpatch%growth_resp_mlmax    (recc) = cpatch%growth_resp_mlmax    (recc)              &
+                                         + cpatch%growth_resp_mlmax    (donc)
+      !if (c_alloc_flg > 0) then
+      !   cpatch%today_lassim_resp  (recc) = cpatch%today_lassim_resp      (recc)           &
+      !                                    + cpatch%today_lassim_resp      (donc)
+      !end if
+      !if (c13af > 0) then
+      !   cpatch%today_gpp_c13      (recc) = cpatch%today_gpp_c13          (recc)           &
+      !                                    + cpatch%today_gpp_c13          (donc)
+      !                                    
+      !   cpatch%today_leaf_resp_c13(recc) = cpatch%today_leaf_resp_c13    (recc)           &
+      !                                    + cpatch%today_leaf_resp_c13    (donc)
+ 
+      !   cpatch%today_root_resp_c13(recc) = cpatch%today_root_resp_c13    (recc)           &
+      !                                    + cpatch%today_root_resp_c13    (donc)
+      !   if (c_alloc_flg > 0) then
+      !      cpatch%today_lassim_resp_c13(recc) = cpatch%today_lassim_resp_c13    (recc)    &
+      !                                         + cpatch%today_lassim_resp_c13    (donc)
+      !   end if
+      !end if
       !------------------------------------------------------------------------------------!
 
 
@@ -1991,6 +2012,10 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%dmean_root_resp       (donc)         &
                                              * dnplant
+         cpatch%dmean_leaf_maintenance(recc) = cpatch%dmean_leaf_maintenance(recc) * rnplant     &
+                                             + cpatch%dmean_leaf_maintenance(donc) * dnplant
+         cpatch%dmean_root_maintenance(recc) = cpatch%dmean_root_maintenance(recc) * rnplant     &
+                                             + cpatch%dmean_root_maintenance(donc) * dnplant
          cpatch%dmean_leaf_growth_resp(recc) = cpatch%dmean_leaf_growth_resp(recc)         &
                                              * rnplant                                     &
                                              + cpatch%dmean_leaf_growth_resp(donc)         &
@@ -2393,6 +2418,14 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%mmean_root_resp       (donc)         &
                                              * dnplant
+         cpatch%mmean_leaf_maintenance(recc) = cpatch%mmean_leaf_maintenance(recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%mmean_leaf_maintenance(donc)         &
+                                             * dnplant
+         cpatch%mmean_root_maintenance(recc) = cpatch%mmean_root_maintenance(recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%mmean_root_maintenance(donc)         &
+                                             * dnplant
          cpatch%mmean_leaf_growth_resp(recc) = cpatch%mmean_leaf_growth_resp(recc)         &
                                              * rnplant                                     &
                                              + cpatch%mmean_leaf_growth_resp(donc)         &
@@ -2452,14 +2485,6 @@ module fuse_fiss_utils
          cpatch%mmean_bstorage        (recc) = cpatch%mmean_bstorage        (recc)         &
                                              * rnplant                                     &
                                              + cpatch%mmean_bstorage        (donc)         &
-                                             * dnplant
-         cpatch%mmean_leaf_maintenance(recc) = cpatch%mmean_leaf_maintenance(recc)         &
-                                             * rnplant                                     &
-                                             + cpatch%mmean_leaf_maintenance(donc)         &
-                                             * dnplant
-         cpatch%mmean_root_maintenance(recc) = cpatch%mmean_root_maintenance(recc)         &
-                                             * rnplant                                     &
-                                             + cpatch%mmean_root_maintenance(donc)         &
                                              * dnplant
          cpatch%mmean_leaf_drop       (recc) = cpatch%mmean_leaf_drop       (recc)         &
                                              * rnplant                                     &

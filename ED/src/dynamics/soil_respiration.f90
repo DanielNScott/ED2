@@ -92,13 +92,6 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
       !------------------------------------------------------------------------------------!
 
 
-      !----- Add this time step to the daily mean root respiration. -----------------------!
-      cpatch%today_root_resp(ico)  = cpatch%today_root_resp(ico)                           &
-                                   + cpatch%root_respiration(ico)
-      !------------------------------------------------------------------------------------!
-
-
-
       !------------------------------------------------------------------------------------!
       !     The following is for output only, we switch the units to kgC/plant/yr.         !
       !------------------------------------------------------------------------------------!
@@ -599,6 +592,8 @@ subroutine update_C_and_N_pools(cgrid)
                            , r_stsc          ! ! intent(in)
    use pft_coms     , only : c2n_slow        & ! intent(in)
                            , c2n_structural  ! ! intent(in)
+   use ed_misc_coms , only : dtlsm           ! ! intent(in)
+   use consts_coms  , only : day_sec         ! ! intent(in) 
    !----- DS Additional Uses -----------------------------------------------------------!
    use isotopes     , only : c13af           ! ! intent(in)
    implicit none
@@ -617,6 +612,7 @@ subroutine update_C_and_N_pools(cgrid)
    real                        :: structural_L_loss
    real                        :: slow_C_input
    real                        :: slow_C_loss
+   real                        :: dtlsm_o_daysec
    !----- DS Additional Vars -----------------------------------------------------------!
    real                        :: fast_c13_loss                !!!DSC!!!
    real                        :: structural_c13_loss
@@ -624,6 +620,7 @@ subroutine update_C_and_N_pools(cgrid)
    real                        :: slow_c13_input
    real                        :: slow_c13_loss
    !---------------------------------------------------------------------------------------!
+   dtlsm_o_daysec = dtlsm / day_sec
 
    polygonloop: do ipy = 1,cgrid%npolygons
 
@@ -647,28 +644,31 @@ subroutine update_C_and_N_pools(cgrid)
             end if
       
             !----- Fast pools. ------------------------------------------------------------!
-            fast_C_loss = csite%today_A_decomp(ipa) * decay_rate_fsc                       &
+            fast_C_loss = csite%A_decomp(ipa) * decay_rate_fsc * dtlsm_o_daysec            &
                         * csite%fast_soil_C(ipa)
-            fast_N_loss = csite%today_A_decomp(ipa) * decay_rate_fsc                       &
+            fast_N_loss = csite%A_decomp(ipa) * decay_rate_fsc * dtlsm_o_daysec            &
                         * csite%fast_soil_N(ipa)
 
             !----- Structural pools. ------------------------------------------------------!
-            structural_C_loss = csite%today_Af_decomp(ipa) * Lc * decay_rate_stsc          &
-                              * csite%structural_soil_C(ipa)
-            structural_L_loss = csite%today_Af_decomp(ipa) * Lc * decay_rate_stsc          &
-                              * csite%structural_soil_L(ipa)
+            structural_C_loss = csite%A_decomp(ipa) * csite%f_decomp(ipa) * Lc             &
+                              * decay_rate_stsc * csite%structural_soil_C(ipa)             &
+                              * dtlsm_o_daysec
+            structural_L_loss = csite%A_decomp(ipa) * csite%f_decomp(ipa) * Lc             &
+                              * decay_rate_stsc * csite%structural_soil_L(ipa)             &
+                              * dtlsm_o_daysec
 
             !----- Slow pools. ------------------------------------------------------------!
             slow_C_input = (1.0 - r_stsc) * structural_C_loss
-            slow_C_loss  = csite%today_A_decomp(ipa) * decay_rate_ssc                      &
+            slow_C_loss  = csite%A_decomp(ipa) * decay_rate_ssc * dtlsm_o_daysec           &
                          * csite%slow_soil_C(ipa)
             
             !----- Mineralized pool. ------------------------------------------------------!
             csite%mineralized_N_input = fast_N_loss + slow_C_loss / c2n_slow
             csite%mineralized_N_loss  = csite%total_plant_nitrogen_uptake(ipa)             &
-                                      + csite%today_Af_decomp(ipa) * Lc * decay_rate_stsc  &
-                                      * csite%structural_soil_C(ipa)                       &
-                                      * ( (1.0 - r_stsc) / c2n_slow - 1.0 / c2n_structural)
+                                      + csite%A_decomp(ipa) * csite%f_decomp(ipa) * Lc     &
+                                      * decay_rate_stsc * csite%structural_soil_C(ipa)     &
+                                      * ( (1.0 - r_stsc) / c2n_slow - 1.0 / c2n_structural)&
+                                      * dtlsm_o_daysec
 
 
             !------------------------------------------------------------------------------!
@@ -706,16 +706,16 @@ subroutine update_C_and_N_pools(cgrid)
             
             if (c13af > 0) then !!!DSC!!!
                !----- Fluxes --------------------------------------------------------------!
-               fast_c13_loss = csite%today_A_decomp(ipa) * decay_rate_fsc                  &
+               fast_c13_loss = csite%A_decomp(ipa) * decay_rate_fsc * dtlsm_o_daysec       &
                              * csite%fast_soil_c13(ipa)
                            
-               structural_c13_loss   = csite%today_Af_decomp(ipa) * Lc * decay_rate_stsc   &
-                                     * csite%structural_soil_c13(ipa)
-               structural_L_c13_loss = csite%today_Af_decomp(ipa) * Lc * decay_rate_stsc   &
-                                     * csite%structural_soil_L_c13(ipa)
+               structural_c13_loss   = csite%Af_decomp(ipa) * Lc * decay_rate_stsc         &
+                                     * csite%structural_soil_c13(ipa) * dtlsm_o_daysec
+               structural_L_c13_loss = csite%Af_decomp(ipa) * Lc * decay_rate_stsc         &
+                                     * csite%structural_soil_L_c13(ipa) * dtlsm_o_daysec
 
                slow_c13_input = (1.0 - r_stsc) * structural_c13_loss
-               slow_c13_loss  = csite%today_A_decomp(ipa) * decay_rate_ssc                 &
+               slow_c13_loss  = csite%A_decomp(ipa) * decay_rate_ssc *dtlsm_o_daysec       &
                               * csite%slow_soil_c13(ipa)
 
                !----- Pools ---------------------------------------------------------------!
@@ -738,6 +738,12 @@ subroutine update_C_and_N_pools(cgrid)
             end if
             
 
+            !----- Reset litter inputs. ---------------------------------------------------!
+            csite%fsc_in(ipa) = 0.0
+            csite%fsn_in(ipa) = 0.0
+            csite%ssc_in(ipa) = 0.0
+            csite%ssl_in(ipa) = 0.0
+            !------------------------------------------------------------------------------!            
          end do patchloop
       end do siteloop
    end do polygonloop

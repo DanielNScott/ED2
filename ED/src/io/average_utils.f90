@@ -1864,7 +1864,8 @@ module average_utils
                                       , polygontype         & ! structure
                                       , sitetype            & ! structure
                                       , patchtype           ! ! structure
-      use ed_misc_coms         , only : frqsum              ! ! intent(in)
+      use ed_misc_coms         , only : frqsum              & ! intent(in)
+                                      , dtlsm               ! ! intent(in)
       use consts_coms          , only : day_sec             ! ! intent(in)
       !----- DS Additional Uses -----------------------------------------------------------!
       use isotopes,              only : c13af         & ! intent(in)
@@ -1884,12 +1885,13 @@ module average_utils
       !----- Locally saved variables. -----------------------------------------------------!
       logical                            , save       :: find_factors    = .true.
       real                               , save       :: frqsum_o_daysec = 1.e34
+      real                               , save       :: frqsum_o_dtlsm  = 1.e34
       !------------------------------------------------------------------------------------!
-
 
       !----- Compute the normalisation factors. This is done only once. -------------------!
       if (find_factors) then
          frqsum_o_daysec = frqsum / day_sec
+         frqsum_o_dtlsm  = frqsum / dtlsm
          find_factors    = .false.
       end if
       !------------------------------------------------------------------------------------!
@@ -2608,6 +2610,18 @@ module average_utils
                   cpatch%dmean_root_resp     (ico) = cpatch%dmean_root_resp     (ico)      &
                                                    + cpatch%fmean_root_resp     (ico)      &
                                                    * frqsum_o_daysec
+                  !------------------------------------------------------------------------!
+                  ! These almost certianly shouldn't go here, but I'm not sure what to do  ! 
+                  ! with them right now! There don't appear to be other vars which are     !
+                  ! computed on dtlsm time step which are not fmean vars.                  !
+                  !------------------------------------------------------------------------!
+                  cpatch%dmean_leaf_maintenance(ico) = cpatch%dmean_leaf_maintenance(ico)  &
+                                                     + cpatch%leaf_maintenance(ico)        &
+                                                     * frqsum_o_dtlsm
+                  cpatch%dmean_root_maintenance(ico) = cpatch%dmean_root_maintenance(ico)  &
+                                                     + cpatch%root_maintenance(ico)        &
+                                                     * frqsum_o_dtlsm
+                  !------------------------------------------------------------------------!
                   cpatch%dmean_leaf_growth_resp(ico) = cpatch%dmean_leaf_growth_resp (ico) &
                                                      + cpatch%fmean_leaf_growth_resp (ico) &
                                                      * frqsum_o_daysec
@@ -2899,20 +2913,20 @@ module average_utils
                   !------------------------------------------------------------------------!
                   !     Normalise the variables used to compute carbon balance.            !
                   !------------------------------------------------------------------------!
-                  cpatch%today_gpp          (ico) = cpatch%today_gpp          (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_pot      (ico) = cpatch%today_gpp_pot      (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_lightmax (ico) = cpatch%today_gpp_lightmax (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_moistmax (ico) = cpatch%today_gpp_moistmax (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_gpp_mlmax    (ico) = cpatch%today_gpp_mlmax (ico)           &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_leaf_resp    (ico) = cpatch%today_leaf_resp    (ico)        &
-                                                  * dtlsm_o_daysec
-                  cpatch%today_root_resp    (ico) = cpatch%today_root_resp    (ico)        &
-                                                  * dtlsm_o_daysec
+                  !cpatch%today_npp          (ico) = cpatch%today_npp          (ico)        &
+                  !                                * dtlsm_o_daysec
+                  !cpatch%today_npp_pot      (ico) = cpatch%today_npp_pot      (ico)        &
+                  !                                * dtlsm_o_daysec
+                  !cpatch%today_npp_lightmax (ico) = cpatch%today_npp_lightmax (ico)        &
+                  !                                * dtlsm_o_daysec
+                  !cpatch%today_npp_moistmax (ico) = cpatch%today_npp_moistmax (ico)        &
+                  !                                * dtlsm_o_daysec
+                  !cpatch%today_npp_mlmax    (ico) = cpatch%today_npp_mlmax (ico)           &
+                  !                                * dtlsm_o_daysec
+                  !cpatch%today_leaf_resp    (ico) = cpatch%today_leaf_resp    (ico)        &
+                  !                                * dtlsm_o_daysec
+                  !cpatch%today_root_resp    (ico) = cpatch%today_root_resp    (ico)        &
+                  !                                * dtlsm_o_daysec
                      if (c_alloc_flg > 0) then
                         cpatch%today_lassim_resp(ico) = cpatch%today_lassim_resp    (ico)  &
                                                       * dtlsm_o_daysec
@@ -3555,7 +3569,6 @@ module average_utils
 
                !----- Reset variables stored in patchtype. --------------------------------!
                do ico = 1, cpatch%ncohorts
-                  cpatch%today_gpp          (ico) = 0.0
                   cpatch%today_nppleaf      (ico) = 0.0
                   cpatch%today_nppfroot     (ico) = 0.0
                   cpatch%today_nppsapwood   (ico) = 0.0
@@ -3563,21 +3576,30 @@ module average_utils
                   cpatch%today_nppseeds     (ico) = 0.0
                   cpatch%today_nppwood      (ico) = 0.0
                   cpatch%today_nppdaily     (ico) = 0.0
-                  cpatch%today_gpp_pot      (ico) = 0.0
-                  cpatch%today_gpp_lightmax (ico) = 0.0
-                  cpatch%today_gpp_moistmax (ico) = 0.0
-                  cpatch%today_gpp_mlmax (ico) = 0.0
-                  cpatch%today_leaf_resp    (ico) = 0.0
-                  cpatch%today_root_resp    (ico) = 0.0
+                  cpatch%gpp_pot            (ico) = 0.0
+                  cpatch%gpp_lightmax       (ico) = 0.0
+                  cpatch%gpp_moistmax       (ico) = 0.0
+                  cpatch%gpp_mlmax          (ico) = 0.0
+                  cpatch%today_npp           (ico) = 0.0
+                  cpatch%today_npp_pot       (ico) = 0.0
+                  cpatch%today_npp_lightmax  (ico) = 0.0
+                  cpatch%today_npp_moistmax  (ico) = 0.0
+                  cpatch%today_npp_mlmax     (ico) = 0.0
+                  cpatch%growth_resp         (ico) = 0.0
+                  cpatch%growth_resp_pot     (ico) = 0.0
+                  cpatch%growth_resp_lightmax(ico) = 0.0
+                  cpatch%growth_resp_moistmax(ico) = 0.0
+                  cpatch%growth_resp_mlmax   (ico) = 0.0
+                  
                   if (c_alloc_flg > 0) then
-                     cpatch%today_lassim_resp   (ico) = 0.0
+                     !cpatch%today_lassim_resp   (ico) = 0.0
                   end if
                   if (c13af > 0) then
-                     cpatch%today_gpp_c13       (ico) = 0.0
-                     cpatch%today_leaf_resp_c13 (ico) = 0.0
-                     cpatch%today_root_resp_c13 (ico) = 0.0
+                     !cpatch%today_gpp_c13       (ico) = 0.0
+                     !cpatch%today_leaf_resp_c13 (ico) = 0.0
+                     !cpatch%today_root_resp_c13 (ico) = 0.0
                      if (c_alloc_flg > 0) then
-                        cpatch%today_lassim_resp_c13  (ico) = 0.0
+                        !cpatch%today_lassim_resp_c13  (ico) = 0.0
                      end if
                   end if
                end do
@@ -3932,6 +3954,8 @@ module average_utils
                   cpatch%dmean_npp               (ico) = 0.0
                   cpatch%dmean_leaf_resp         (ico) = 0.0
                   cpatch%dmean_root_resp         (ico) = 0.0
+                  cpatch%dmean_leaf_maintenance  (ico) = 0.0
+                  cpatch%dmean_root_maintenance  (ico) = 0.0
                   cpatch%dmean_leaf_growth_resp  (ico) = 0.0
                   cpatch%dmean_root_growth_resp  (ico) = 0.0
                   cpatch%dmean_sapa_growth_resp  (ico) = 0.0
@@ -5182,20 +5206,14 @@ module average_utils
                   cpatch%mmean_mort_rate     (:,ico) = cpatch%mmean_mort_rate     (:,ico)  &
                                                      + cpatch%mort_rate           (:,ico)  &
                                                      * ndaysi
-                  cpatch%mmean_leaf_maintenance(ico) = cpatch%mmean_leaf_maintenance(ico)  &
-                                                     + cpatch%leaf_maintenance      (ico)  &
-                                                     * ndaysi
-                  cpatch%mmean_root_maintenance(ico) = cpatch%mmean_root_maintenance(ico)  &
-                                                     + cpatch%root_maintenance      (ico)  &
-                                                     * ndaysi
                   cpatch%mmean_leaf_drop       (ico) = cpatch%mmean_leaf_drop       (ico)  &
                                                      + cpatch%leaf_drop             (ico)  &
                                                      * ndaysi
                   cpatch%mmean_cb              (ico) = cpatch%mmean_cb              (ico)  &
                                                      + ( cpatch%dmean_gpp           (ico)  &
                                                        - cpatch%dmean_plresp        (ico)  &
-                                                       - cpatch%leaf_maintenance    (ico)  &
-                                                       - cpatch%root_maintenance    (ico)  &
+                                                       - cpatch%dmean_leaf_maintenance(ico)  &
+                                                       - cpatch%dmean_root_maintenance(ico)  &
                                                        - cpatch%leaf_drop           (ico)  &
                                                        ) / yr_day * ndaysi
                   if (c13af > 0) then
@@ -5236,6 +5254,12 @@ module average_utils
                                                      * ndaysi
                   cpatch%mmean_root_resp       (ico) = cpatch%mmean_root_resp       (ico)  &
                                                      + cpatch%dmean_root_resp       (ico)  &
+                                                     * ndaysi
+                  cpatch%mmean_leaf_maintenance(ico) = cpatch%mmean_leaf_maintenance(ico)  &
+                                                     + cpatch%dmean_leaf_maintenance(ico)  &
+                                                     * ndaysi
+                  cpatch%mmean_root_maintenance(ico) = cpatch%mmean_root_maintenance(ico)  &
+                                                     + cpatch%dmean_root_maintenance(ico)  &
                                                      * ndaysi
                   cpatch%mmean_leaf_growth_resp(ico) = cpatch%mmean_leaf_growth_resp(ico)  &
                                                      + cpatch%dmean_leaf_growth_resp(ico)  &
@@ -6275,8 +6299,6 @@ module average_utils
                   cpatch%mmean_broot             (ico) = 0.0
                   cpatch%mmean_bstorage          (ico) = 0.0
                   cpatch%mmean_mort_rate       (:,ico) = 0.0
-                  cpatch%mmean_leaf_maintenance  (ico) = 0.0
-                  cpatch%mmean_root_maintenance  (ico) = 0.0
                   cpatch%mmean_leaf_drop         (ico) = 0.0
                   select case (iddmort_scheme)
                   case (0)
@@ -6288,6 +6310,8 @@ module average_utils
                   cpatch%mmean_npp               (ico) = 0.0
                   cpatch%mmean_leaf_resp         (ico) = 0.0
                   cpatch%mmean_root_resp         (ico) = 0.0
+                  cpatch%mmean_leaf_maintenance  (ico) = 0.0
+                  cpatch%mmean_root_maintenance  (ico) = 0.0
                   cpatch%mmean_leaf_growth_resp  (ico) = 0.0
                   cpatch%mmean_root_growth_resp  (ico) = 0.0
                   cpatch%mmean_sapa_growth_resp  (ico) = 0.0

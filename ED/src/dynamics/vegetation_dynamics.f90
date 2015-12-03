@@ -4,7 +4,7 @@
 ! has become a file by itself to reduce the number of sub-routines that are doubled        !
 ! between ED-2.1 stand alone and the coupled model.                                        !
 !------------------------------------------------------------------------------------------!
-subroutine vegetation_dynamics(new_month,new_year)
+subroutine vegetation_dynamics(new_day,new_month,new_year)
    use grid_coms        , only : ngrids
    use ed_misc_coms     , only : current_time               & ! intent(in)
                                , dtlsm                      & ! intent(in)
@@ -18,7 +18,8 @@ subroutine vegetation_dynamics(new_month,new_year)
    use ed_state_vars    , only : edgrid_g                   & ! intent(inout)
                                , edtype                     & ! variable type
                                , polygontype                ! ! variable type
-   use growth_balive    , only : dbalive_dt                 ! ! subroutine
+   use growth_balive    , only : dbalive_dt                 & ! subroutine
+                               , update_growth_resp         ! ! subroutine
    use consts_coms      , only : day_sec                    & ! intent(in)
                                , yr_day                     ! ! intent(in)
    use mem_polygons     , only : maxpatch                   ! ! intent(in)
@@ -27,6 +28,7 @@ subroutine vegetation_dynamics(new_month,new_year)
                                , zero_ed_today_vars         ! ! sub-routine
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
+   logical          , intent(in)   :: new_day
    logical          , intent(in)   :: new_month
    logical          , intent(in)   :: new_year
    !----- Local variables. ----------------------------------------------------------------!
@@ -51,8 +53,9 @@ subroutine vegetation_dynamics(new_month,new_year)
    one_o_year  = 1.0 / yr_day
 
    !----- Apply events. -------------------------------------------------------------------!
-   call prescribed_event(current_time%year,doy)
-
+   if (new_day) then
+      call prescribed_event(current_time%year,doy)
+   end if
   
    !---------------------------------------------------------------------------------------!
    !   Loop over all domains.                                                              !
@@ -64,11 +67,15 @@ subroutine vegetation_dynamics(new_month,new_year)
       !------------------------------------------------------------------------------------!
       !     The following block corresponds to the daily time-step.                        !
       !------------------------------------------------------------------------------------!
-      !----- Standardise the fast-scale uptake and respiration, for growth rates. ---------!
-      call normalize_ed_today_vars(cgrid)
-      !----- Update phenology and growth of live tissues. ---------------------------------!
-      call phenology_driver(cgrid,doy,current_time%month, dtlsm_o_day)
-      call dbalive_dt(cgrid,one_o_year)
+      if (new_day) then
+         !----- Standardise the fast-scale uptake and respiration, for growth rates. ------!
+         call normalize_ed_today_vars(cgrid)
+         call update_growth_resp(cgrid)
+         !----- Update phenology ----------------------------------------------------------!
+         call phenology_driver(cgrid,doy,current_time%month, dtlsm_o_day)
+      end if
+      !----- Update Vegetation. -----------------------------------------------------------!
+      call dbalive_dt(cgrid,one_o_year,new_day)
       !------------------------------------------------------------------------------------!
 
 
@@ -101,16 +108,22 @@ subroutine vegetation_dynamics(new_month,new_year)
       end if
       !------------------------------------------------------------------------------------!
 
-      !------  update dmean and mmean values for NPP allocation terms ---------------------!
-      call normalize_ed_todayNPP_vars(cgrid)
+      if (new_day) then
+         !------  update dmean and mmean values for NPP allocation terms ------------------!
+         call normalize_ed_todayNPP_vars(cgrid)
+         
+         !---------------------------------------------------------------------------------!
+         !     This should be done every day, but after the longer-scale steps.  We update !
+         ! the carbon and nitrogen pools, and re-set the daily variables.                  !
+         !---------------------------------------------------------------------------------!
+      end if
       
-      !------------------------------------------------------------------------------------!
-      !     This should be done every day, but after the longer-scale steps.  We update    !
-      ! the carbon and nitrogen pools, and re-set the daily variables.                     !
-      !------------------------------------------------------------------------------------!
       call update_C_and_N_pools(cgrid)
-      call zero_ed_today_vars(cgrid)
-      !------------------------------------------------------------------------------------!
+      
+      if (new_day) then
+         call zero_ed_today_vars(cgrid)
+         !---------------------------------------------------------------------------------!
+      end if
 
 
       !------------------------------------------------------------------------------------!

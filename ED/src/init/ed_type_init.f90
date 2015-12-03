@@ -133,9 +133,6 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    !---------------------------------------------------------------------------------------!
    !      Most variables start with zero.                                                  !
    !---------------------------------------------------------------------------------------!
-   cpatch%today_leaf_resp       (ico) = 0.0
-   cpatch%today_root_resp       (ico) = 0.0
-   cpatch%today_gpp             (ico) = 0.0
    cpatch%today_nppleaf         (ico) = 0.0
    cpatch%today_nppfroot        (ico) = 0.0
    cpatch%today_nppsapwood      (ico) = 0.0
@@ -143,10 +140,20 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%today_nppseeds        (ico) = 0.0
    cpatch%today_nppwood         (ico) = 0.0
    cpatch%today_nppdaily        (ico) = 0.0
-   cpatch%today_gpp_pot         (ico) = 0.0
-   cpatch%today_gpp_lightmax    (ico) = 0.0
-   cpatch%today_gpp_moistmax    (ico) = 0.0
-   cpatch%today_gpp_mlmax       (ico) = 0.0
+   cpatch%gpp_pot               (ico) = 0.0
+   cpatch%gpp_lightmax          (ico) = 0.0
+   cpatch%gpp_moistmax          (ico) = 0.0
+   cpatch%gpp_mlmax             (ico) = 0.0
+   cpatch%today_npp             (ico) = 0.0
+   cpatch%today_npp_pot         (ico) = 0.0
+   cpatch%today_npp_lightmax    (ico) = 0.0
+   cpatch%today_npp_moistmax    (ico) = 0.0
+   cpatch%today_npp_mlmax       (ico) = 0.0
+   cpatch%growth_resp           (ico) = 0.0
+   cpatch%growth_resp_pot       (ico) = 0.0
+   cpatch%growth_resp_lightmax  (ico) = 0.0
+   cpatch%growth_resp_moistmax  (ico) = 0.0
+   cpatch%growth_resp_mlmax     (ico) = 0.0
    cpatch%light_level           (ico) = 0.0
    cpatch%light_level_beam      (ico) = 0.0
    cpatch%light_level_diff      (ico) = 0.0
@@ -381,6 +388,8 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       cpatch%dmean_npp               (ico) = 0.0
       cpatch%dmean_leaf_resp         (ico) = 0.0
       cpatch%dmean_root_resp         (ico) = 0.0
+      cpatch%dmean_leaf_maintenance  (ico) = 0.0
+      cpatch%dmean_root_maintenance  (ico) = 0.0
       cpatch%dmean_leaf_growth_resp  (ico) = 0.0
       cpatch%dmean_root_growth_resp  (ico) = 0.0
       cpatch%dmean_sapa_growth_resp  (ico) = 0.0

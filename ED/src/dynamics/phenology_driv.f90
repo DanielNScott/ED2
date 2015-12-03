@@ -235,10 +235,10 @@ subroutine update_phenology(doy, cpoly, isi, lat)
       cpatch => csite%patch(ipa)
 
       !----- Re-initialize litter inputs. -------------------------------------------------!
-      csite%fsc_in(ipa) = 0.0
-      csite%fsn_in(ipa) = 0.0
-      csite%ssc_in(ipa) = 0.0
-      csite%ssl_in(ipa) = 0.0
+      !csite%fsc_in(ipa) = 0.0
+      !csite%fsn_in(ipa) = 0.0
+      !csite%ssc_in(ipa) = 0.0
+      !csite%ssl_in(ipa) = 0.0
 
       if (c13af > 0) then !!!DSC!!!
          csite%fsc13_in  (ipa) = 0.0

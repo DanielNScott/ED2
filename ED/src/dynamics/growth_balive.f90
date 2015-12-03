@@ -18,7 +18,7 @@ module growth_balive
    ! IMPORTANT: The order of the operations here affect the C/N budgets, so don't change   !
    !            the order of the operations unless you really know what you are doing.     !
    !---------------------------------------------------------------------------------------!
-   subroutine dbalive_dt(cgrid, tfact)
+   subroutine dbalive_dt(cgrid, tfact, new_day)
       use ed_state_vars   , only : edtype                 & ! structure
                                  , polygontype            & ! structure
                                  , sitetype               & ! structure
@@ -42,9 +42,11 @@ module growth_balive
       use ed_misc_coms    , only : igrass                 & ! intent(in)
                                  , growth_resp_scheme     & ! intent(in)
                                  , storage_resp_scheme    & ! intent(in)
+                                 , dtlsm                  & ! intent(in)
                                  , ibigleaf               ! ! intent(in)
       use budget_utils    , only : update_budget          ! ! sub-routine
-      use consts_coms   , only : tiny_num     ! ! intent(in)
+      use consts_coms     , only : tiny_num               & ! intent(in)
+                                 , day_sec                ! ! intent(in) 
 
       !----- DS Additional Uses -----------------------------------------------------------!
       use iso_alloc       , only : resp_h2tc              & ! function
@@ -57,6 +59,7 @@ module growth_balive
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target     :: cgrid
       real             , intent(in) :: tfact
+      logical          , intent(in) :: new_day
       !----- Local variables. -------------------------------------------------------------!
       type(polygontype), pointer    :: cpoly
       type(sitetype)   , pointer    :: csite
@@ -68,7 +71,9 @@ module growth_balive
       integer                       :: ipft
       real                          :: salloc
       real                          :: salloci
-      real                          :: daily_C_gain
+      real                          :: bl
+      real                          :: br
+      real                          :: dtlsm_c_gain
       real                          :: carbon_balance
       real                          :: carbon_balance_pot
       real                          :: carbon_balance_lightmax
@@ -83,6 +88,7 @@ module growth_balive
       real                          :: nitrogen_uptake
       real                          :: N_uptake_pot
       real                          :: temp_dep
+      real                          :: dtlsm_o_daysec
       real                          :: growth_resp_int          ! Growth resp / balive
       real                          :: storage_resp_int         ! Growth resp / balive
       real                          :: tr_bleaf
@@ -108,7 +114,7 @@ module growth_balive
       real                          :: lloss_resp_c13
       real                          :: hotc_bstorage
       !------------------------------------------------------------------------------------!
-
+      dtlsm_o_daysec = dtlsm / day_sec
 
       polyloop: do ipy = 1,cgrid%npolygons
          cpoly => cgrid%polygon(ipy)
@@ -137,10 +143,10 @@ module growth_balive
                   salloci = 1.0 / salloc
 
                   !------------------------------------------------------------------------!
-                  !     Compute and apply maintenance costs and get daily C gain.          !
+                  !     Compute and apply maintenance costs and get dtlsm C gain.          !
                   !------------------------------------------------------------------------!
-                  call get_maintenance(cpatch,ico,tfact,csite%avg_daily_temp(ipa))
-                  call get_daily_C_gain(cpatch,ico,daily_C_gain,lloss_resp)
+                  call get_maintenance(cpatch,ico,tfact,csite%can_temp(ipa))
+                  call get_daily_C_gain(cpatch,ico,dtlsm_c_gain,lloss_resp)
 
                   if (c13af > 0) then
                      cpatch%leaf_maintenance_c13(ico) = cpatch%leaf_maintenance(ico)       &
@@ -182,7 +188,7 @@ module growth_balive
                      cpatch%sapb_storage_resp(ico) = 0.0
 
                      cpatch%bstorage(ico) = cpatch%bstorage(ico)                           &
-                                            - cpatch%sapa_storage_resp(ico)
+                                            - cpatch%sapa_storage_resp(ico) * dtlsm_o_daysec
                   case(1)
                      storage_resp_int = cpatch%bstorage(ico) / cpatch%balive(ico)          &
                                       * storage_turnover_rate(ipft) * tfact * temp_dep
@@ -193,10 +199,10 @@ module growth_balive
                      cpatch%sapb_storage_resp(ico) = storage_resp_int *cpatch%bsapwoodb(ico)
 
                      cpatch%bstorage(ico) = cpatch%bstorage(ico)                           &
-                                          - cpatch%leaf_storage_resp(ico)                  &
-                                          - cpatch%root_storage_resp(ico)                  &
-                                          - cpatch%sapa_storage_resp(ico)                  &
-                                          - cpatch%sapb_storage_resp(ico)
+                                          - cpatch%leaf_storage_resp(ico) * dtlsm_o_daysec &
+                                          - cpatch%root_storage_resp(ico) * dtlsm_o_daysec &
+                                          - cpatch%sapa_storage_resp(ico) * dtlsm_o_daysec &
+                                          - cpatch%sapb_storage_resp(ico) * dtlsm_o_daysec
                   end select
                   
                   if (c13af > 0) then
@@ -230,47 +236,12 @@ module growth_balive
                   !------------------------------------------------------------------------!
                   !      Calculate actual, potential and maximum carbon balances.          !
                   !------------------------------------------------------------------------!
-                  call plant_carbon_balances(cpatch,ipa,ico,daily_C_gain,carbon_balance    &
+                  call plant_carbon_balances(cpatch,ipa,ico,dtlsm_c_gain,carbon_balance    &
                                             ,carbon_balance_pot,carbon_balance_lightmax    &
                                             ,carbon_balance_moistmax,carbon_balance_mlmax)
                   if (c13af > 0) then
                      call plant_carbon13_balances(cpatch,ico,daily_c13_gain                &
                                                  ,carbon13_balance)
-                  end if
-                  !------------------------------------------------------------------------!
-
-
-
-                  !------------------------------------------------------------------------!
-                  !      Compute respiration rates for coming day [kgC/plant/day].         !
-                  !------------------------------------------------------------------------!
-                  select case(growth_resp_scheme)
-                  case(0)
-                     cpatch%sapa_growth_resp(ico) = max(0.0, daily_C_gain                  &
-                                                             * growth_resp_factor(ipft))
-                     cpatch%leaf_growth_resp(ico) = 0.0
-                     cpatch%root_growth_resp(ico) = 0.0
-                     cpatch%sapb_growth_resp(ico) = 0.0
-                  case(1)
-                     growth_resp_int = max(0.0, daily_C_gain * growth_resp_factor(ipft)    &
-                                                             / cpatch%balive(ico))
-                     
-                     cpatch%leaf_growth_resp(ico) = growth_resp_int * cpatch%bleaf(ico)
-                     cpatch%root_growth_resp(ico) = growth_resp_int * cpatch%broot(ico)
-                     cpatch%sapa_growth_resp(ico) = growth_resp_int * cpatch%bsapwooda(ico)
-                     cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
-                  end select
-                  
-                  if (c13af > 0) then
-                     hotc_bstorage = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
-                     cpatch%leaf_growth_resp_c13(ico) = cpatch%leaf_growth_resp(ico)       &
-                                                       * hotc_bstorage
-                     cpatch%root_growth_resp_c13(ico) = cpatch%root_growth_resp(ico)       &
-                                                       * hotc_bstorage
-                     cpatch%sapa_growth_resp_c13(ico) = cpatch%sapa_growth_resp(ico)       &
-                                                       * hotc_bstorage
-                     cpatch%sapb_growth_resp_c13(ico) = cpatch%sapb_growth_resp(ico)       &
-                                                       * hotc_bstorage
                   end if
                   !------------------------------------------------------------------------!
 
@@ -378,8 +349,8 @@ module growth_balive
                   ! big-leaf simulations, this is now done at disturbance.f90.             !
                   !------------------------------------------------------------------------!
                   call mortality_rates(cpatch,ico,csite%avg_daily_temp(ipa),csite%age(ipa))
-                  dlnndt   = - sum(cpatch%mort_rate(1:4,ico))
-                  dndt     = dlnndt * cpatch%nplant(ico)
+                  dlnndt   = - sum(cpatch%mort_rate(1:4,ico)) * dtlsm_o_daysec
+                  dndt     = dlnndt * cpatch%nplant(ico) * dtlsm_o_daysec
                   !------------------------------------------------------------------------!
 
                   !----- Update monthly mortality rates [plants/m2/month and 1/month]. ----!
@@ -434,9 +405,11 @@ module growth_balive
                call update_budget(csite,cpoly%lsl(isi),ipa,ipa)
                !---------------------------------------------------------------------------!
 
-               !----- It's a new day, reset average daily temperature. --------------------!
-               csite%avg_daily_temp(ipa) = 0.0 
-               !---------------------------------------------------------------------------!
+               if (new_day) then
+                  !----- It's a new day, reset average daily temperature. -----------------!
+                  csite%avg_daily_temp(ipa) = 0.0 
+                  !------------------------------------------------------------------------!
+               end if
             end do patchloop
             !------------------------------------------------------------------------------!
          end do siteloop
@@ -450,6 +423,116 @@ module growth_balive
    !=======================================================================================!
 
 
+
+
+
+   !=======================================================================================!
+   !=======================================================================================!
+   !     This subroutine will scale the daily averages of GPP and some respiration vari-   !
+   ! ables to normal units.  These variables are not for output, so they are done          !
+   ! separatedly.  There are also some output variables here, because these depend on the  !
+   ! average of the gpp, and leaf and root respiration and would need to be calculated     !
+   ! again otherwise.                                                                      !
+   !---------------------------------------------------------------------------------------!
+   subroutine update_growth_resp(cgrid)
+      use ed_state_vars , only : edtype             & ! structure
+                               , polygontype        & ! structure
+                               , sitetype           & ! structure
+                               , patchtype          ! ! structure
+      use pft_coms      , only : growth_resp_factor ! ! intent(in)
+      use ed_misc_coms  , only : dtlsm              & ! intent(in)
+                               , growth_resp_scheme & ! intent(in)
+                               , c13af              ! ! intent(in)
+      use consts_coms   , only : day_sec            ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      type(edtype)     , target     :: cgrid
+      !----- Local variables. -------------------------------------------------------------!
+      type(polygontype), pointer    :: cpoly
+      type(sitetype)   , pointer    :: csite
+      type(patchtype)  , pointer    :: cpatch
+      integer                       :: ipy
+      integer                       :: isi
+      integer                       :: ipa
+      integer                       :: ico
+      integer                       :: ipft
+      real                          :: growth_resp_int         ! Growth resp / balive
+      real                          :: daysec_o_dtlsm
+      !------------------------------------------------------------------------------------!
+      daysec_o_dtlsm = day_sec / dtlsm
+      
+      polyloop: do ipy=1,cgrid%npolygons
+         cpoly => cgrid%polygon(ipy)
+         !----- This part is done only if arrays are sought. ------------------------------!
+         siteloop: do isi=1,cpoly%nsites
+            csite => cpoly%site(isi)
+            patchloop: do ipa=1,csite%npatches
+               cpatch => csite%patch(ipa)
+               
+               !----- Included a loop so it won't crash with empty cohorts... -------------!
+               cohortloop: do ico=1,cpatch%ncohorts
+                  ipft = cpatch%pft(ico)
+                  !------------------------------------------------------------------------!
+                  !  Compute the growth respiration as a fraction of yesterday's NPP.      !
+                  !  This stays in units kgC/m^2 (per dtlsm) because it's used every dtlsm.!
+                  !------------------------------------------------------------------------!
+                  cpatch%growth_resp         (ico) = max(0.0,cpatch%today_npp         (ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_pot     (ico) = max(0.0,cpatch%today_npp_pot     (ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_lightmax(ico) = max(0.0,cpatch%today_npp_lightmax(ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_moistmax(ico) = max(0.0,cpatch%today_npp_moistmax(ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_mlmax   (ico) = max(0.0,cpatch%today_npp_mlmax   (ico)&
+                                                             * growth_resp_factor(ipft))
+                  !------------------------------------------------------------------------!
+                  
+                  !------------------------------------------------------------------------!
+                  !  Compute respiration rates for coming day [kgC/plant/day].             !
+                  !------------------------------------------------------------------------!
+                  select case(growth_resp_scheme)
+                  case(0)
+                     cpatch%sapa_growth_resp(ico) = max(0.0,cpatch%growth_resp(ico))
+                     cpatch%leaf_growth_resp(ico) = 0.0
+                     cpatch%root_growth_resp(ico) = 0.0
+                     cpatch%sapb_growth_resp(ico) = 0.0
+                  case(1)
+                     growth_resp_int = max(0.0,cpatch%growth_resp(ico)/cpatch%balive(ico))
+
+                     cpatch%leaf_growth_resp(ico) = growth_resp_int * cpatch%bleaf(ico)
+                     cpatch%root_growth_resp(ico) = growth_resp_int * cpatch%broot(ico)
+                     cpatch%sapa_growth_resp(ico) = growth_resp_int * cpatch%bsapwooda(ico)
+                     cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
+                  end select
+                  
+                  if (c13af > 0) then
+                     hotc_bstorage = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+                     cpatch%leaf_growth_resp_c13(ico) = cpatch%leaf_growth_resp(ico)       &
+                                                       * hotc_bstorage
+                     cpatch%root_growth_resp_c13(ico) = cpatch%root_growth_resp(ico)       &
+                                                       * hotc_bstorage
+                     cpatch%sapa_growth_resp_c13(ico) = cpatch%sapa_growth_resp(ico)       &
+                                                       * hotc_bstorage
+                     cpatch%sapb_growth_resp_c13(ico) = cpatch%sapb_growth_resp(ico)       &
+                                                       * hotc_bstorage
+                  end if
+                  !------------------------------------------------------------------------!               
+
+                  
+               end do cohortloop
+               !---------------------------------------------------------------------------!
+            end do patchloop
+            !------------------------------------------------------------------------------!
+         end do siteloop
+         !---------------------------------------------------------------------------------!
+      end do polyloop
+      !------------------------------------------------------------------------------------!
+
+      return
+   end subroutine update_growth_resp
+   !=======================================================================================!
+   !=======================================================================================!
 
 
 
@@ -500,7 +583,7 @@ module growth_balive
       real                          :: salloci
       real                          :: bl
       real                          :: br
-      real                          :: daily_C_gain
+      real                          :: dtlsm_c_gain
       real                          :: carbon_balance
       real                          :: carbon_balance_pot
       real                          :: carbon_balance_lightmax
@@ -518,7 +601,6 @@ module growth_balive
       real                          :: growth_resp_int         ! Growth resp / balive
       real                          :: storage_resp_int        ! Growth resp / balive
       !------------------------------------------------------------------------------------!
-
 
       polyloop: do ipy = 1,cgrid%npolygons
          cpoly => cgrid%polygon(ipy)
@@ -551,7 +633,7 @@ module growth_balive
                   !     Compute maintenance costs using actual pools.                      !
                   !------------------------------------------------------------------------!
                   call plant_maintenance(cpatch,ico,cpatch%broot(ico),cpatch%bleaf(ico)    &
-                                        ,tfact,daily_C_gain,csite%avg_daily_temp(ipa))
+                                        ,tfact,dtlsm_c_gain,csite%can_temp(ipa))
 
                   !------------------------------------------------------------------------!
                   !    For the no vegetation dynamics case, we update the carbon balance   !
@@ -615,34 +697,10 @@ module growth_balive
                   !------------------------------------------------------------------------!
                   !      Calculate actual, potential and maximum carbon balances.          !
                   !------------------------------------------------------------------------!
-                  call plant_carbon_balances(cpatch,ipa,ico,daily_C_gain,carbon_balance    &
+                  call plant_carbon_balances(cpatch,ipa,ico,dtlsm_c_gain,carbon_balance    &
                                             ,carbon_balance_pot,carbon_balance_lightmax    &
                                             ,carbon_balance_moistmax,carbon_balance_mlmax)
                   !------------------------------------------------------------------------!
-
-
-
-                  !------------------------------------------------------------------------!
-                  !      Compute respiration rates for coming day [kgC/plant/day].         !
-                  !------------------------------------------------------------------------!
-                  select case(growth_resp_scheme)
-                  case(0)
-                     cpatch%sapa_growth_resp(ico) = max(0.0, daily_C_gain                  &
-                                                             * growth_resp_factor(ipft))
-                     cpatch%leaf_growth_resp(ico) = 0.0
-                     cpatch%root_growth_resp(ico) = 0.0
-                     cpatch%sapb_growth_resp(ico) = 0.0
-                  case(1)
-                     growth_resp_int = max(0.0, daily_C_gain * growth_resp_factor(ipft)    &
-                                                             / cpatch%balive(ico))
-                     
-                     cpatch%leaf_growth_resp(ico) = growth_resp_int * cpatch%bleaf(ico)
-                     cpatch%root_growth_resp(ico) = growth_resp_int * cpatch%broot(ico)
-                     cpatch%sapa_growth_resp(ico) = growth_resp_int * cpatch%bsapwooda(ico)
-                     cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
-                  end select
-                  !------------------------------------------------------------------------!
-
 
 
                   !------------------------------------------------------------------------!
@@ -1564,7 +1622,7 @@ module growth_balive
 
    !=======================================================================================!
    !=======================================================================================!
-   subroutine plant_maintenance(cpatch,ico,br,bl,tfact,daily_C_gain,tempk)
+   subroutine plant_maintenance(cpatch,ico,br,bl,tfact,dtlsm_c_gain,tempk)
       use ed_state_vars, only : patchtype          ! ! structure
       use pft_coms     , only : phenology          & ! intent(in)
                               , root_turnover_rate & ! intent(in)
@@ -1572,6 +1630,7 @@ module growth_balive
       use consts_coms  , only : umol_2_kgC         & ! intent(in)
                               , day_sec            & ! intent(in)
                               , tiny_num           ! ! intent(in)
+      use ed_misc_coms , only : dtlsm              ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype), target        :: cpatch
@@ -1580,11 +1639,13 @@ module growth_balive
       real           , intent(in)    :: bl
       real           , intent(in)    :: tfact
       real           , intent(in)    :: tempk
-      real           , intent(out)   :: daily_C_gain
+      real           , intent(out)   :: dtlsm_c_gain
       !----- Local variables. -------------------------------------------------------------!
       integer                        :: ipft
       real                           :: maintenance_temp_dep
+      real                           :: dtlsm_o_daysec
       !------------------------------------------------------------------------------------!
+      dtlsm_o_daysec = dtlsm / day_sec;
 
       !------ Alias for plant functional type. --------------------------------------------!
       ipft = cpatch%pft(ico)
@@ -1604,9 +1665,9 @@ module growth_balive
          maintenance_temp_dep = 1.0 / (1.0 + exp(0.4 * (278.15 - tempk)))
          !----- Scale maintenance by biomass and apply the temperature correction. --------!
          cpatch%leaf_maintenance(ico) = leaf_turnover_rate(ipft) * bl                      &
-                                      * maintenance_temp_dep * tfact
+                                      * maintenance_temp_dep * tfact * dtlsm_o_daysec
          cpatch%root_maintenance(ico) = root_turnover_rate(ipft) * br                      &
-                                      * maintenance_temp_dep * tfact
+                                      * maintenance_temp_dep * tfact * dtlsm_o_daysec
          !---------------------------------------------------------------------------------!
 
       case (3)
@@ -1615,9 +1676,9 @@ module growth_balive
          ! amplitude that comes from the dependence on the radiation (running average).    !
          ! Roots are the same as the other plants that don't depend on temperature.        !
          !---------------------------------------------------------------------------------!
-         cpatch%root_maintenance(ico) = root_turnover_rate(ipft) * br * tfact
+         cpatch%root_maintenance(ico) = root_turnover_rate(ipft) * br *tfact *dtlsm_o_daysec
          cpatch%leaf_maintenance(ico) = leaf_turnover_rate(ipft) * bl                      &
-                                      * cpatch%turnover_amp(ico) * tfact
+                                      * cpatch%turnover_amp(ico) * tfact * dtlsm_o_daysec
          !---------------------------------------------------------------------------------!
 
 
@@ -1626,8 +1687,8 @@ module growth_balive
          !      Ohter phenologies, use the standard turnover rates, scaled by biomass      !
          ! only.                                                                           !
          !---------------------------------------------------------------------------------!
-         cpatch%root_maintenance(ico) = root_turnover_rate(ipft) * br * tfact
-         cpatch%leaf_maintenance(ico) = leaf_turnover_rate(ipft) * bl * tfact
+         cpatch%root_maintenance(ico) = root_turnover_rate(ipft) *br *tfact *dtlsm_o_daysec
+         cpatch%leaf_maintenance(ico) = leaf_turnover_rate(ipft) *bl *tfact *dtlsm_o_daysec
          !---------------------------------------------------------------------------------!
          
       end select
@@ -1652,12 +1713,12 @@ module growth_balive
 
       !----- Compute daily C uptake [kgC/plant/day]. --------------------------------------!
       if(cpatch%nplant(ico) > tiny(1.0)) then
-         daily_C_gain = umol_2_kgC * day_sec * ( cpatch%today_gpp(ico)                     &
-                                               - cpatch%today_leaf_resp(ico)               &
-                                               - cpatch%today_root_resp(ico))              &
-                                             / cpatch%nplant(ico)
+         dtlsm_c_gain = umol_2_kgC * dtlsm * ( cpatch%gpp(ico)                               &
+                                             - cpatch%leaf_respiration(ico)                  &
+                                             - cpatch%root_respiration(ico))                 &
+                                           / cpatch%nplant(ico)
       else
-         daily_C_gain = 0.0
+         dtlsm_c_gain = 0.0
       end if
 
       return
@@ -1752,14 +1813,15 @@ module growth_balive
 
    !=======================================================================================!
    !=======================================================================================!
-   subroutine plant_carbon_balances(cpatch,ipa,ico,daily_C_gain,carbon_balance             &
+   subroutine plant_carbon_balances(cpatch,ipa,ico,dtlsm_c_gain,carbon_balance             &
                                    ,carbon_balance_pot,carbon_balance_lightmax             &
                                    ,carbon_balance_moistmax,carbon_balance_mlmax)
       use ed_state_vars  , only : patchtype          ! ! structure
       use pft_coms       , only : growth_resp_factor ! ! intent(in)
       use consts_coms    , only : umol_2_kgC         & ! intent(in)
                                 , day_sec            ! ! intent(in)
-      use ed_misc_coms   , only : current_time       ! ! intent(in)
+      use ed_misc_coms   , only : current_time       & ! intent(in)
+                                , dtlsm              ! ! intent(in)
       use ed_max_dims    , only : n_pft              ! ! intent(in)
       use isotopes       , only : c_alloc_flg        ! ! intent(in)
       implicit none
@@ -1767,21 +1829,19 @@ module growth_balive
       type(patchtype)          , target      :: cpatch
       integer                  , intent(in)  :: ipa
       integer                  , intent(in)  :: ico
-      real                     , intent(in)  :: daily_C_gain
+      real                     , intent(in)  :: dtlsm_c_gain
       real                     , intent(out) :: carbon_balance
       real                     , intent(out) :: carbon_balance_pot
       real                     , intent(out) :: carbon_balance_lightmax
       real                     , intent(out) :: carbon_balance_moistmax
       real                     , intent(out) :: carbon_balance_mlmax
       !----- Local variables. -------------------------------------------------------------!
-      real                                   :: daily_C_gain_pot
-      real                                   :: daily_C_gain_lightmax
-      real                                   :: daily_C_gain_moistmax
-      real                                   :: daily_C_gain_mlmax
-      real                                   :: growth_respiration_pot
-      real                                   :: growth_respiration_lightmax
-      real                                   :: growth_respiration_moistmax
-      real                                   :: growth_respiration_mlmax
+      real                                   :: dtlsm_c_gain_pot
+      real                                   :: dtlsm_c_gain_lightmax
+      real                                   :: dtlsm_c_gain_moistmax
+      real                                   :: dtlsm_c_gain_mlmax
+      real                                   :: leaf_plus_root_resp     ! Sum of R_l, R_r
+      real                                   :: mult                    ! Rescaling factor
       integer                                :: ipft
       !----- Local constants. -------------------------------------------------------------!
       logical                  , parameter   :: print_debug = .false.
@@ -1789,34 +1849,36 @@ module growth_balive
       logical, dimension(n_pft), save        :: first_time  = .true.
       !------------------------------------------------------------------------------------!
 
+
       !----- Alias for PFT type. ----------------------------------------------------------!
       ipft = cpatch%pft(ico)
       !------------------------------------------------------------------------------------!
 
-
-
       !------------------------------------------------------------------------------------!
-      !       Calculate actual daily carbon balance: kgC/plant/day.                        !
+      !       Calculate dtlsm carbon balance: kgC/plant/dtlsm.                             !
       !------------------------------------------------------------------------------------!
-      carbon_balance = daily_C_gain - cpatch%leaf_growth_resp (ico)                        &
-                                    - cpatch%root_growth_resp (ico)                        &
-                                    - cpatch%sapa_growth_resp (ico)                        &
-                                    - cpatch%sapb_growth_resp (ico)
+      carbon_balance = dtlsm_c_gain - cpatch%growth_resp(ico)
       !------------------------------------------------------------------------------------!
 
       if (cpatch%nplant(ico) > tiny(1.0)) then
-
          !---------------------------------------------------------------------------------!
-         !      Calculate potential carbon balance (used for nitrogen demand function).    !
-         ! [kgC/plant/day].                                                                !
+         !      Find carbon balance under various conditions. They will be used for        !
+         ! nitrogen demand and density-dependent mortality.  Units: [kgC/plant/dtlsm].     !
+         ! Var "mult" is conversion from umol/pl/sec -> kgC/m^2/dtlsm.                     !
          !---------------------------------------------------------------------------------!
-         daily_C_gain_pot       = umol_2_kgC * day_sec * ( cpatch%today_gpp_pot(ico)       &
-                                                         - cpatch%today_leaf_resp(ico)     &
-                                                         - cpatch%today_root_resp(ico))    &
-                                                       / cpatch%nplant(ico)
-         growth_respiration_pot = max(0.0, daily_C_gain_pot * growth_resp_factor(ipft))
-         carbon_balance_pot     = daily_C_gain_pot - growth_respiration_pot
-
+         mult = umol_2_kgC * dtlsm / cpatch%nplant(ico)
+         leaf_plus_root_resp = cpatch%leaf_respiration(ico) + cpatch%root_respiration(ico)
+         
+         dtlsm_c_gain_pot        = (cpatch%gpp_pot(ico)      - leaf_plus_root_resp) * mult
+         dtlsm_c_gain_lightmax   = (cpatch%gpp_lightmax(ico) - leaf_plus_root_resp) * mult
+         dtlsm_c_gain_moistmax   = (cpatch%gpp_moistmax(ico) - leaf_plus_root_resp) * mult
+         dtlsm_c_gain_mlmax      = (cpatch%gpp_mlmax(ico)    - leaf_plus_root_resp) * mult
+         
+         carbon_balance_pot      = dtlsm_c_gain_pot      - cpatch%growth_resp_pot(ico)
+         carbon_balance_lightmax = dtlsm_c_gain_lightmax - cpatch%growth_resp_lightmax(ico)
+         carbon_balance_moistmax = dtlsm_c_gain_moistmax - cpatch%growth_resp_moistmax(ico)
+         carbon_balance_mlmax    = dtlsm_c_gain_mlmax    - cpatch%growth_resp_mlmax(ico)
+         
          if (c_alloc_flg > 0) then
             daily_C_gain_pot = umol_2_kgC *day_sec * ( cpatch%today_gpp_pot(ico)           &
                                                      - cpatch%today_lassim_resp(ico) )     &
@@ -1824,40 +1886,15 @@ module growth_balive
             carbon_balance_pot = daily_C_gain_pot - growth_respiration_pot
          end if
          !---------------------------------------------------------------------------------!
-
-
-
+         
          !---------------------------------------------------------------------------------!
-         !      Find carbon balance under full light and full soil moisture.  They will be !
-         ! used for density-dependent mortality.  Units: [kgC/plant/day].                  !
+         ! Update today npp values.                                                        !
          !---------------------------------------------------------------------------------!
-         !------ Full light. --------------------------------------------------------------!
-         daily_C_gain_lightmax       = umol_2_kgC * day_sec                                &
-                                     * ( cpatch%today_gpp_lightmax(ico)                    &
-                                       - cpatch%today_leaf_resp   (ico)                    &
-                                       - cpatch%today_root_resp   (ico) )                  &
-                                     / cpatch%nplant(ico)
-         growth_respiration_lightmax = max(0.0, daily_C_gain_lightmax                      &
-                                              * growth_resp_factor(ipft) )
-         carbon_balance_lightmax     = daily_C_gain_lightmax - growth_respiration_lightmax
-         !------ Full soil moisture. ------------------------------------------------------!
-         daily_C_gain_moistmax       = umol_2_kgC * day_sec                                &
-                                     * ( cpatch%today_gpp_moistmax(ico)                    &
-                                       - cpatch%today_leaf_resp   (ico)                    &
-                                       - cpatch%today_root_resp   (ico) )                  &
-                                     / cpatch%nplant(ico)
-         growth_respiration_moistmax = max(0.0, daily_C_gain_moistmax                      &
-                                              * growth_resp_factor(ipft) )
-         carbon_balance_moistmax     = daily_C_gain_moistmax - growth_respiration_moistmax
-         !------ Full soil moisture and light. --------------------------------------------!
-         daily_C_gain_mlmax          = umol_2_kgC * day_sec                                &
-                                     * ( cpatch%today_gpp_mlmax(ico)                       &
-                                       - cpatch%today_leaf_resp   (ico)                    &
-                                       - cpatch%today_root_resp   (ico) )                  &
-                                     / cpatch%nplant(ico)
-         growth_respiration_mlmax    = max(0.0, daily_C_gain_mlmax                         &
-                                              * growth_resp_factor(ipft) )
-         carbon_balance_mlmax        = daily_C_gain_mlmax - growth_respiration_mlmax
+         cpatch%today_npp         (ico) = cpatch%today_npp         (ico) + dtlsm_c_gain
+         cpatch%today_npp_pot     (ico) = cpatch%today_npp_pot     (ico) + dtlsm_c_gain_pot
+         cpatch%today_npp_lightmax(ico) = cpatch%today_npp_lightmax(ico) + dtlsm_c_gain_lightmax
+         cpatch%today_npp_moistmax(ico) = cpatch%today_npp_moistmax(ico) + dtlsm_c_gain_moistmax
+         cpatch%today_npp_mlmax   (ico) = cpatch%today_npp_mlmax   (ico) + dtlsm_c_gain_mlmax
          !---------------------------------------------------------------------------------!
          if (c_alloc_flg > 0) then
             !------ Full light. -----------------------------------------------------------!
@@ -1916,17 +1953,17 @@ module growth_balive
                            ,'          CB_MLMAX','  LEAF_MAINTENANCE','  ROOT_MAINTENANCE'
          end if
 
-         write(unit=30+ipft,fmt='(2(i2.2,a1),i4.4,2(1x,i18),22(1x,es18.5))')               &
-              current_time%month,'/',current_time%date,'/',current_time%year               &
-             ,ipa,ico,cpatch%nplant(ico),carbon_balance,cpatch%leaf_growth_resp(ico)       &
-             ,cpatch%root_growth_resp(ico),cpatch%sapa_growth_resp(ico)                    &
-             ,cpatch%sapb_growth_resp(ico),cpatch%today_gpp(ico)                           &
-             ,cpatch%today_gpp_lightmax(ico),cpatch%today_gpp_moistmax(ico)                &
-             ,cpatch%today_gpp_mlmax(ico),cpatch%today_leaf_resp(ico)                      &
-             ,cpatch%today_root_resp(ico),carbon_balance_lightmax,carbon_balance_moistmax  &
-             ,carbon_balance_mlmax,cpatch%cb(13,ico),cpatch%cb_lightmax(13,ico)            &
-             ,cpatch%cb_moistmax(13,ico),cpatch%cb_mlmax(13,ico)                           &
-             ,cpatch%leaf_maintenance(ico),cpatch%root_maintenance(ico)
+ !        write(unit=30+ipft,fmt='(2(i2.2,a1),i4.4,2(1x,i18),22(1x,es18.5))')               &
+ !             current_time%month,'/',current_time%date,'/',current_time%year               &
+ !            ,ipa,ico,cpatch%nplant(ico),carbon_balance,cpatch%leaf_growth_resp(ico)       &
+ !            ,cpatch%root_growth_resp(ico),cpatch%sapa_growth_resp(ico)                    &
+ !            ,cpatch%sapb_growth_resp(ico),cpatch%today_gpp(ico)                           &
+ !            ,cpatch%today_gpp_lightmax(ico),cpatch%today_gpp_moistmax(ico)                &
+ !            ,cpatch%today_gpp_mlmax(ico),cpatch%today_leaf_resp(ico)                      &
+ !            ,cpatch%today_root_resp(ico),carbon_balance_lightmax,carbon_balance_moistmax  &
+ !            ,carbon_balance_mlmax,cpatch%cb(13,ico),cpatch%cb_lightmax(13,ico)            &
+ !            ,cpatch%cb_moistmax(13,ico),cpatch%cb_mlmax(13,ico)                           &
+ !            ,cpatch%leaf_maintenance(ico),cpatch%root_maintenance(ico)
       end if
 
       return
@@ -2138,10 +2175,14 @@ module growth_balive
 
 
             !----- NPP allocation in diff pools in KgC/m2/day. ----------------------------!
-            cpatch%today_nppleaf(ico)   = tr_bleaf       * cpatch%nplant(ico)
-            cpatch%today_nppfroot(ico)  = tr_broot       * cpatch%nplant(ico)
-            cpatch%today_nppsapwood(ico)= (tr_bsapwooda + tr_bsapwoodb)* cpatch%nplant(ico)
-            cpatch%today_nppdaily(ico)  = carbon_balance * cpatch%nplant(ico)
+            cpatch%today_nppleaf(ico)   = cpatch%today_nppleaf(ico)                        &
+                                        + tr_bleaf * cpatch%nplant(ico)
+            cpatch%today_nppfroot(ico)  = cpatch%today_nppfroot(ico)                       &
+                                        + tr_broot * cpatch%nplant(ico)
+            cpatch%today_nppsapwood(ico)= cpatch%today_nppsapwood(ico)                     &
+                                        + (tr_bsapwooda + tr_bsapwoodb)* cpatch%nplant(ico)
+            cpatch%today_nppdaily(ico)  = cpatch%today_nppdaily(ico)                       &
+                                        + carbon_balance * cpatch%nplant(ico)
             !------------------------------------------------------------------------------!
             
 
@@ -2223,10 +2264,11 @@ module growth_balive
             nitrogen_uptake      = nitrogen_uptake      + carbon_balance / c2n_storage
                                  
             !----- NPP allocation in diff pools in Kg C/m2/day. ---------------------------!
-            cpatch%today_nppleaf(ico)    = 0.0
-            cpatch%today_nppfroot(ico)   = 0.0
-            cpatch%today_nppsapwood(ico) = 0.0
-            cpatch%today_nppdaily(ico)   = carbon_balance * cpatch%nplant(ico)
+            !cpatch%today_nppleaf(ico)    = 0.0    ! These get zeroed elsewhere right?
+            !cpatch%today_nppfroot(ico)   = 0.0    ! Need to for dbalive_dt push into dtlsm
+            !cpatch%today_nppsapwood(ico) = 0.0    !
+            cpatch%today_nppdaily(ico)   = cpatch%today_nppdaily(ico)                      &
+                                         + carbon_balance * cpatch%nplant(ico)
             !------------------------------------------------------------------------------!
          end select
          !---------------------------------------------------------------------------------!
@@ -2400,23 +2442,24 @@ module growth_balive
 
 
          !---- NPP allocation in diff pools in KgC/m2/day. --------------------------------!
-         cpatch%today_nppleaf(ico)    = 0.0
-         cpatch%today_nppfroot(ico)   = 0.0
-         cpatch%today_nppsapwood(ico) = 0.0
-         cpatch%today_nppdaily(ico)   = carbon_balance * cpatch%nplant(ico)
+         !cpatch%today_nppleaf(ico)    = 0.0    ! See note above on zeroing of today_npp
+         !cpatch%today_nppfroot(ico)   = 0.0    ! vars...
+         !cpatch%today_nppsapwood(ico) = 0.0    ! ...
+         cpatch%today_nppdaily(ico)   = cpatch%today_nppdaily(ico)                         &
+                                      + carbon_balance * cpatch%nplant(ico)
          !---------------------------------------------------------------------------------!
       end if
 
       !------------------------------------------------------------------------------------!
-      if (printout) then
-         open (unit=66,file=fracfile,status='old',position='append',action='write')
-         write(unit=66,fmt='(7(i12,1x),1(11x,l1,1x),3(f12.6,1x),1(11x,l1,1x),8(f12.8,1x))')&
-               current_time%year,current_time%month,current_time%date,ipft,phenology(ipft) &
-              ,phen_stat_in,cpatch%phenology_status(ico),time_to_flush,available_carbon    &
-              ,cpatch%elongf(ico),green_leaf_factor,on_allometry,delta_bleaf,delta_broot   &
-              ,delta_bsapwooda,delta_bsapwoodb,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb
-         close (unit=66,status='keep')
-      end if
+      !if (printout) then
+      !   open (unit=66,file=fracfile,status='old',position='append',action='write')
+      !   write(unit=66,fmt='(7(i12,1x),1(11x,l1,1x),3(f12.6,1x),1(11x,l1,1x),8(f12.8,1x))')&
+      !         current_time%year,current_time%month,current_time%date,ipft,phenology(ipft) &
+      !        ,phen_stat_in,cpatch%phenology_status(ico),time_to_flush,available_carbon    &
+      !        ,cpatch%elongf(ico),green_leaf_factor,on_allometry,delta_bleaf,delta_broot   &
+      !        ,delta_bsapwooda,delta_bsapwoodb,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb
+      !   close (unit=66,status='keep')
+      !end if
       !------------------------------------------------------------------------------------!
 
       return
