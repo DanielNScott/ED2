@@ -182,9 +182,9 @@ subroutine alloc_c13 (cpatch,ico,tr_bleaf,tr_broot,tr_bsapwooda,tr_bsapwoodb,dai
       write(*,*) ' '
       write(*,*) '- Context Vars:  ----- Total C ----- 13C Value ---------------------'
       write(*,*) ' daily_C_gain    :', daily_C_gain                  , daily_c13_gain
-      write(*,*) ' today_gpp       :', cpatch%today_gpp(ico)         , cpatch%today_gpp_c13(ico)
-      write(*,*) ' today_leaf_resp :', cpatch%today_leaf_resp(ico)   , cpatch%today_leaf_resp_c13(ico)
-      write(*,*) ' today_root_resp :', cpatch%today_root_resp(ico)   , cpatch%today_root_resp_c13(ico)
+!      write(*,*) ' today_gpp       :', cpatch%today_gpp(ico)         , cpatch%today_gpp_c13(ico)
+!      write(*,*) ' today_leaf_resp :', cpatch%today_leaf_resp(ico)   , cpatch%today_leaf_resp_c13(ico)
+!      write(*,*) ' today_root_resp :', cpatch%today_root_resp(ico)   , cpatch%today_root_resp_c13(ico)
       write(*,*) ' '
       write(*,*) '- Variable Name: ---- Input Val ---- Var Will Be --- Xfer to Var ---'
       write(*,*) ' bleaf           :', cpatch%bleaf(ico)    , cpatch%bleaf(ico)     + tr_bleaf    , tr_bleaf    
@@ -566,8 +566,8 @@ subroutine l_r_diff(cpatch,ico,carbon13_balance,lh2tc_in,rh2tc_in,sth2tc_in,blea
    !  Why don't we have to worry about storage = 0.0?                                      !
    !---------------------------------------------------------------------------------------!
    lhc_target4 = 0.0
-   call get_lhc_target(cpatch%pft(ico),cpatch%bleaf(ico),cpatch%bleaf_c13(ico),cpatch%today_gpp(ico)  &
-                      ,cpatch%today_gpp_c13(ico),lh2tc_in,sth2tc_in,bleaf_in,lhc_target4)
+   !call get_lhc_target(cpatch%pft(ico),cpatch%bleaf(ico),cpatch%bleaf_c13(ico),cpatch%today_gpp(ico)  &
+   !                   ,cpatch%today_gpp_c13(ico),lh2tc_in,sth2tc_in,bleaf_in,lhc_target4)
    lhc_target = dble(lhc_target4)
 
    ! if (cpatch%bleaf(ico) > tiny(1.0)) then
@@ -1588,33 +1588,28 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
    if (c13af > 0 .and. c_alloc_flg > 0) then
       ! Assimilated C-13 should not exceed assimilated C.
       if ((cpatch%gpp_c13      (ico) > cpatch%gpp      (ico) .and. &
-           cpatch%gpp          (ico) > tiny(1.0)            ).or.  &
-          (cpatch%today_gpp_c13(ico) > cpatch%today_gpp(ico).and. &
-           cpatch%today_gpp    (ico) > tiny(1.0)            )) then
+           cpatch%gpp          (ico) > tiny(1.0)            )) then
          write(*,*) ' There is too much C-13 in gpp...'
          reason   = 'GPP C-13 too high.'
          show_gpp = .true.
       end if
       
       ! Leaf respired C-13 should exceed respired C.
-      if (cpatch%leaf_respiration_c13(ico) > cpatch%leaf_respiration(ico) .or. &
-          cpatch%today_leaf_resp_c13 (ico) > cpatch%today_leaf_resp (ico)) then
+      if (cpatch%leaf_respiration_c13(ico) > cpatch%leaf_respiration(ico)) then
          write(*,*) ' There is too much C-13 in leaf respiration...'
          reason   = 'Respired C-13 too high.'
          show_LR  = .true.
       end if
    
       ! Assimilate based resp should be positive.
-      if (cpatch%today_lassim_resp(ico) < 0.0 .or. cpatch%today_lassim_resp_c13(ico) < 0.0 .or. &
-          cpatch%lassim_resp      (ico) < 0.0 .or. cpatch%lassim_resp_c13      (ico) < 0.0) then
+      if (cpatch%lassim_resp      (ico) < 0.0 .or. cpatch%lassim_resp_c13      (ico) < 0.0) then
          write(*,*) ' Leaf respiration of assimilate is less than 0...'
          reason   = 'Respired C-13 is neg.'
          show_LAR = .true.
       end if
       
       ! Assimilate based resp should not exceed total resp.
-      if (cpatch%lassim_resp      (ico) > cpatch%leaf_respiration(ico) .and. abs(cpatch%lassim_resp      (ico)) > tiny(1.0) .or. &
-          cpatch%today_lassim_resp(ico) > cpatch%today_leaf_resp (ico) .and. abs(cpatch%today_lassim_resp(ico)) > tiny(1.0)) then
+      if (cpatch%lassim_resp      (ico) > cpatch%leaf_respiration(ico) .and. abs(cpatch%lassim_resp      (ico)) > tiny(1.0)) then
          write(*,*) ' Leaf respiration of assimilate exceeds total leaf respiration...'
          reason   = 'LAR too high.'
          show_LR  = .true.
@@ -1622,8 +1617,7 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
       end if
                      
       ! Assimilate based resp shold not exceed total assimilate
-      if (cpatch%lassim_resp      (ico) > cpatch%gpp      (ico) .and. cpatch%gpp_c13      (ico) > tiny(1.0) .or. &
-          cpatch%today_lassim_resp(ico) > cpatch%today_gpp(ico) .and. cpatch%today_gpp_c13(ico) > tiny(1.0)) then
+      if (cpatch%lassim_resp      (ico) > cpatch%gpp      (ico) .and. cpatch%gpp_c13      (ico) > tiny(1.0)) then
          write(*,*) ' Leaf respiration of assimilate exceeds total assimilation...'
          reason   = 'LAR too high.'
          show_gpp = .true.
@@ -1632,9 +1626,7 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
       
       ! Assimilate based resp c13 should not exceed total assim respiration
       if ((cpatch%lassim_resp_c13      (ico) > cpatch%lassim_resp      (ico) .and. &
-           cpatch%lassim_resp          (ico) > tiny(1.0))                    .or.  &
-          (cpatch%today_lassim_resp_c13(ico) > cpatch%today_lassim_resp(ico) .and. &
-           cpatch%today_lassim_resp    (ico) > tiny(1.0))) then
+           cpatch%lassim_resp          (ico) > tiny(1.0))) then
          write(*,*) ' Leaf respiration of assimilate C-13 exceeds total LAR...'
          reason   = 'LAR C-13 too high.'
          show_LAR = .true.
@@ -1642,9 +1634,7 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
 
      ! Assimilate based resp c13 should not exceed total resp c13
       if ((cpatch%lassim_resp_c13      (ico) > cpatch%leaf_respiration_c13(ico) .and. &
-           cpatch%leaf_respiration_c13 (ico) > tiny(1.0))                       .or.  &
-          (cpatch%today_lassim_resp_c13(ico) > cpatch%today_leaf_resp_c13 (ico) .and. &
-           cpatch%today_leaf_resp_c13  (ico) > tiny(1.0))) then
+           cpatch%leaf_respiration_c13 (ico) > tiny(1.0))) then
          write(*,*) ' Leaf respiration of assimilate C-13 exceeds total resp of C-13...'
          reason   = 'LAR C-13 too high.'
          show_LR  = .true.
@@ -1661,15 +1651,6 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
          show_LAR = .true.
       end if
           
-      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp_c13(ico) .and. &
-          cpatch%today_gpp_c13        (ico) > tiny(1.0)                 .and. &
-          cpatch%today_lassim_resp_c13(ico) > tiny(1.0)) then
-         write(*,*) ' today_lassim_resp_c13 > today_gpp_c13 ...'
-         reason   = 'LAR C-13 too high.'
-         show_GPP = .true.
-         show_LAR = .true.
-      end if
-
       ! Assim Resp c13 should not exceed total assimilate
       if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp(ico) .and. &
           cpatch%gpp                  (ico) > tiny(1.0)      ) then
@@ -1679,14 +1660,6 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
          show_LAR = .true.
       end if
           
-      if (cpatch%today_lassim_resp_c13(ico) > cpatch%today_gpp (ico) .and. &
-          cpatch%today_gpp_c13        (ico) > tiny(1.0)             ) then
-         write(*,*) ' today_lassim_resp_c13 > today_gpp ...'
-         reason   = 'LAR C-13 too high.'
-         show_GPP = .true.
-         show_LAR = .true.
-      end if
-      
       !if (present(daily_c13_gain)) then
       !   if (daily_c13_gain > daily_C_gain  .and. &
       !       daily_C_gain   > tiny(1.0)    ) then
@@ -1707,17 +1680,14 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
       
       !if (show_gpp) then
          write(*,*) ' gpp              ,         gpp_c13 : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
-         write(*,*) ' today_gpp        ,   today_gpp_c13 : ', cpatch%today_gpp(ico)        , cpatch%today_gpp_c13(ico)
       !end if
       
       !if (show_LR ) then
          write(*,*) ' leaf_resp        ,   leaf_resp_c13 : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
-         write(*,*) ' today_leaf_resp  ,         ..._c13 : ', cpatch%today_leaf_resp(ico)  , cpatch%today_leaf_resp_c13(ico)
       !end if
       
       if (show_LAR) then
          write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
-         write(*,*) ' today_lassim_resp,         ..._c13 : ', cpatch%today_lassim_resp(ico), cpatch%today_lassim_resp_c13(ico)
       end if
       
       !if (show_DCG) then

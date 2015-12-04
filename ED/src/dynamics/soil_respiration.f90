@@ -708,11 +708,14 @@ subroutine update_C_and_N_pools(cgrid)
                !----- Fluxes --------------------------------------------------------------!
                fast_c13_loss = csite%A_decomp(ipa) * decay_rate_fsc * dtlsm_o_daysec       &
                              * csite%fast_soil_c13(ipa)
-                           
-               structural_c13_loss   = csite%Af_decomp(ipa) * Lc * decay_rate_stsc         &
-                                     * csite%structural_soil_c13(ipa) * dtlsm_o_daysec
-               structural_L_c13_loss = csite%Af_decomp(ipa) * Lc * decay_rate_stsc         &
-                                     * csite%structural_soil_L_c13(ipa) * dtlsm_o_daysec
+               
+               structural_c13_loss = csite%A_decomp(ipa) * csite%f_decomp(ipa) * Lc        &
+                                   * decay_rate_stsc * csite%structural_soil_c13(ipa)      &
+                                   * dtlsm_o_daysec
+               
+               structural_L_c13_loss = csite%A_decomp(ipa) * csite%f_decomp(ipa) * Lc      &
+                                     * decay_rate_stsc * csite%structural_soil_L_c13(ipa)  &
+                                     * dtlsm_o_daysec
 
                slow_c13_input = (1.0 - r_stsc) * structural_c13_loss
                slow_c13_loss  = csite%A_decomp(ipa) * decay_rate_ssc *dtlsm_o_daysec       &
