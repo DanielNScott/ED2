@@ -1480,6 +1480,7 @@ subroutine update_cohort_extensive_props(cpatch,aco,zco,mult)
          cpatch%today_lassim_resp      (ico) = cpatch%today_lassim_resp      (ico) * mult
       end if
       if (c13af > 0) then
+         cpatch%today_npp_c13          (ico) = cpatch%today_npp_c13          (ico) * mult
          cpatch%today_gpp_c13          (ico) = cpatch%today_gpp_c13          (ico) * mult 
          cpatch%today_leaf_resp_c13    (ico) = cpatch%today_leaf_resp_c13    (ico) * mult
          cpatch%today_root_resp_c13    (ico) = cpatch%today_root_resp_c13    (ico) * mult 

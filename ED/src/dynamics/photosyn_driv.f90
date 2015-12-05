@@ -42,6 +42,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
    use iso_alloc      , only : photo_h2tc         & ! function
                              , resp_h2tc          & ! function
                              , htIsoDelta         & ! function
+                             , hotc               & ! function
                              , c13_sanity_check   ! ! function
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
@@ -685,8 +686,9 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                   ! Here we're using the ED2.1 standard and larprop is irrelevant.         !
                   ! We get the C-13/C ratio in leaf respriation and set the respiration.   !
                   !------------------------------------------------------------------------!
-                  lr_h2tc = resp_h2tc('leaf',cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
-                  cpatch%leaf_respiration_c13(ico) = lr_h2tc * cpatch%leaf_respiration(ico)
+                  !lr_h2tc = resp_h2tc('leaf',cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
+                  !cpatch%leaf_respiration_c13(ico) = lr_h2tc * cpatch%leaf_respiration(ico)
+                  cpatch%leaf_respiration_c13(ico) = hotc(cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
                   !------------------------------------------------------------------------!
                end if
                !----- The output variable must be in [kgC/plant/yr]. ----------------------!
@@ -702,7 +704,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                cpatch%today_leaf_resp_c13 (ico) = cpatch%today_leaf_resp_c13(ico)          &
                                                 + cpatch%leaf_respiration_c13(ico)
                !---------------------------------------------------------------------------!
-               
+
                call c13_sanity_check(cpatch,ico,'canopy_photosynthesis','photosyn_driv.f90')
                !---------------------------------------------------------------------------!
             end if ! End of C-13 conditional (c13af > 0)

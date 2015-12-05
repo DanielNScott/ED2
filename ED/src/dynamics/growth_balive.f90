@@ -423,6 +423,7 @@ module growth_balive
       use ed_misc_coms  , only : dtlsm              & ! intent(in)
                                , growth_resp_scheme ! ! intent(in)
       use consts_coms   , only : day_sec            ! ! intent(in)
+      use isotopes      , only : c13af              ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)     , target     :: cgrid
@@ -436,6 +437,7 @@ module growth_balive
       integer                       :: ico
       integer                       :: ipft
       real                          :: growth_resp_int         ! Growth resp / balive
+      real                          :: growth_resp_c13
       real                          :: daysec_o_dtlsm
       !------------------------------------------------------------------------------------!
       daysec_o_dtlsm = day_sec / dtlsm
@@ -484,6 +486,27 @@ module growth_balive
                      cpatch%sapa_growth_resp(ico) = growth_resp_int * cpatch%bsapwooda(ico)
                      cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
                   end select
+                  
+                  if (c13af > 0) then
+                     growth_resp_c13 = max(0.0,cpatch%today_npp_c13(ico)*growth_resp_factor(ipft))
+                     !cpatch%growth_resp_c13(ico) = cpatch%growth_resp(ico)               &
+                     !                            * hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+                     
+                     select case(growth_resp_scheme)
+                     case(0)
+                        cpatch%sapa_growth_resp_c13(ico) = max(0.0,cpatch%growth_resp(ico))
+                        cpatch%leaf_growth_resp_c13(ico) = 0.0
+                        cpatch%root_growth_resp_c13(ico) = 0.0
+                        cpatch%sapb_growth_resp_c13(ico) = 0.0
+                     case(1)
+                        growth_resp_int = max(0.0,growth_resp_c13/cpatch%balive_c13(ico))
+
+                        cpatch%leaf_growth_resp_c13(ico) = growth_resp_int * cpatch%bleaf_c13(ico)
+                        cpatch%root_growth_resp_c13(ico) = growth_resp_int * cpatch%broot_c13(ico)
+                        cpatch%sapa_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwooda_c13(ico)
+                        cpatch%sapb_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwoodb_c13(ico)
+                     end select
+                  end if
                   !------------------------------------------------------------------------!                  
                end do cohortloop
                !---------------------------------------------------------------------------!
@@ -1569,6 +1592,7 @@ module growth_balive
                                , patchtype                ! ! structure
       use pft_coms      , only : phenology                ! ! intent(in)
       use isotopes      , only : c_alloc_flg              ! ! intent(in)
+      use iso_alloc     , only : hotc                     ! ! function
       use pft_coms      , only : q            & ! intent(in)
                                , qsw          & ! intent(in)
                                , agf_bs       ! ! intent(in)
@@ -1643,6 +1667,17 @@ module growth_balive
                          ( available_carbon > 0.0 .and. cpatch%phenology_status(ico) == 1 )
       !------------------------------------------------------------------------------------!
 
+      
+      !------------------------------------------------------------------------------------!
+      ! Default xfers to 0. This makes it easy to avoid NaNs from non-assignment and
+      ! minimizes code duplication in casing as well.
+      !------------------------------------------------------------------------------------!
+      tr_bleaf_c13     = 0.
+      tr_broot_c13     = 0.
+      tr_bsapwooda_c13 = 0.
+      tr_bsapwoodb_c13 = 0.
+      tr_bstorage_c13  = 0.
+      !------------------------------------------------------------------------------------!
 
 
       !------------------------------------------------------------------------------------!
@@ -1656,15 +1691,15 @@ module growth_balive
             ! allometry.  Here we will compute the maximum amount that can go to balive    !
             ! pools, and put any excess in storage.                                        !
             !------------------------------------------------------------------------------!
-            stor_h2tc = cpatch%bstorage_c13(ico) / cpatch%bstorage(ico)
+            stor_h2tc = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
             
             sum_tr = tr_bleaf + tr_broot + tr_bsapwooda + tr_bsapwoodb
 
-            f_bleaf     = tr_bleaf     /sum_tr;
-            f_broot     = tr_broot     /sum_tr;
-            f_bsapwooda = tr_bsapwooda /sum_tr;
-            f_bsapwoodb = tr_bsapwoodb /sum_tr;
-            
+            f_bleaf     = hotc(tr_bleaf    ,sum_tr);
+            f_broot     = hotc(tr_broot    ,sum_tr);
+            f_bsapwooda = hotc(tr_bsapwooda,sum_tr);
+            f_bsapwoodb = hotc(tr_bsapwoodb,sum_tr);
+           
             if (carbon13_balance > 0.0 .and. carbon_balance > 0.0) then
                cbal_h2tc = carbon13_balance / carbon_balance
                
@@ -1722,17 +1757,13 @@ module growth_balive
                   tr_bsapwoodb_c13 = tr_bstorage_c13 * f_bsapwoodb
                else
                   ! All carbon is from c13 balance
-                  tr_bleaf_c13     = 0.
-                  tr_broot_c13     = 0.
-                  tr_bsapwooda_c13 = 0.
-                  tr_bsapwoodb_c13 = 0.
-                  tr_bstorage_c13  = 0.
+                  ! Do nothing (all tissue xfers 0)
                end if
                
             elseif (carbon13_balance < 0.0 .and. carbon_balance < 0.0) then 
                ! As just above...
                
-               stor_h2tc = (cpatch%bstorage_c13(ico) - carbon13_balance) /cpatch%bstorage(ico)
+               stor_h2tc = hotc((cpatch%bstorage_c13(ico) - carbon13_balance),cpatch%bstorage(ico))
                
                ! Check if any of the carbon going to tissues is coming from storage.
                if (tr_bstorage < 0.0 .and. sum_tr > 0.0) then
@@ -1748,11 +1779,7 @@ module growth_balive
                   tr_bsapwoodb_c13 = tr_bstorage_c13 * f_bsapwoodb
                else
                   ! All carbon is from c13 balance
-                  tr_bleaf_c13     = 0.
-                  tr_broot_c13     = 0.
-                  tr_bsapwooda_c13 = 0.
-                  tr_bsapwoodb_c13 = 0.
-                  tr_bstorage_c13  = 0.
+                  ! Do nothing (all tissue xfers 0)
                end if
             end if
             
@@ -1801,8 +1828,8 @@ module growth_balive
                   ! to the current biomass of each the pools.                                 !
                   !---------------------------------------------------------------------------!
                   bloss_max   = cpatch%bleaf_c13(ico) + cpatch%broot_c13(ico)
-                  f_bleaf     = cpatch%bleaf_c13(ico) / bloss_max
-                  f_broot     = cpatch%broot_c13(ico) / bloss_max
+                  f_bleaf     = hotc(cpatch%bleaf_c13(ico),bloss_max)
+                  f_broot     = hotc(cpatch%broot_c13(ico),bloss_max)
 
                   if (bloss_max > carbon13_debt) then
                      !----- Remove biomass accordingly. --------------------------------------!
@@ -1831,8 +1858,8 @@ module growth_balive
                ! storage.                                                                     !
                !------------------------------------------------------------------------------!
                bloss_max = cpatch%bleaf_c13(ico) + cpatch%broot_c13(ico)
-               f_bleaf   = cpatch%bleaf_c13(ico) / bloss_max
-               f_broot   = cpatch%broot_c13(ico) / bloss_max
+               f_bleaf   = hotc(cpatch%bleaf_c13(ico),bloss_max)
+               f_broot   = hotc(cpatch%broot_c13(ico),bloss_max)
 
                if (bloss_max > carbon13_debt) then
                   !----- Remove biomass accordingly. -----------------------------------------!
@@ -2233,7 +2260,7 @@ module growth_balive
       real                     , intent(in)  :: dtlsm_c13_gain
       real                     , intent(out) :: carbon13_balance
       !------------------------------------------------------------------------------------!
-
+      
       !------------------------------------------------------------------------------------!
       !       Calculate actual daily carbon balance: kgC/plant/day.                        !
       !------------------------------------------------------------------------------------!
@@ -2241,6 +2268,8 @@ module growth_balive
                                         - cpatch%root_growth_resp_c13(ico)                 &
                                         - cpatch%sapa_growth_resp_c13(ico)                 &
                                         - cpatch%sapb_growth_resp_c13(ico)
+
+      cpatch%today_npp_c13(ico) = cpatch%today_npp_c13(ico) + dtlsm_c13_gain
       !------------------------------------------------------------------------------------!
 
       return

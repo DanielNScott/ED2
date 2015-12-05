@@ -1389,7 +1389,9 @@ module fuse_fiss_utils
       !   cpatch%today_lassim_resp  (recc) = cpatch%today_lassim_resp      (recc)           &
       !                                    + cpatch%today_lassim_resp      (donc)
       !end if
-      !if (c13af > 0) then
+      if (c13af > 0) then
+         cpatch%today_npp_c13      (recc) = cpatch%today_npp_c13          (recc)            &
+                                          + cpatch%today_npp_c13          (donc)
       !   cpatch%today_gpp_c13      (recc) = cpatch%today_gpp_c13          (recc)           &
       !                                    + cpatch%today_gpp_c13          (donc)
       !                                    
@@ -1402,7 +1404,7 @@ module fuse_fiss_utils
       !      cpatch%today_lassim_resp_c13(recc) = cpatch%today_lassim_resp_c13    (recc)    &
       !                                         + cpatch%today_lassim_resp_c13    (donc)
       !   end if
-      !end if
+      end if
       !------------------------------------------------------------------------------------!
 
 

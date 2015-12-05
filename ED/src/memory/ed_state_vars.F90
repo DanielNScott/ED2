@@ -840,14 +840,17 @@ module ed_state_vars
       real, pointer, dimension(:) :: balive_c13              ! (kgC/plant)	
       real ,pointer, dimension(:) :: bdead_c13				    ! (kgC/plant)
       
+      ! These should no longer exist (dbdt_push_down)
       real ,pointer, dimension(:) :: today_leaf_resp_c13     ! (umol/m2 ground/s) (ave over day)
       real ,pointer, dimension(:) :: today_root_resp_c13     ! (umol/m2 ground/s) (ave over day)
       real ,pointer, dimension(:) :: today_gpp_c13           !  (ave over day)
+      real ,pointer,dimension(:) :: today_npp_c13
       
       ! Instantaneous values of leaf assimilate respiration [umol/m2/s]
       real ,pointer,dimension(:) :: lassim_resp
       real ,pointer,dimension(:) :: lassim_resp_c13
       
+      ! These should no longer exist (dbdt_push_down)
       real ,pointer, dimension(:) :: today_lassim_resp         ! (umol/m2 ground/s) (ave over day)
       real ,pointer, dimension(:) :: today_lassim_resp_c13     ! (umol/m2 ground/s) (ave over day)
       
@@ -5208,11 +5211,13 @@ module ed_state_vars
          allocate(cpatch%bsapwoodb_c13                    (                    ncohorts))
          allocate(cpatch%balive_c13                       (                    ncohorts))
          allocate(cpatch%bdead_c13				             (                    ncohorts))
-         
+
+         ! These should no longer exist (dbdt_push_down)
          allocate(cpatch%today_leaf_resp_c13              (                    ncohorts))
          allocate(cpatch%today_root_resp_c13              (                    ncohorts))
          allocate(cpatch%today_gpp_c13                    (                    ncohorts))
-         
+         allocate(cpatch%today_npp_c13                    (                    ncohorts))
+
          allocate(cpatch%fmean_gpp_c13                    (                    ncohorts))
          allocate(cpatch%fmean_npp_c13                    (                    ncohorts))
          allocate(cpatch%fmean_leaf_resp_c13              (                    ncohorts))
@@ -7492,6 +7497,7 @@ module ed_state_vars
       nullify(cpatch%bsapwoodb_c13             )          
       nullify(cpatch%bstorage_c13              )          
       nullify(cpatch%bseeds_c13                )          
+      ! These should no longer exist (dbdt_push_down)
       nullify(cpatch%today_leaf_resp_c13       )          
       nullify(cpatch%today_root_resp_c13       )          
       nullify(cpatch%today_gpp_c13             )          
@@ -9574,6 +9580,7 @@ module ed_state_vars
       if(associated(cpatch%bsapwoodb_c13             )) deallocate(cpatch%bsapwoodb_c13             )          
       if(associated(cpatch%bstorage_c13              )) deallocate(cpatch%bstorage_c13              )          
       if(associated(cpatch%bseeds_c13                )) deallocate(cpatch%bseeds_c13                )          
+      ! These should no longer exist (dbdt_push_down)
       if(associated(cpatch%today_leaf_resp_c13       )) deallocate(cpatch%today_leaf_resp_c13       )          
       if(associated(cpatch%today_root_resp_c13       )) deallocate(cpatch%today_root_resp_c13       )          
       if(associated(cpatch%today_gpp_c13             )) deallocate(cpatch%today_gpp_c13             )          
@@ -11685,9 +11692,11 @@ module ed_state_vars
             opatch%bsapwoodb_c13             (oco) = ipatch%bsapwoodb_c13             (ico)          
             opatch%bstorage_c13              (oco) = ipatch%bstorage_c13              (ico)          
             opatch%bseeds_c13                (oco) = ipatch%bseeds_c13                (ico)          
+            ! These should no longer exist (dbdt_push_down)
             opatch%today_leaf_resp_c13       (oco) = ipatch%today_leaf_resp_c13       (ico)          
             opatch%today_root_resp_c13       (oco) = ipatch%today_root_resp_c13       (ico)          
             opatch%today_gpp_c13             (oco) = ipatch%today_gpp_c13             (ico)          
+            opatch%today_npp_c13             (oco) = ipatch%today_npp_c13             (ico)
             opatch%leaf_growth_resp_c13      (oco) = ipatch%leaf_growth_resp_c13      (ico)          
             opatch%root_growth_resp_c13      (oco) = ipatch%root_growth_resp_c13      (ico)          
             opatch%sapa_growth_resp_c13      (oco) = ipatch%sapa_growth_resp_c13      (ico)          
@@ -12039,9 +12048,11 @@ module ed_state_vars
          opatch%bsapwoodb_c13             (1:z) = pack(ipatch%bsapwoodb_c13             ,lmask)          
          opatch%bstorage_c13              (1:z) = pack(ipatch%bstorage_c13              ,lmask)          
          opatch%bseeds_c13                (1:z) = pack(ipatch%bseeds_c13                ,lmask)          
+         ! These should no longer exist (dbdt_push_down)
          opatch%today_leaf_resp_c13       (1:z) = pack(ipatch%today_leaf_resp_c13       ,lmask)          
          opatch%today_root_resp_c13       (1:z) = pack(ipatch%today_root_resp_c13       ,lmask)          
          opatch%today_gpp_c13             (1:z) = pack(ipatch%today_gpp_c13             ,lmask)          
+         opatch%today_npp_c13             (1:z) = pack(ipatch%today_npp_c13             ,lmask)
          opatch%leaf_growth_resp_c13      (1:z) = pack(ipatch%leaf_growth_resp_c13      ,lmask)          
          opatch%root_growth_resp_c13      (1:z) = pack(ipatch%root_growth_resp_c13      ,lmask)          
          opatch%sapa_growth_resp_c13      (1:z) = pack(ipatch%sapa_growth_resp_c13      ,lmask)          
@@ -27457,40 +27468,40 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'Gross Primary Production','[umol/m2/s]','icohort') 
       end if                                          
       
-      if (associated(cpatch%today_leaf_resp_c13)) then    
-         nvar=nvar+1                                  
-           call vtable_edio_r(npts,cpatch%today_leaf_resp_c13,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_LEAF_RESP_C13 :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if                  
+!      if (associated(cpatch%today_leaf_resp_c13)) then    
+!         nvar=nvar+1                                  
+!           call vtable_edio_r(npts,cpatch%today_leaf_resp_c13,nvar,igr,init,cpatch%coglob_id, &
+!           var_len,var_len_global,max_ptrs,'TODAY_LEAF_RESP_C13 :41:hist') 
+!         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
+!      end if                  
       
-      if (associated(cpatch%today_lassim_resp)) then    
-         nvar=nvar+1                                  
-           call vtable_edio_r(npts,cpatch%today_lassim_resp,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_LASSIM_RESP :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if                           
+!      if (associated(cpatch%today_lassim_resp)) then    
+!         nvar=nvar+1                                  
+!           call vtable_edio_r(npts,cpatch%today_lassim_resp,nvar,igr,init,cpatch%coglob_id, &
+!           var_len,var_len_global,max_ptrs,'TODAY_LASSIM_RESP :41:hist') 
+!         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
+!      end if                           
       
-      if (associated(cpatch%today_lassim_resp_c13)) then    
-         nvar=nvar+1                                  
-           call vtable_edio_r(npts,cpatch%today_lassim_resp_c13,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_LASSIM_RESP_C13 :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if                                          
+!      if (associated(cpatch%today_lassim_resp_c13)) then    
+!         nvar=nvar+1                                  
+!           call vtable_edio_r(npts,cpatch%today_lassim_resp_c13,nvar,igr,init,cpatch%coglob_id, &
+!           var_len,var_len_global,max_ptrs,'TODAY_LASSIM_RESP_C13 :41:hist') 
+!         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
+!      end if                                          
 
-      if (associated(cpatch%today_root_resp_c13)) then    
-         nvar=nvar+1                                  
-           call vtable_edio_r(npts,cpatch%today_root_resp_c13,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_ROOT_RESP_C13 :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if                                          
+!      if (associated(cpatch%today_root_resp_c13)) then    
+!         nvar=nvar+1                                  
+!           call vtable_edio_r(npts,cpatch%today_root_resp_c13,nvar,igr,init,cpatch%coglob_id, &
+!           var_len,var_len_global,max_ptrs,'TODAY_ROOT_RESP_C13 :41:hist') 
+!         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
+!      end if                                          
 
-      if (associated(cpatch%today_gpp_c13)) then          
-         nvar=nvar+1                                  
-           call vtable_edio_r(npts,cpatch%today_gpp_c13,nvar,igr,init,cpatch%coglob_id, &
-           var_len,var_len_global,max_ptrs,'TODAY_GPP_C13 :41:hist') 
-         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
-      end if                                          
+!      if (associated(cpatch%today_gpp_c13)) then          
+!         nvar=nvar+1                                  
+!           call vtable_edio_r(npts,cpatch%today_gpp_c13,nvar,igr,init,cpatch%coglob_id, &
+!           var_len,var_len_global,max_ptrs,'TODAY_GPP_C13 :41:hist') 
+!         call metadata_edio(nvar,igr,'NOT A DIAGNOSTIC VARIABLE','[NA]','icohort') 
+!      end if                                          
 
       if (associated(cpatch%leaf_growth_resp_c13)) then 
          nvar=nvar+1                                  

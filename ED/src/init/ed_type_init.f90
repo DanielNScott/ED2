@@ -248,6 +248,7 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       cpatch%today_root_resp_c13    (ico) = 0.0
       cpatch%today_gpp_c13          (ico) = 0.0
 
+      cpatch%today_npp_c13          (ico) = 0.0
       cpatch%gpp_c13                (ico) = 0.0
       cpatch%leaf_respiration_c13   (ico) = 0.0
       cpatch%root_respiration_c13   (ico) = 0.0

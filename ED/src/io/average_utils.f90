@@ -3595,6 +3595,7 @@ module average_utils
                      !cpatch%today_lassim_resp   (ico) = 0.0
                   end if
                   if (c13af > 0) then
+                     cpatch%today_npp_c13           (ico) = 0.0
                      !cpatch%today_gpp_c13       (ico) = 0.0
                      !cpatch%today_leaf_resp_c13 (ico) = 0.0
                      !cpatch%today_root_resp_c13 (ico) = 0.0

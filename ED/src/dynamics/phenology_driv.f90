@@ -189,6 +189,7 @@ subroutine update_phenology(doy, cpoly, isi, lat)
    !----- DS Additional Use Statements ----------------------------------------------------!
    use isotopes       , only : c13af                    & ! intent(in)
                              , cri_bdead                ! ! intent(in)
+   use iso_alloc      , only : hotc                     ! ! function
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(polygontype)        , target     :: cpoly
@@ -322,7 +323,7 @@ subroutine update_phenology(doy, cpoly, isi, lat)
                !----- Update plant carbon pools. ------------------------------------------!
                !----- Do everything for c13 first, see case 2 for explanation -------------!
                if (c13af > 0) then !!!DSC!!
-                  lh2tc                    = cpatch%bleaf_c13(ico)/cpatch%bleaf(ico)
+                  lh2tc                    = hotc(cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
                   cpatch%balive_c13  (ico) = cpatch%balive_c13(ico) - cpatch%bleaf_c13(ico)
                   cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico)                      &
                                         + (cpatch%bleaf_c13(ico) * retained_carbon_fraction)
