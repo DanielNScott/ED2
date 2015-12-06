@@ -123,7 +123,7 @@ module growth_balive
                   !------------------------------------------------------------------------!
                   !     Compute and apply maintenance costs and get dtlsm C gain.          !
                   !------------------------------------------------------------------------!
-                  call get_maintenance(cpatch,ico,tfact,csite%can_temp(ipa))
+                  call get_maintenance(cpatch,ico,tfact*dtlsm_o_daysec,csite%can_temp(ipa))
                   call get_dtlsm_c_gain(cpatch,ico,dtlsm_c_gain)
                   call apply_maintenance(cpatch,ico,tfact,cb_decrement)
 
@@ -779,7 +779,9 @@ module growth_balive
                               , root_turnover_rate    & ! intent(in)
                               , leaf_turnover_rate    & ! intent(in)
                               , storage_turnover_rate ! ! intent(in)
-      use ed_misc_coms , only : storage_resp_scheme   ! ! intent(in)
+      use ed_misc_coms , only : storage_resp_scheme   & ! intent(in)
+                              , dtlsm                 ! ! intent(in)
+      use consts_coms  , only : day_sec               ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype), target       :: cpatch
@@ -791,7 +793,9 @@ module growth_balive
       real                          :: maintenance_temp_dep
       real                          :: temp_dep
       real                          :: storage_resp_int
+      real                          :: dtlsm_o_daysec
       !------------------------------------------------------------------------------------!
+      dtlsm_o_daysec = dtlsm / day_sec
 
       !------ Alias for plant functional type. --------------------------------------------!
       ipft = cpatch%pft(ico)
