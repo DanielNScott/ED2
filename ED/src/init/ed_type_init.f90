@@ -387,6 +387,9 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       cpatch%dmean_nppdaily          (ico) = 0.0
       cpatch%dmean_gpp               (ico) = 0.0
       cpatch%dmean_npp               (ico) = 0.0
+      cpatch%dmean_bleaf             (ico) = 0.0
+      cpatch%dmean_broot             (ico) = 0.0
+      cpatch%dmean_bstorage          (ico) = 0.0
       cpatch%dmean_leaf_resp         (ico) = 0.0
       cpatch%dmean_root_resp         (ico) = 0.0
       cpatch%dmean_leaf_maintenance  (ico) = 0.0

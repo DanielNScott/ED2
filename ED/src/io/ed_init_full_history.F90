@@ -5182,6 +5182,12 @@ subroutine fill_history_patch(cpatch,paco_index,ncohorts_global)
                         ,'DMEAN_GPP_CO              ',dsetrank,iparallel,.false.,foundvar)
       call hdf_getslab_r(cpatch%dmean_npp                                                  &
                         ,'DMEAN_NPP_CO              ',dsetrank,iparallel,.false.,foundvar)
+      call hdf_getslab_r(cpatch%dmean_bleaf                                                &
+                        ,'DMEAN_BLEAF_CO            ',dsetrank,iparallel,.false.,foundvar)
+      call hdf_getslab_r(cpatch%dmean_broot                                                &
+                        ,'DMEAN_BROOT_CO            ',dsetrank,iparallel,.false.,foundvar)
+      call hdf_getslab_r(cpatch%dmean_bstorage                                             &
+                        ,'DMEAN_BSTORAGE_CO         ',dsetrank,iparallel,.false.,foundvar)
       call hdf_getslab_r(cpatch%dmean_leaf_resp                                            &
                         ,'DMEAN_LEAF_RESP_CO        ',dsetrank,iparallel,.false.,foundvar)
       call hdf_getslab_r(cpatch%dmean_root_resp                                            &

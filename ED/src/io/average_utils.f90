@@ -2604,6 +2604,15 @@ module average_utils
                   cpatch%dmean_npp           (ico) = cpatch%dmean_npp           (ico)      &
                                                    + cpatch%fmean_npp           (ico)      &
                                                    * frqsum_o_daysec
+                  cpatch%dmean_bleaf         (ico) = cpatch%dmean_bleaf           (ico)  &
+                                                   + cpatch%bleaf                 (ico)  &
+                                                   * frqsum_o_daysec
+                  cpatch%dmean_broot         (ico) = cpatch%dmean_broot           (ico)  &
+                                                   + cpatch%broot                 (ico)  &
+                                                   * frqsum_o_daysec
+                  cpatch%dmean_bstorage      (ico) = cpatch%dmean_bstorage        (ico)  &
+                                                   + cpatch%bstorage              (ico)  &
+                                                   * frqsum_o_daysec
                   cpatch%dmean_leaf_resp     (ico) = cpatch%dmean_leaf_resp     (ico)      &
                                                    + cpatch%fmean_leaf_resp     (ico)      &
                                                    * frqsum_o_daysec
@@ -3953,6 +3962,9 @@ module average_utils
                   cpatch%dmean_nppdaily          (ico) = 0.0
                   cpatch%dmean_gpp               (ico) = 0.0
                   cpatch%dmean_npp               (ico) = 0.0
+                  cpatch%dmean_bleaf             (ico) = 0.0
+                  cpatch%dmean_broot             (ico) = 0.0
+                  cpatch%dmean_bstorage          (ico) = 0.0
                   cpatch%dmean_leaf_resp         (ico) = 0.0
                   cpatch%dmean_root_resp         (ico) = 0.0
                   cpatch%dmean_leaf_maintenance  (ico) = 0.0

@@ -2006,6 +2006,18 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%dmean_npp             (donc)         &
                                              * dnplant
+         cpatch%dmean_bleaf           (recc) = cpatch%dmean_bleaf           (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_bleaf           (donc)         &
+                                             * dnplant
+         cpatch%dmean_broot           (recc) = cpatch%dmean_broot           (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_broot           (donc)         &
+                                             * dnplant
+         cpatch%dmean_bstorage        (recc) = cpatch%dmean_bstorage        (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_bstorage        (donc)         &
+                                             * dnplant
          cpatch%dmean_leaf_resp       (recc) = cpatch%dmean_leaf_resp       (recc)         &
                                              * rnplant                                     &
                                              + cpatch%dmean_leaf_resp       (donc)         &

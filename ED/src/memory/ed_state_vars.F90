@@ -587,6 +587,9 @@ module ed_state_vars
       !----- Daily mean (same units as fast mean). ----------------------------------------!
       real,pointer,dimension(:)     :: dmean_gpp
       real,pointer,dimension(:)     :: dmean_npp
+      real,pointer,dimension(:)     :: dmean_bleaf
+      real,pointer,dimension(:)     :: dmean_broot
+      real,pointer,dimension(:)     :: dmean_bstorage
       real,pointer,dimension(:)     :: dmean_leaf_resp
       real,pointer,dimension(:)     :: dmean_root_resp
       real,pointer,dimension(:)     :: dmean_leaf_maintenance
@@ -5249,6 +5252,9 @@ module ed_state_vars
          allocate(cpatch%dmean_nppdaily            (                    ncohorts))
          allocate(cpatch%dmean_gpp                 (                    ncohorts))
          allocate(cpatch%dmean_npp                 (                    ncohorts))
+         allocate(cpatch%dmean_bleaf               (                    ncohorts))
+         allocate(cpatch%dmean_broot               (                    ncohorts))
+         allocate(cpatch%dmean_bstorage            (                    ncohorts))
          allocate(cpatch%dmean_leaf_resp           (                    ncohorts))
          allocate(cpatch%dmean_root_resp           (                    ncohorts))
          allocate(cpatch%dmean_leaf_maintenance    (                    ncohorts))
@@ -7252,6 +7258,9 @@ module ed_state_vars
       nullify(cpatch%dmean_nppdaily        )
       nullify(cpatch%dmean_gpp             )
       nullify(cpatch%dmean_npp             )
+      nullify(cpatch%dmean_bleaf           )
+      nullify(cpatch%dmean_broot           )
+      nullify(cpatch%dmean_bstorage        )
       nullify(cpatch%dmean_leaf_resp       )
       nullify(cpatch%dmean_root_resp       )
       nullify(cpatch%dmean_leaf_maintenance)
@@ -9327,6 +9336,9 @@ module ed_state_vars
       if(associated(cpatch%dmean_nppdaily      )) deallocate(cpatch%dmean_nppdaily      )
       if(associated(cpatch%dmean_gpp           )) deallocate(cpatch%dmean_gpp           )
       if(associated(cpatch%dmean_npp           )) deallocate(cpatch%dmean_npp           )
+      if(associated(cpatch%dmean_bleaf         )) deallocate(cpatch%dmean_bleaf         )
+      if(associated(cpatch%dmean_broot         )) deallocate(cpatch%dmean_broot         )
+      if(associated(cpatch%dmean_bstorage      )) deallocate(cpatch%dmean_bstorage      )
       if(associated(cpatch%dmean_leaf_resp     )) deallocate(cpatch%dmean_leaf_resp     )
       if(associated(cpatch%dmean_root_resp     )) deallocate(cpatch%dmean_root_resp     )
       if(associated(cpatch%dmean_leaf_maintenance)) deallocate(cpatch%dmean_leaf_maintenance)
@@ -11394,6 +11406,9 @@ module ed_state_vars
             opatch%dmean_nppdaily        (oco) = ipatch%dmean_nppdaily        (ico)
             opatch%dmean_gpp             (oco) = ipatch%dmean_gpp             (ico)
             opatch%dmean_npp             (oco) = ipatch%dmean_npp             (ico)
+            opatch%dmean_bleaf           (oco) = ipatch%dmean_bleaf           (ico)
+            opatch%dmean_broot           (oco) = ipatch%dmean_broot           (ico)
+            opatch%dmean_bstorage        (oco) = ipatch%dmean_bstorage        (ico)
             opatch%dmean_leaf_resp       (oco) = ipatch%dmean_leaf_resp       (ico)
             opatch%dmean_root_resp       (oco) = ipatch%dmean_root_resp       (ico)
             opatch%dmean_leaf_maintenance(oco) = ipatch%dmean_leaf_maintenance(ico)
@@ -12239,6 +12254,9 @@ module ed_state_vars
       opatch%dmean_nppdaily        (1:z) = pack(ipatch%dmean_nppdaily            ,lmask)
       opatch%dmean_gpp             (1:z) = pack(ipatch%dmean_gpp                 ,lmask)
       opatch%dmean_npp             (1:z) = pack(ipatch%dmean_npp                 ,lmask)
+      opatch%dmean_bleaf           (1:z) = pack(ipatch%dmean_bleaf               ,lmask)
+      opatch%dmean_broot           (1:z) = pack(ipatch%dmean_broot               ,lmask)
+      opatch%dmean_bstorage        (1:z) = pack(ipatch%dmean_bstorage            ,lmask)
       opatch%dmean_leaf_resp       (1:z) = pack(ipatch%dmean_leaf_resp           ,lmask)
       opatch%dmean_root_resp       (1:z) = pack(ipatch%dmean_root_resp           ,lmask)
       opatch%dmean_leaf_maintenance(1:z) = pack(ipatch%dmean_leaf_maintenance    ,lmask)
@@ -28459,6 +28477,33 @@ module ed_state_vars
                            ,'Daily mean - Net primary productivity'                        &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if                                          
+      if (associated(cpatch%dmean_bleaf           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_bleaf                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_BLEAF_CO             :41:'//trim(dail_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Leaf biomass'                                    &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_broot           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_broot                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_BROOT_CO             :41:'//trim(dail_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'daiy mean - Root biomass'                                     &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_bstorage        )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_bstorage                                     &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_BSTORAGE_CO          :41:'//trim(dail_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Storage biomass'                                 &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
       if (associated(cpatch%dmean_leaf_resp       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%dmean_leaf_resp                                    &
