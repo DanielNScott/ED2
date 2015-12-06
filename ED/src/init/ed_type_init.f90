@@ -461,6 +461,9 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       if (c13af > 0) then
          cpatch%dmean_gpp_c13                (ico) = 0.0
          cpatch%dmean_npp_c13                (ico) = 0.0
+         cpatch%dmean_bleaf_c13              (ico) = 0.0
+         cpatch%dmean_broot_c13              (ico) = 0.0
+         cpatch%dmean_bstorage_c13           (ico) = 0.0
          cpatch%dmean_leaf_resp_c13          (ico) = 0.0
          cpatch%dmean_root_resp_c13          (ico) = 0.0
 

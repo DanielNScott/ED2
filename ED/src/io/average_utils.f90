@@ -2789,6 +2789,15 @@ module average_utils
                      cpatch%dmean_npp_c13          (ico) = cpatch%dmean_npp_c13           (ico)      &
                                                          + cpatch%fmean_npp_c13           (ico)      &
                                                          * frqsum_o_daysec
+                     cpatch%dmean_bleaf_c13        (ico) = cpatch%dmean_bleaf_c13         (ico)  &
+                                                         + cpatch%bleaf_c13               (ico)  &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_broot_c13        (ico) = cpatch%dmean_broot_c13         (ico)  &
+                                                         + cpatch%broot_c13               (ico)  &
+                                                         * frqsum_o_daysec
+                     cpatch%dmean_bstorage_c13     (ico) = cpatch%dmean_bstorage_c13      (ico)  &
+                                                         + cpatch%bstorage_c13            (ico)  &
+                                                         * frqsum_o_daysec
                      cpatch%dmean_leaf_resp_c13    (ico) = cpatch%dmean_leaf_resp_c13     (ico)      &
                                                          + cpatch%fmean_leaf_resp_c13     (ico)      &
                                                          * frqsum_o_daysec
@@ -4035,6 +4044,9 @@ module average_utils
                   if (c13af > 0) then
                      cpatch%dmean_gpp_c13               (ico) = 0.0
                      cpatch%dmean_npp_c13               (ico) = 0.0
+                     cpatch%dmean_bleaf_c13             (ico) = 0.0
+                     cpatch%dmean_broot_c13             (ico) = 0.0
+                     cpatch%dmean_bstorage_c13          (ico) = 0.0
                      cpatch%dmean_leaf_resp_c13         (ico) = 0.0
                      cpatch%dmean_root_resp_c13         (ico) = 0.0
                      cpatch%dmean_leaf_growth_resp_c13  (ico) = 0.0

@@ -2108,6 +2108,18 @@ module fuse_fiss_utils
                                                   + cpatch%dmean_npp_c13         (donc)       &
                                                   * cpatch%nplant                (donc) )     &
                                                 * newni
+            cpatch%dmean_bleaf_c13       (recc) = cpatch%dmean_bleaf_c13           (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%dmean_bleaf_c13           (donc)         &
+                                                * dnplant
+            cpatch%dmean_broot_c13       (recc) = cpatch%dmean_broot_c13           (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%dmean_broot_c13           (donc)         &
+                                                * dnplant
+            cpatch%dmean_bstorage_c13    (recc) = cpatch%dmean_bstorage_c13        (recc)     &
+                                                * rnplant                                     &
+                                                + cpatch%dmean_bstorage_c13        (donc)         &
+                                                * dnplant
             cpatch%dmean_leaf_resp_c13   (recc) = ( cpatch%dmean_leaf_resp_c13   (recc)       &
                                                   * cpatch%nplant                (recc)       &
                                                   + cpatch%dmean_leaf_resp_c13   (donc)       &
