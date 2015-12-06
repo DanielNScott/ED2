@@ -4563,13 +4563,13 @@ module average_utils
                                                      + cpatch%lai                   (ico)  &
                                                      * ndaysi
                   cpatch%mmean_bleaf           (ico) = cpatch%mmean_bleaf           (ico)  &
-                                                     + cpatch%bleaf                 (ico)  &
+                                                     + cpatch%dmean_bleaf           (ico)  &
                                                      * ndaysi
                   cpatch%mmean_broot           (ico) = cpatch%mmean_broot           (ico)  &
-                                                     + cpatch%broot                 (ico)  &
+                                                     + cpatch%dmean_broot           (ico)  &
                                                      * ndaysi
                   cpatch%mmean_bstorage        (ico) = cpatch%mmean_bstorage        (ico)  &
-                                                     + cpatch%bstorage              (ico)  &
+                                                     + cpatch%dmean_bstorage        (ico)  &
                                                      * ndaysi
                   cpatch%mmean_mort_rate     (:,ico) = cpatch%mmean_mort_rate     (:,ico)  &
                                                      + cpatch%mort_rate           (:,ico)  &
