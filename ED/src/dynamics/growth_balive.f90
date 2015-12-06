@@ -69,9 +69,6 @@ module growth_balive
       real                          :: dtlsm_c_gain
       real                          :: carbon_balance
       real                          :: carbon_balance_pot
-      real                          :: carbon_balance_lightmax
-      real                          :: carbon_balance_moistmax
-      real                          :: carbon_balance_mlmax
       real                          :: balive_in
       real                          :: nitrogen_supply
       real                          :: dndt
@@ -126,8 +123,8 @@ module growth_balive
                   !------------------------------------------------------------------------!
                   !     Compute and apply maintenance costs and get dtlsm C gain.          !
                   !------------------------------------------------------------------------!
-                  call get_maintenance(cpatch,ico,tfact,csite%can_temp(ipa))
-                  call get_daily_C_gain(cpatch,ico,dtlsm_c_gain)
+                  call get_maintenance(cpatch,ico,tfact*dtlsm_o_daysec,csite%can_temp(ipa))
+                  call get_dtlsm_c_gain(cpatch,ico,dtlsm_c_gain)
                   call apply_maintenance(cpatch,ico,tfact,cb_decrement)
 
                   call update_cb(cpatch,ico,cb_decrement)
@@ -167,10 +164,10 @@ module growth_balive
                      cpatch%sapb_storage_resp(ico) = storage_resp_int *cpatch%bsapwoodb(ico)
 
                      cpatch%bstorage(ico) = cpatch%bstorage(ico)                           &
-                                          - cpatch%leaf_storage_resp(ico) * dtlsm_o_daysec &
-                                          - cpatch%root_storage_resp(ico) * dtlsm_o_daysec &
-                                          - cpatch%sapa_storage_resp(ico) * dtlsm_o_daysec &
-                                          - cpatch%sapb_storage_resp(ico) * dtlsm_o_daysec
+                                          - (  cpatch%leaf_storage_resp(ico)               &
+                                             + cpatch%root_storage_resp(ico)               &
+                                             + cpatch%sapa_storage_resp(ico)               &
+                                             + cpatch%sapb_storage_resp(ico))*dtlsm_o_daysec
                   end select
 
                   !------------------------------------------------------------------------!
@@ -181,14 +178,14 @@ module growth_balive
                                                         +  cpatch%root_storage_resp(ico)   &
                                                         +  cpatch%sapa_storage_resp(ico)   &
                                                         +  cpatch%sapb_storage_resp(ico))  &
-                                                        / c2n_storage * cpatch%nplant(ico)
+                                                        / c2n_storage * cpatch%nplant(ico) &
+                                                        * dtlsm_o_daysec
 
                   !------------------------------------------------------------------------!
                   !      Calculate actual, potential and maximum carbon balances.          !
                   !------------------------------------------------------------------------!
                   call plant_carbon_balances(cpatch,ipa,ico,dtlsm_c_gain,carbon_balance    &
-                                            ,carbon_balance_pot,carbon_balance_lightmax    &
-                                            ,carbon_balance_moistmax,carbon_balance_mlmax)
+                                            ,carbon_balance_pot)
                   !------------------------------------------------------------------------!
 
 
@@ -277,9 +274,9 @@ module growth_balive
                   !      We no longer include mortality rates due to disturbance in the    !
                   ! big-leaf simulations, this is now done at disturbance.f90.             !
                   !------------------------------------------------------------------------!
-                  call mortality_rates(cpatch,ico,csite%avg_daily_temp(ipa),csite%age(ipa))
+                  call mortality_rates(cpatch,ico,csite%can_temp(ipa),csite%age(ipa))
                   dlnndt   = - sum(cpatch%mort_rate(1:4,ico)) * dtlsm_o_daysec
-                  dndt     = dlnndt * cpatch%nplant(ico) * dtlsm_o_daysec
+                  dndt     = dlnndt * cpatch%nplant(ico)      * dtlsm_o_daysec
                   !------------------------------------------------------------------------!
 
                   !----- Update monthly mortality rates [plants/m2/month and 1/month]. ----!
@@ -610,8 +607,7 @@ module growth_balive
                   !      Calculate actual, potential and maximum carbon balances.          !
                   !------------------------------------------------------------------------!
                   call plant_carbon_balances(cpatch,ipa,ico,dtlsm_c_gain,carbon_balance    &
-                                            ,carbon_balance_pot,carbon_balance_lightmax    &
-                                            ,carbon_balance_moistmax,carbon_balance_mlmax)
+                                            ,carbon_balance_pot)
                   !------------------------------------------------------------------------!
 
 
@@ -783,7 +779,9 @@ module growth_balive
                               , root_turnover_rate    & ! intent(in)
                               , leaf_turnover_rate    & ! intent(in)
                               , storage_turnover_rate ! ! intent(in)
-      use ed_misc_coms , only : storage_resp_scheme   ! ! intent(in)
+      use ed_misc_coms , only : storage_resp_scheme   & ! intent(in)
+                              , dtlsm                 ! ! intent(in)
+      use consts_coms  , only : day_sec               ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype), target       :: cpatch
@@ -795,7 +793,9 @@ module growth_balive
       real                          :: maintenance_temp_dep
       real                          :: temp_dep
       real                          :: storage_resp_int
+      real                          :: dtlsm_o_daysec
       !------------------------------------------------------------------------------------!
+      dtlsm_o_daysec = dtlsm / day_sec
 
       !------ Alias for plant functional type. --------------------------------------------!
       ipft = cpatch%pft(ico)
@@ -880,27 +880,26 @@ module growth_balive
 
    !=======================================================================================!
    !=======================================================================================!
-   subroutine get_daily_C_gain(cpatch,ico,daily_C_gain)
+   subroutine get_dtlsm_c_gain(cpatch,ico,dtlsm_c_gain)
       use ed_state_vars, only : patchtype          ! ! structure
-      use consts_coms  , only : umol_2_kgC         & ! intent(in)
-                              , day_sec            ! ! intent(in)
+      use consts_coms  , only : umol_2_kgC         ! ! intent(in)
+      use ed_misc_coms , only : dtlsm              ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype), target       :: cpatch
       integer        , intent(in)   :: ico
-      real           , intent(out)  :: daily_C_gain
+      real           , intent(out)  :: dtlsm_c_gain
       !------------------------------------------------------------------------------------!
 
       if(cpatch%nplant(ico) > tiny(1.0)) then
-         daily_C_gain = umol_2_kgC * day_sec * ( cpatch%today_gpp(ico)                 &
-                                               - cpatch%today_leaf_resp(ico)           &
-                                               - cpatch%today_root_resp(ico))          &
-                                             / cpatch%nplant(ico)
+         dtlsm_c_gain = (cpatch%gpp(ico) - cpatch%leaf_respiration(ico)                    &
+                                         - cpatch%root_respiration(ico))                   &
+                        * umol_2_kgC * dtlsm / cpatch%nplant(ico)
       else
-         daily_C_gain = 0.0
+         dtlsm_c_gain = 0.0
       end if
 
-      end subroutine get_daily_C_gain
+      end subroutine get_dtlsm_c_gain
    !=======================================================================================!
    !=======================================================================================!
    
@@ -1531,8 +1530,7 @@ module growth_balive
    !=======================================================================================!
    !=======================================================================================!
    subroutine plant_carbon_balances(cpatch,ipa,ico,dtlsm_c_gain,carbon_balance             &
-                                   ,carbon_balance_pot,carbon_balance_lightmax             &
-                                   ,carbon_balance_moistmax,carbon_balance_mlmax)
+                                   ,carbon_balance_pot)
       use ed_state_vars  , only : patchtype          ! ! structure
       use pft_coms       , only : growth_resp_factor ! ! intent(in)
       use consts_coms    , only : umol_2_kgC         & ! intent(in)
@@ -1548,14 +1546,14 @@ module growth_balive
       real                     , intent(in)  :: dtlsm_c_gain
       real                     , intent(out) :: carbon_balance
       real                     , intent(out) :: carbon_balance_pot
-      real                     , intent(out) :: carbon_balance_lightmax
-      real                     , intent(out) :: carbon_balance_moistmax
-      real                     , intent(out) :: carbon_balance_mlmax
       !----- Local variables. -------------------------------------------------------------!
       real                                   :: dtlsm_c_gain_pot
       real                                   :: dtlsm_c_gain_lightmax
       real                                   :: dtlsm_c_gain_moistmax
       real                                   :: dtlsm_c_gain_mlmax
+      real                                   :: carbon_balance_lightmax
+      real                                   :: carbon_balance_moistmax
+      real                                   :: carbon_balance_mlmax
       real                                   :: leaf_plus_root_resp     ! Sum of R_l, R_r
       real                                   :: mult                    ! Rescaling factor
       integer                                :: ipft
