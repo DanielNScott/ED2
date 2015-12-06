@@ -26242,7 +26242,7 @@ module ed_state_vars
          nvar = nvar+1
          call vtable_edio_r(npts,cpatch%dmean_bleaf                                        &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_BLEAF_CO             :41:'//trim(eorq_keys))
+                           ,'DMEAN_BLEAF_CO             :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Leaf biomass'                                    &
                            ,'[     kgC/pl]','(icohort)'            )
@@ -26251,7 +26251,7 @@ module ed_state_vars
          nvar = nvar+1
          call vtable_edio_r(npts,cpatch%dmean_broot                                        &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_BROOT_CO             :41:'//trim(eorq_keys))
+                           ,'DMEAN_BROOT_CO             :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'daiy mean - Root biomass'                                     &
                            ,'[     kgC/pl]','(icohort)'            )
@@ -26260,7 +26260,7 @@ module ed_state_vars
          nvar = nvar+1
          call vtable_edio_r(npts,cpatch%dmean_bstorage                                     &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_BSTORAGE_CO          :41:'//trim(eorq_keys))
+                           ,'DMEAN_BSTORAGE_CO          :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Storage biomass'                                 &
                            ,'[     kgC/pl]','(icohort)'            )
