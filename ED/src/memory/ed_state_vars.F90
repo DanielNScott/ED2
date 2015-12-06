@@ -29100,7 +29100,7 @@ module ed_state_vars
          nvar = nvar+1
          call vtable_edio_r(npts,cpatch%dmean_bleaf_c13                                        &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_BLEAF_c13_CO             :41:'//trim(dail_keys))
+                           ,'DMEAN_BLEAF_C13_CO             :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Leaf biomass'                                    &
                            ,'[     kgC/pl]','(icohort)'            )

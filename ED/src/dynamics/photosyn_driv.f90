@@ -712,8 +712,10 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                !cpatch%today_leaf_resp_c13 (ico) = cpatch%today_leaf_resp_c13(ico)          &
                !                                 + cpatch%leaf_respiration_c13(ico)
                !---------------------------------------------------------------------------!
-
-               call check_patch_c13(cpatch,ico,'canopy_photosynthesis','photosyn_driv.f90')
+               
+               ! Can't check patch_c13 here; leaf respiration was just updated, it may be
+               ! less than the as-yet un-updated leaf respiration C-13 content.
+               !call check_patch_c13(cpatch,ico,'canopy_photosynthesis','photosyn_driv.f90')
                !---------------------------------------------------------------------------!
             end if ! End of C-13 conditional (c13af > 0)
             !------------------------------------------------------------------------------!

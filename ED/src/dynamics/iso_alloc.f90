@@ -1586,6 +1586,9 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,dtlsm_C_gain,dtlsm_c13_gain
    real           :: root_delta                          ! ...
    real           :: bsa_delta                           ! ...
    real           :: bsb_delta                           ! ...
+   real           :: bst_delta                           ! ...
+   real           :: non_stor_resp                       ! Sum of non storage resps
+   real           :: nsr_c13                             ! C-13 content of above
    logical        :: valid                               ! Valid C-13 to C ratio logical
    !---------------------------------------------------------------------------------------!
    Cfmt = '(11A18)'
@@ -1716,6 +1719,22 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,dtlsm_C_gain,dtlsm_c13_gain
       error_found = .true.
    end if
    
+   call check_c13(cpatch%bstorage_c13(ico) &
+                 ,cpatch%bstorage    (ico) &
+                 ,bst_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in storage...'
+      error_found = .true.
+   end if
+   
+   non_stor_resp = cpatch%leaf_respiration(ico) + cpatch%root_respiration(ico)        &
+                 + cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico)        &
+                 + cpatch%sapa_growth_resp(ico) + cpatch%sapb_growth_resp(ico)
+                 
+   nsr_c13 = cpatch%leaf_respiration_c13(ico) + cpatch%root_respiration_c13(ico)      &
+           + cpatch%leaf_growth_resp_c13(ico) + cpatch%root_growth_resp_c13(ico)      &
+           + cpatch%sapa_growth_resp_c13(ico) + cpatch%sapb_growth_resp_c13(ico)
+   
    if (error_found) then
       write(*,*) '======================================================================='
       write(*,*) ' C-13 sanity check error in ', call_loc, '!'
@@ -1726,37 +1745,59 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,dtlsm_C_gain,dtlsm_c13_gain
       write(*,*) '-----------------------------------------------------------------------'
       write(*,*) 'Flux Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
       write(*,*) '-----------------------------------------------------------------------'
-      write(*,Cfmt) '               GPP','  LEAF_RESPIRATION','  ROOT_RESPIRATION'       &
-                   ,'  LEAF_GROWTH_RESP','  ROOT_GROWTH_RESP','  SAPA_GROWTH_RESP'       &
-                   ,'  SAPB_GROWTH_RESP',' LEAF_STORAGE_RESP',' ROOT_STORAGE_RESP'       &
-                   ,' SAPA_STORAGE_RESP',' SAPB_STORAGE_RESP'
-                   
-      write(*,Rfmt) cpatch%gpp(ico),cpatch%leaf_respiration(ico)                         &
-                   ,cpatch%root_respiration(ico),cpatch%leaf_growth_resp(ico)            &
-                   ,cpatch%root_growth_resp(ico),cpatch%sapa_growth_resp(ico)            &
-                   ,cpatch%sapb_growth_resp(ico),cpatch%leaf_storage_resp(ico)           &
-                   ,cpatch%root_storage_resp(ico),cpatch%sapa_storage_resp(ico)          &
-                   ,cpatch%sapb_storage_resp(ico)
-      write(*,Rfmt) cpatch%gpp_c13(ico),cpatch%leaf_respiration_c13(ico)                 &
-                   ,cpatch%root_respiration_c13(ico),cpatch%leaf_growth_resp_c13(ico)    &
-                   ,cpatch%root_growth_resp_c13(ico),cpatch%sapa_growth_resp_c13(ico)    &
-                   ,cpatch%sapb_growth_resp_c13(ico),cpatch%leaf_storage_resp_c13(ico)   &
-                   ,cpatch%root_storage_resp_c13(ico),cpatch%sapa_storage_resp_c13(ico)  &
-                   ,cpatch%sapb_storage_resp_c13(ico)
-      write(*,Rfmt) gpp_delta,lr_delta,rr_delta,lg_delta,rg_delta,sag_delta,sbg_delta    &
-                   ,ls_delta,rs_delta,sas_delta,sbs_delta
+      write(*,'(3A18)') '               GPP'          &
+                         ,'  LEAF_RESPIRATION'        &
+                         ,'  ROOT_RESPIRATION'        &
+                         ,'        **RESP_SUM'
+      write(*,'(3E18.2)')  cpatch%gpp(ico)                &
+                          ,cpatch%leaf_respiration(ico)   &
+                          ,cpatch%root_respiration(ico)   &
+                          ,non_stor_resp
+      write(*,'(3E18.2)')  cpatch%gpp_c13(ico)               &
+                          ,cpatch%leaf_respiration_c13(ico)  &
+                          ,cpatch%root_respiration_c13(ico)  &
+                          ,nsr_c13
+      write(*,'(3E18.2)') gpp_delta,lr_delta,rr_delta, hotc(nsr_c13,non_stor_resp)
+      write(*,*) ' '
+      write(*,'(4A18)') '  LEAF_GROWTH_RESP','  ROOT_GROWTH_RESP','  SAPA_GROWTH_RESP' &
+                       ,'  SAPB_GROWTH_RESP'
+      write(*,'(4E18.2)') cpatch%leaf_growth_resp(ico) ,cpatch%root_growth_resp(ico)       &
+                       ,cpatch%sapa_growth_resp(ico) ,cpatch%sapb_growth_resp(ico)
+      write(*,'(4E18.2)') cpatch%leaf_growth_resp_c13(ico)    &
+                       ,cpatch%root_growth_resp_c13(ico)    &
+                       ,cpatch%sapa_growth_resp_c13(ico)    &
+                       ,cpatch%sapb_growth_resp_c13(ico)
+      write(*,'(4E18.2)') lg_delta,rg_delta,sag_delta,sbg_delta
+      write(*,*) ' '
+      write(*,'(4A18)') ' LEAF_STORAGE_RESP',' ROOT_STORAGE_RESP',' SAPA_STORAGE_RESP' &
+                         ,' SAPB_STORAGE_RESP'
+      write(*,'(4E18.2)') cpatch%leaf_storage_resp(ico)       &
+                       ,cpatch%root_storage_resp(ico)       &
+                       ,cpatch%sapa_storage_resp(ico)       &
+                       ,cpatch%sapb_storage_resp(ico)
+      write(*,'(4E18.2)') cpatch%leaf_storage_resp_c13(ico)   &
+                       ,cpatch%root_storage_resp_c13(ico)   &
+                       ,cpatch%sapa_storage_resp_c13(ico)   &
+                       ,cpatch%sapb_storage_resp_c13(ico)
+      write(*,'(4E18.2)') ls_delta,rs_delta,sas_delta,sbs_delta
 
+      write(*,*) ' **RESP_SUM is the sum of non-storage respiration terms.'
       write(*,*) ' '
       write(*,*) '-----------------------------------------------------------------------'
       write(*,*) 'Pool Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
       write(*,*) '-----------------------------------------------------------------------'
-      write(*,'(4A10)') '     BLEAF','     BROOT',' BSAPWOODA',' BSAPWOODB'
+      write(*,'(4A10)') '     BLEAF','     BROOT',' BSAPWOODA','BSAPWOODB','  BSTORAGE'
       write(*,'(4E10.2)') cpatch%bleaf(ico),cpatch%broot(ico),cpatch%bsapwooda(ico)      &
-                         ,cpatch%bsapwoodb(ico)
-      write(*,'(4E10.2)') cpatch%bleaf_c13(ico),cpatch%broot_c13(ico)                    &
-                         ,cpatch%bsapwooda_c13(ico),cpatch%bsapwoodb_c13(ico)
-      write(*,Rfmt)      leaf_delta,root_delta,bsa_delta,bsb_delta
+                         ,cpatch%bsapwoodb(ico), cpatch%bstorage(ico)
+      write(*,'(5E10.2)') cpatch%bleaf_c13(ico),cpatch%broot_c13(ico)                    &
+                         ,cpatch%bsapwooda_c13(ico),cpatch%bsapwoodb_c13(ico)            &
+                         ,cpatch%bstorage_c13(ico)
 
+      write(*,'(5E10.2)') leaf_delta,root_delta,bsa_delta,bsb_delta,bst_delta
+
+      write(*,*) ' '
+      write(*,*) ' '
+      write(*,*) '-----------------------------------------------------------------------'
       if (present(assim_h2tc)) then
          write(*,*) '-----------------------------------------------------------------------'
          write(*,*) ' Pieces of leaf C-13 respiration computation'
@@ -1945,22 +1986,29 @@ end subroutine check_c13
 !------------------------------------------------------------------------------------------!
 subroutine leaf_root_resp_c13(csite,ipa)
    use ed_state_vars  , only : sitetype                  & ! structure
-                      , only : patchtype                 ! ! structure
-   use consts_coms    , only : tiny_num                  ! ! intent(in)
+                             , patchtype                 ! ! structure
+   use ed_misc_coms   , only : dtlsm                     & ! intent(in)
+                             , frqsum                    ! ! intent(in)
+   use isotopes       , only : c13af                     ! ! intent(in)
+   use consts_coms    , only : tiny_num                  & ! intent(in)
+                             , umols_2_kgCyr             ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(sitetype)            , intent(inout) :: csite    ! Current site
    integer                   , intent(in)    :: ipa      ! Current patch number
    !----- Local variables. ----------------------------------------------------------------!
-   type(patchtype) :: cpatch                             ! Current patch
-   integer         :: ico                                ! Current cohort number
-   real            :: non_stor_resp                      ! Respiration excl. storage_resp
-   real            :: ff_gpp                             ! Fraction of above from gpp.
-   real            :: ratio_gpp                          ! heavy:total carbon in GPP
-   real            :: ratio_stor                         ! heavy:total carbon in storage
-   real            :: ratio_resp                         ! heavy:total carbon in resp
+   type(patchtype), pointer :: cpatch                     ! Current patch
+   integer                  :: ico                        ! Current cohort number
+   real                     :: non_stor_resp              ! Respiration excl. storage_resp
+   real                     :: ff_gpp                     ! Fraction of above from gpp.
+   real                     :: ratio_gpp                  ! heavy:total carbon in GPP
+   real                     :: ratio_stor                 ! heavy:total carbon in storage
+   real                     :: ratio_resp                 ! heavy:total carbon in resp
+   real                     :: dtlsm_o_frqsum             ! heavy:total carbon in resp
    !---------------------------------------------------------------------------------------!
-   
+   dtlsm_o_frqsum = dtlsm/frqsum  
+
+ 
    !---------------------------------------------------------------------------------------!
    !    Loop over all cohorts.                                                             !
    !---------------------------------------------------------------------------------------!
@@ -1985,6 +2033,15 @@ subroutine leaf_root_resp_c13(csite,ipa)
             ratio_resp = 0.0
          end if
          
+         !if (non_stor_resp <= cpatch%gpp(ico)) then
+         !   ratio_resp = ratio_gpp
+         !else
+         !   ratio_stor  = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+         !   c_from_gpp  = cpatch%gpp(ico)
+         !   c_from_stor = min(non_stor_resp - c_from_gpp,cpatch%bstorage(ico))
+         !   ratio_resp  = (cpatch%gpp(ico) - non_stor_resp)/non_stor_resp
+         !end if
+         
          cpatch%leaf_respiration_c13(ico) = cpatch%leaf_respiration(ico) *ratio_resp
          cpatch%root_respiration_c13(ico) = cpatch%root_respiration(ico) *ratio_resp
          cpatch%leaf_growth_resp_c13(ico) = cpatch%leaf_growth_resp(ico) *ratio_resp
@@ -1997,7 +2054,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
                                          + cpatch%leaf_respiration_c13(ico)          &
                                          * dtlsm_o_frqsum * umols_2_kgCyr            &
                                          / cpatch%nplant          (ico)
-         cpatch%fmean_leaf_resp_c13(ico) = cpatch%fmean_root_resp_c13 (ico)          &
+         cpatch%fmean_root_resp_c13(ico) = cpatch%fmean_root_resp_c13 (ico)          &
                                          + cpatch%root_respiration_c13(ico)          &
                                          * dtlsm_o_frqsum * umols_2_kgCyr            &
                                          / cpatch%nplant          (ico)
@@ -2010,9 +2067,9 @@ subroutine leaf_root_resp_c13(csite,ipa)
       end if
       !------------------------------------------------------------------------------!
    end do cohortloop
-   call check_site_c13(csite,ipa,'leaf_root_resp_c13','iso_alloc.f90')\
+   call check_site_c13(csite,ipa,'leaf_root_resp_c13','iso_alloc.f90')
 
-end subroutine leaf_root_c13
+end subroutine leaf_root_resp_c13
 !==========================================================================================!
 !==========================================================================================!
 
