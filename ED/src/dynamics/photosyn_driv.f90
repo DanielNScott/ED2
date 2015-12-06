@@ -691,14 +691,19 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                   !cpatch%leaf_respiration_c13(ico) = lr_h2tc * cpatch%leaf_respiration(ico)
                   
                   !cpatch%leaf_respiration_c13(ico) = hotc(cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
-                  cpatch%leaf_respiration_c13(ico) = assim_h2tc*cpatch%leaf_respiration(ico)
+                  !cpatch%leaf_respiration_c13(ico) = assim_h2tc*cpatch%leaf_respiration(ico)
                   !------------------------------------------------------------------------!
                end if
+               
+               !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+               ! LEAF RESPIRATION C-13 CALCULATION MOVED INTO ROOT_LEAF_C13 AFTER SOIL_RESP!
+               !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+               
                !----- The output variable must be in [kgC/plant/yr]. ----------------------!
-               cpatch%fmean_leaf_resp_c13(ico) = cpatch%fmean_leaf_resp_c13 (ico)          &
-                                               + cpatch%leaf_respiration_c13(ico)          &
-                                               * dtlsm_o_frqsum * umols_2_kgCyr            &
-                                               / cpatch%nplant          (ico)
+               !cpatch%fmean_leaf_resp_c13(ico) = cpatch%fmean_leaf_resp_c13 (ico)          &
+               !                                + cpatch%leaf_respiration_c13(ico)          &
+               !                                * dtlsm_o_frqsum * umols_2_kgCyr            &
+               !                                / cpatch%nplant          (ico)
                !---------------------------------------------------------------------------!
 
                !---------------------------------------------------------------------------!

@@ -108,20 +108,20 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
       !------------------------------------------------------------------------------------!
       !      Repeat the above 3 steps for c13 vars.                                        !
       !------------------------------------------------------------------------------------!
-      if (c13af > 0) then !!!DSC!!!
-         cpatch%root_respiration_c13(ico) = cpatch%root_respiration (ico)                  &
-                                          * hotc(cpatch%gpp_c13(ico),cpatch%gpp(ico))
+      !if (c13af > 0) then !!!DSC!!!
+      !   cpatch%root_respiration_c13(ico) = cpatch%root_respiration (ico)                  &
+      !                                    * hotc(cpatch%gpp_c13(ico),cpatch%gpp(ico))
          
          !cpatch%today_root_resp_c13(ico)  = cpatch%today_root_resp_c13 (ico)               &
          !                                 + cpatch%root_respiration_c13(ico)
 
-         cpatch%fmean_root_resp_c13(ico)  = cpatch%fmean_root_resp_c13 (ico)               &
-                                          + cpatch%root_respiration_c13(ico)               &
-                                          * umols_2_kgCyr * dtlsm_o_frqsum                 &
-                                          / cpatch%nplant              (ico)
-      end if
+      !   cpatch%fmean_root_resp_c13(ico)  = cpatch%fmean_root_resp_c13 (ico)               &
+      !                                    + cpatch%root_respiration_c13(ico)               &
+      !                                    * umols_2_kgCyr * dtlsm_o_frqsum                 &
+      !                                    / cpatch%nplant              (ico)
+      !end if
       !------------------------------------------------------------------------------------!
-      call check_patch_c13(cpatch,ico,'soil_respiration','soil_respiration.f90')
+      !call check_patch_c13(cpatch,ico,'soil_respiration','soil_respiration.f90')
 
    end do
    !---------------------------------------------------------------------------------------!

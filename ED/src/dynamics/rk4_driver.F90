@@ -31,6 +31,7 @@ module rk4_driver
       use budget_utils           , only : update_budget        & ! function
                                         , compute_budget       ! ! function
       use isotopes               , only : c13af                ! ! intent(in)
+      use iso_alloc              , only : leaf_root_resp_c13   ! ! subroutine
       !$ use omp_lib
       implicit none
 
@@ -237,6 +238,9 @@ module rk4_driver
                call soil_respiration(csite,ipa,nzg,cpoly%ntext_soil(:,isi))
                !---------------------------------------------------------------------------!
 
+               !----- Compute 13C signature of leaf and root resp. ------------------------!
+               call leaf_root_resp_c13(csite,ipa)
+               !---------------------------------------------------------------------------!
 
                !---------------------------------------------------------------------------!
                !     Set up the integration patch.                                         !

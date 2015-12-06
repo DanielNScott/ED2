@@ -1099,8 +1099,8 @@ end subroutine partition
 !------------------------------------------------------------------------------------------!
 ! Details:
 !------------------------------------------------------------------------------------------!
-real function photo_h2tc(d13C_atm,  can_co2,fs_open,  lsfc_co2_open,  lsfc_co2_closed &
-                             ,lint_co2_open,  lint_co2_closed)
+real function photo_h2tc(d13C_atm,can_co2,fs_open,lsfc_co2_open,lsfc_co2_closed            &
+                        ,lint_co2_open,lint_co2_closed)
    use isotopes, only  : R_std  ! ! intent(in)
    implicit none
 
@@ -1933,7 +1933,86 @@ subroutine check_c13(heavy,total,delta,valid)
    
    delta = htIsoDelta(heavy,total)
 
-end subroutine
+end subroutine check_c13
+!==========================================================================================!
+!==========================================================================================!
+
+
+
+!==========================================================================================!
+!==========================================================================================!
+! This subroutine computes the leaf and root respiration 13C composition.                  !
+!------------------------------------------------------------------------------------------!
+subroutine leaf_root_resp_c13(csite,ipa)
+   use ed_state_vars  , only : sitetype                  & ! structure
+                      , only : patchtype                 ! ! structure
+   use consts_coms    , only : tiny_num                  ! ! intent(in)
+   implicit none
+   !----- Arguments. ----------------------------------------------------------------------!
+   type(sitetype)            , intent(inout) :: csite    ! Current site
+   integer                   , intent(in)    :: ipa      ! Current patch number
+   !----- Local variables. ----------------------------------------------------------------!
+   type(patchtype) :: cpatch                             ! Current patch
+   integer         :: ico                                ! Current cohort number
+   real            :: non_stor_resp                      ! Respiration excl. storage_resp
+   real            :: ff_gpp                             ! Fraction of above from gpp.
+   real            :: ratio_gpp                          ! heavy:total carbon in GPP
+   real            :: ratio_stor                         ! heavy:total carbon in storage
+   real            :: ratio_resp                         ! heavy:total carbon in resp
+   !---------------------------------------------------------------------------------------!
+   
+   !---------------------------------------------------------------------------------------!
+   !    Loop over all cohorts.                                                             !
+   !---------------------------------------------------------------------------------------!
+   cpatch => csite%patch(ipa)
+   cohortloop: do ico = 1,cpatch%ncohorts
+      !------------------------------------------------------------------------------------!
+      !     Determine if the sum of respiration, excluding [var]_storage_resp terms, is    !
+      ! greater than gpp. If so, some fraction of this respiration must come from plant    !
+      ! storage, in which case we implement a 2-pool mixing model.                         ! 
+      !------------------------------------------------------------------------------------!
+      if (c13af > 0) then
+         non_stor_resp = cpatch%leaf_respiration(ico) + cpatch%root_respiration(ico)      &
+                       + cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico)      &
+                       + cpatch%sapa_growth_resp(ico) + cpatch%sapb_growth_resp(ico)
+         
+         if (non_stor_resp > tiny_num) then
+            ff_gpp     = min(cpatch%gpp(ico) /non_stor_resp, 1.0)
+            ratio_gpp  = hotc(     cpatch%gpp_c13(ico),     cpatch%gpp(ico))
+            ratio_stor = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+            ratio_resp = ff_gpp*ratio_gpp + (1.0 - ff_gpp)*ratio_stor
+         else
+            ratio_resp = 0.0
+         end if
+         
+         cpatch%leaf_respiration_c13(ico) = cpatch%leaf_respiration(ico) *ratio_resp
+         cpatch%root_respiration_c13(ico) = cpatch%root_respiration(ico) *ratio_resp
+         cpatch%leaf_growth_resp_c13(ico) = cpatch%leaf_growth_resp(ico) *ratio_resp
+         cpatch%root_growth_resp_c13(ico) = cpatch%root_growth_resp(ico) *ratio_resp
+         cpatch%sapa_growth_resp_c13(ico) = cpatch%sapa_growth_resp(ico) *ratio_resp
+         cpatch%sapb_growth_resp_c13(ico) = cpatch%sapb_growth_resp(ico) *ratio_resp
+
+         !----- The output variables must be in [kgC/plant/yr]. ---------------------!
+         cpatch%fmean_leaf_resp_c13(ico) = cpatch%fmean_leaf_resp_c13 (ico)          &
+                                         + cpatch%leaf_respiration_c13(ico)          &
+                                         * dtlsm_o_frqsum * umols_2_kgCyr            &
+                                         / cpatch%nplant          (ico)
+         cpatch%fmean_leaf_resp_c13(ico) = cpatch%fmean_root_resp_c13 (ico)          &
+                                         + cpatch%root_respiration_c13(ico)          &
+                                         * dtlsm_o_frqsum * umols_2_kgCyr            &
+                                         / cpatch%nplant          (ico)
+         !---------------------------------------------------------------------------!
+         
+         call check_patch_c13(cpatch,ico,'leaf_root_resp_c13','iso_alloc.f90')
+         !---------------------------------------------------------------------------!
+      else
+         return
+      end if
+      !------------------------------------------------------------------------------!
+   end do cohortloop
+   call check_site_c13(csite,ipa,'leaf_root_resp_c13','iso_alloc.f90')\
+
+end subroutine leaf_root_c13
 !==========================================================================================!
 !==========================================================================================!
 
