@@ -337,7 +337,7 @@ subroutine nm_alloc_1(cpatch,ico,carbon13_balance)
    !use isotope_utils, only : nelder_mead           & ! subroutine
    !                        , iso_err_fn            & ! function
    !                        , htIsoDelta            ! ! function
-!   use iso_checks          , c13_sanity_check      ! ! subroutine
+!   use iso_checks          , check_patch_c13      ! ! subroutine
    use ed_state_vars, only : patchtype             ! ! intent(inout)
    implicit none
    
@@ -460,7 +460,7 @@ subroutine nm_alloc_1(cpatch,ico,carbon13_balance)
    cpatch%balive_c13(ico) = cpatch%bleaf_c13    (ico) + cpatch%broot_c13    (ico)          &
                           + cpatch%bsapwooda_c13(ico) + cpatch%bsapwoodb_c13(ico)
    
-!   call c13_sanity_check(cpatch,ico,"Leaving alloc_c13")
+!   call check_patch_c13(cpatch,ico,"Leaving alloc_c13")
 
 end subroutine nm_alloc_1
 !=======================================================================================!
@@ -475,7 +475,7 @@ subroutine l_r_diff(cpatch,ico,carbon13_balance,lh2tc_in,rh2tc_in,sth2tc_in,blea
    !                        , d13C2Ratio      & ! function
    !                        , d13C2Ratio8     & ! function
    !                        , get_lhc_target        ! ! subroutine
-!   use iso_checks          , c13_sanity_check      ! ! subroutine
+!   use iso_checks          , check_patch_c13      ! ! subroutine
    use isotopes,  only : iso_P1                & ! intent(in)
                            , iso_P2                & ! intent(in)
                            , R_std                 ! ! intent(in)
@@ -762,7 +762,7 @@ subroutine l_r_diff(cpatch,ico,carbon13_balance,lh2tc_in,rh2tc_in,sth2tc_in,blea
       ! write(*,*) '!--------------------------------------------------------------------------!'
    ! end if
    
-!   call c13_sanity_check(cpatch,ico,"end c13_alloc")
+!   call check_patch_c13(cpatch,ico,"end c13_alloc")
 end subroutine l_r_diff
 !=======================================================================================!
 
@@ -1549,7 +1549,7 @@ end subroutine pheninit_iso
 !==========================================================================================!
 !     This sub-routine does a pretty comprehensive sanity check on C-13 variables.         !
 !------------------------------------------------------------------------------------------!
-subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gain          &
+subroutine check_patch_c13(cpatch,ico,call_loc,fname,dtlsm_C_gain,dtlsm_c13_gain          &
                            ,assim_h2tc,leaf_h2tc)
    use ed_max_dims    , only : str_len            ! ! intent(in)
    use ed_state_vars  , only : patchtype          ! ! structure
@@ -1562,22 +1562,34 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
    integer                   , intent(in) :: ico         ! Current cohort number
    character(*)              , intent(in) :: call_loc    ! What routine called this check?
    character(*)              , intent(in) :: fname       ! What file is that routine in?
-   real        ,optional     , intent(in) :: daily_C_gain
-   real        ,optional     , intent(in) :: daily_c13_gain
+   real        ,optional     , intent(in) :: dtlsm_C_gain
+   real        ,optional     , intent(in) :: dtlsm_c13_gain
    real        ,optional     , intent(in) :: assim_h2tc  ! Ratio of C-13/C in assimilate
    real        ,optional     , intent(in) :: leaf_h2tc   ! Ratio of C-13/C in leaves
    !----- Local variables. ----------------------------------------------------------------!
-   integer        :: diagnosis = 0        ! Error or warning diagnosis code
-   logical        :: show_gpp  = .false.  ! Print Gross Primay Production?
-   logical        :: show_LR   = .false.  ! Print Leaf Respiration?
-   logical        :: show_LAR  = .false.  ! Print Leaf Assimilate Respiration?
-   logical        :: show_DCG  = .false.  ! Print Daily C Gain info?
-   character(60)  :: reason               ! Error or warning diagnosis reason
-   character(17)  :: Cfmt                 ! Character format, for strings
-   character(37)  :: Rfmt                 ! Real format, for reals.
+   logical        :: error_found = .false.               ! Is there a problem?
+   character(60)  :: reason                              ! Error or warning diagnosis reason
+   character(7)   :: Cfmt                                ! Character format, for strings
+   character(9)   :: Rfmt                                ! Real format, for reals.
+   real           :: gpp_delta                           ! Delta C-13 vals for variables.
+   real           :: lr_delta                            ! ...
+   real           :: rr_delta                            ! ...
+   real           :: lg_delta                            ! ...
+   real           :: rg_delta                            ! ...
+   real           :: sag_delta                           ! ...
+   real           :: sbg_delta                           ! ...
+   real           :: ls_delta                            ! ...
+   real           :: rs_delta                            ! ...
+   real           :: sas_delta                           ! ...
+   real           :: sbs_delta                           ! ...
+   real           :: leaf_delta                          ! ...
+   real           :: root_delta                          ! ...
+   real           :: bsa_delta                           ! ...
+   real           :: bsb_delta                           ! ...
+   logical        :: valid                               ! Valid C-13 to C ratio logical
    !---------------------------------------------------------------------------------------!
-   Cfmt = '(A18,A18,A18,A18)'
-   Rfmt = '(ES18.4E3,ES18.4E3,ES18.4E3,ES18.4E3)'
+   Cfmt = '(11A18)'
+   Rfmt = '(11E18.2)'
 
    !------------------------------------------------------------------------------!
    ! Perform a great big sanity check. Today_XXX vars are included to potentially !
@@ -1585,115 +1597,166 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
    ! this routine that if a today var is messed up it is because it's sub-daily   !
    ! analogue is to blame.                                                        !
    !------------------------------------------------------------------------------!
-   if (c13af > 0 .and. c_alloc_flg > 0) then
-      ! Assimilated C-13 should not exceed assimilated C.
-      if ((cpatch%gpp_c13      (ico) > cpatch%gpp      (ico) .and. &
-           cpatch%gpp          (ico) > tiny(1.0)            )) then
-         write(*,*) ' There is too much C-13 in gpp...'
-         reason   = 'GPP C-13 too high.'
-         show_gpp = .true.
-      end if
-      
-      ! Leaf respired C-13 should exceed respired C.
-      if (cpatch%leaf_respiration_c13(ico) > cpatch%leaf_respiration(ico)) then
-         write(*,*) ' There is too much C-13 in leaf respiration...'
-         reason   = 'Respired C-13 too high.'
-         show_LR  = .true.
-      end if
-   
-      ! Assimilate based resp should be positive.
-      if (cpatch%lassim_resp      (ico) < 0.0 .or. cpatch%lassim_resp_c13      (ico) < 0.0) then
-         write(*,*) ' Leaf respiration of assimilate is less than 0...'
-         reason   = 'Respired C-13 is neg.'
-         show_LAR = .true.
-      end if
-      
-      ! Assimilate based resp should not exceed total resp.
-      if (cpatch%lassim_resp      (ico) > cpatch%leaf_respiration(ico) .and. abs(cpatch%lassim_resp      (ico)) > tiny(1.0)) then
-         write(*,*) ' Leaf respiration of assimilate exceeds total leaf respiration...'
-         reason   = 'LAR too high.'
-         show_LR  = .true.
-         show_LAR = .true.
-      end if
-                     
-      ! Assimilate based resp shold not exceed total assimilate
-      if (cpatch%lassim_resp      (ico) > cpatch%gpp      (ico) .and. cpatch%gpp_c13      (ico) > tiny(1.0)) then
-         write(*,*) ' Leaf respiration of assimilate exceeds total assimilation...'
-         reason   = 'LAR too high.'
-         show_gpp = .true.
-         show_LAR = .true.
-      end if
-      
-      ! Assimilate based resp c13 should not exceed total assim respiration
-      if ((cpatch%lassim_resp_c13      (ico) > cpatch%lassim_resp      (ico) .and. &
-           cpatch%lassim_resp          (ico) > tiny(1.0))) then
-         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total LAR...'
-         reason   = 'LAR C-13 too high.'
-         show_LAR = .true.
-      end if
-
-     ! Assimilate based resp c13 should not exceed total resp c13
-      if ((cpatch%lassim_resp_c13      (ico) > cpatch%leaf_respiration_c13(ico) .and. &
-           cpatch%leaf_respiration_c13 (ico) > tiny(1.0))) then
-         write(*,*) ' Leaf respiration of assimilate C-13 exceeds total resp of C-13...'
-         reason   = 'LAR C-13 too high.'
-         show_LR  = .true.
-         show_LAR = .true.
-      end if
-      
-      ! Assim Resp c13 should not exceed total assimilate c13
-      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp_c13(ico) .and. &
-          cpatch%gpp_c13              (ico) > tiny(1.0)           .and. & 
-          cpatch%lassim_resp_c13      (ico) > tiny(1.0)) then
-         write(*,*) ' lassim_resp_c13 > gpp_c13 ...'
-         reason   = 'LAR C-13 too high.'
-         show_GPP = .true.
-         show_LAR = .true.
-      end if
-          
-      ! Assim Resp c13 should not exceed total assimilate
-      if (cpatch%lassim_resp_c13      (ico) > cpatch%gpp(ico) .and. &
-          cpatch%gpp                  (ico) > tiny(1.0)      ) then
-         write(*,*) ' lassim_resp_c13 > gpp ...'
-         reason   = 'LAR C-13 too high.'
-         show_GPP = .true.
-         show_LAR = .true.
-      end if
-          
-      !if (present(daily_c13_gain)) then
-      !   if (daily_c13_gain > daily_C_gain  .and. &
-      !       daily_C_gain   > tiny(1.0)    ) then
-      !      write(*,*) ' daily_c13_gain > daily_C_gain ...'
-      !      reason   = 'daily_c13_gain too high.'
-      !      show_GPP = .true.
-      !      show_LAR = .true.
-      !      show_DCG = .true.
-      !   end if
-      !end if
+   ! Assimilated C-13 should not exceed assimilated C.
+   call check_c13(cpatch%gpp_c13(ico),cpatch%gpp(ico),gpp_delta,valid)
+   if ( .not. valid) then
+      reason = 'GPP C-13 too high.'
+      error_found = .true.
    end if
-
-   if (show_gpp .or. show_LR .or. show_LAR) then
-      write(*,*) '-----------------------------------------------------------------------'
+   
+   call check_c13(cpatch%leaf_respiration_c13(ico) &
+                 ,cpatch%leaf_respiration    (ico) &
+                 ,lr_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in leaf respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%root_respiration_c13(ico) &
+                 ,cpatch%root_respiration    (ico) &
+                 ,rr_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in root respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%leaf_growth_resp_c13(ico) &
+                 ,cpatch%leaf_growth_resp    (ico) &
+                 ,lg_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in leaf growth respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%root_growth_resp_c13(ico) &
+                 ,cpatch%root_growth_resp    (ico) &
+                 ,rg_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in root growth respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%sapa_growth_resp_c13(ico) &
+                 ,cpatch%sapa_growth_resp    (ico) &
+                 ,sag_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in sapa growth respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%sapb_growth_resp_c13(ico) &
+                 ,cpatch%sapb_growth_resp    (ico) &
+                 ,sbg_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in sapb growth respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%leaf_storage_resp_c13(ico) &
+                 ,cpatch%leaf_storage_resp    (ico) &
+                 ,ls_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in leaf storage respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%root_storage_resp_c13(ico) &
+                 ,cpatch%root_storage_resp    (ico) &
+                 ,rs_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in root storage respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%sapa_storage_resp_c13(ico) &
+                 ,cpatch%sapa_storage_resp    (ico) &
+                 ,sas_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in sapa storage respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%sapb_storage_resp_c13(ico) &
+                 ,cpatch%sapb_storage_resp    (ico) &
+                 ,sbs_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in sapb storage respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%bleaf_c13(ico) &
+                 ,cpatch%bleaf    (ico) &
+                 ,leaf_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in leaves...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%broot_c13(ico) &
+                 ,cpatch%broot    (ico) &
+                 ,root_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in roots...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%bsapwooda_c13(ico) &
+                 ,cpatch%bsapwooda    (ico) &
+                 ,bsa_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in aboveground sapwood...'
+      error_found = .true.
+   end if
+   
+   call check_c13(cpatch%bsapwoodb_c13(ico) &
+                 ,cpatch%bsapwoodb    (ico) &
+                 ,bsb_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in belowground sapwood...'
+      error_found = .true.
+   end if
+   
+   if (error_found) then
+      write(*,*) '======================================================================='
       write(*,*) ' C-13 sanity check error in ', call_loc, '!'
-      write(*,*) '-----------------------------------------------------------------------'
+      write(*,*) ' ', reason
+      write(*,*) '======================================================================='
       write(*,*) ' cohort, pft, larprop : ', ico, cpatch%pft(ico), larprop
-      
-      !if (show_gpp) then
-         write(*,*) ' gpp              ,         gpp_c13 : ', cpatch%gpp(ico)              , cpatch%gpp_c13(ico)
-      !end if
-      
-      !if (show_LR ) then
-         write(*,*) ' leaf_resp        ,   leaf_resp_c13 : ', cpatch%leaf_respiration(ico) , cpatch%leaf_respiration_c13(ico)
-      !end if
-      
-      if (show_LAR) then
-         write(*,*) ' lassim_resp      , lassim_resp_c13 : ', cpatch%lassim_resp(ico)      , cpatch%lassim_resp_c13(ico)
-      end if
-      
-      !if (show_DCG) then
-      !   write(*,*) ' daily_C_gain     , daily_c13_gain  : ', daily_C_gain                 , daily_c13_gain
-      !end if
-      
+      write(*,*) ' '
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,*) 'Flux Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,Cfmt) '               GPP','  LEAF_RESPIRATION','  ROOT_RESPIRATION'       &
+                   ,'  LEAF_GROWTH_RESP','  ROOT_GROWTH_RESP','  SAPA_GROWTH_RESP'       &
+                   ,'  SAPB_GROWTH_RESP',' LEAF_STORAGE_RESP',' ROOT_STORAGE_RESP'       &
+                   ,' SAPA_STORAGE_RESP',' SAPB_STORAGE_RESP'
+                   
+      write(*,Rfmt) cpatch%gpp(ico),cpatch%leaf_respiration(ico)                         &
+                   ,cpatch%root_respiration(ico),cpatch%leaf_growth_resp(ico)            &
+                   ,cpatch%root_growth_resp(ico),cpatch%sapa_growth_resp(ico)            &
+                   ,cpatch%sapb_growth_resp(ico),cpatch%leaf_storage_resp(ico)           &
+                   ,cpatch%root_storage_resp(ico),cpatch%sapa_storage_resp(ico)          &
+                   ,cpatch%sapb_storage_resp(ico)
+      write(*,Rfmt) cpatch%gpp_c13(ico),cpatch%leaf_respiration_c13(ico)                 &
+                   ,cpatch%root_respiration_c13(ico),cpatch%leaf_growth_resp_c13(ico)    &
+                   ,cpatch%root_growth_resp_c13(ico),cpatch%sapa_growth_resp_c13(ico)    &
+                   ,cpatch%sapb_growth_resp_c13(ico),cpatch%leaf_storage_resp_c13(ico)   &
+                   ,cpatch%root_storage_resp_c13(ico),cpatch%sapa_storage_resp_c13(ico)  &
+                   ,cpatch%sapb_storage_resp_c13(ico)
+      write(*,Rfmt) gpp_delta,lr_delta,rr_delta,lg_delta,rg_delta,sag_delta,sbg_delta    &
+                   ,ls_delta,rs_delta,sas_delta,sbs_delta
+
+      write(*,*) ' '
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,*) 'Pool Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,'(4A10)') '     BLEAF','     BROOT',' BSAPWOODA',' BSAPWOODB'
+      write(*,'(4E10.2)') cpatch%bleaf(ico),cpatch%broot(ico),cpatch%bsapwooda(ico)      &
+                         ,cpatch%bsapwoodb(ico)
+      write(*,'(4E10.2)') cpatch%bleaf_c13(ico),cpatch%broot_c13(ico)                    &
+                         ,cpatch%bsapwooda_c13(ico),cpatch%bsapwoodb_c13(ico)
+      write(*,Rfmt)      leaf_delta,root_delta,bsa_delta,bsb_delta
+
       if (present(assim_h2tc)) then
          write(*,*) '-----------------------------------------------------------------------'
          write(*,*) ' Pieces of leaf C-13 respiration computation'
@@ -1714,7 +1777,163 @@ subroutine c13_sanity_check(cpatch,ico,call_loc,fname,daily_C_gain,daily_c13_gai
    
    
    return
-end subroutine c13_sanity_check
+end subroutine check_patch_c13
+!==========================================================================================!
+!==========================================================================================!
+
+
+
+!==========================================================================================!
+!==========================================================================================!
+!     This sub-routine does a pretty comprehensive sanity check on C-13 variables.         !
+!------------------------------------------------------------------------------------------!
+subroutine check_site_c13(csite,ipa,call_loc,fname)
+   use ed_max_dims    , only : str_len            ! ! intent(in)
+   use ed_state_vars  , only : sitetype           ! ! structure
+   use isotopes       , only : c13af              & ! intent(in)
+                             , larprop            ! ! intent(in)
+   implicit none
+   !----- Arguments. ----------------------------------------------------------------------!
+   type(sitetype)            , intent(in) :: csite       ! Current site
+   integer                   , intent(in) :: ipa         ! Current patch number
+   character(*)              , intent(in) :: call_loc    ! What routine called this check?
+   character(*)              , intent(in) :: fname       ! What file is that routine in?
+   !----- Local variables. ----------------------------------------------------------------!
+   logical        :: error_found = .false.               ! Is there a problem?
+   character(60)  :: reason                              ! Error or warning diagnosis reason
+   character(6)   :: Cfmt                                ! Character format, for strings
+   character(8)   :: Rfmt                                ! Real format, for reals.
+   real           :: fsc_delta                           ! Delta C-13 vals for variables.
+   real           :: ssc_delta                           ! ...
+   real           :: stsc_delta                          ! ...
+   real           :: stsl_delta                          ! ...
+   real           :: can_co2_delta                       ! ...
+   real           :: rh_delta                            ! ...
+   real           :: cwd_delta                           ! ...
+   logical        :: valid                               ! Valid C-13 to C ratio logical
+   !---------------------------------------------------------------------------------------!
+   !---------------------------------------------------------------------------------------!
+   Cfmt = '(6A18)'
+   Rfmt = '(6E18.2)'
+
+   call check_c13(csite%fast_soil_c13(ipa) &
+                 ,csite%fast_soil_c  (ipa) &
+                 ,fsc_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in fast_soil_c...'
+      error_found = .true.
+   end if
+   
+   call check_c13(csite%slow_soil_c13(ipa) &
+                 ,csite%slow_soil_c  (ipa) &
+                 ,ssc_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in slow_soil_c...'
+      error_found = .true.
+   end if
+   
+   call check_c13(csite%structural_soil_c13(ipa) &
+                 ,csite%structural_soil_c  (ipa) &
+                 ,stsc_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in structural_soil_c...'
+      error_found = .true.
+   end if
+   
+   call check_c13(csite%structural_soil_L_c13(ipa) &
+                 ,csite%structural_soil_L    (ipa) &
+                 ,stsl_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in structural_soil_L...'
+      error_found = .true.
+   end if
+   
+   call check_c13(csite%can_co2_c13(ipa) &
+                 ,csite%can_co2    (ipa) &
+                 ,can_co2_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in can_co2...'
+      error_found = .true.
+   end if
+   
+   call check_c13(csite%rh_c13(ipa) &
+                 ,csite%rh    (ipa) &
+                 ,rh_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in heterotrophic respiration...'
+      error_found = .true.
+   end if
+   
+   call check_c13(csite%cwd_rh_c13(ipa) &
+                 ,csite%cwd_rh    (ipa) &
+                 ,cwd_delta, valid)
+   if ( .not. valid) then
+      reason = 'There is too much C-13 in heterotrophic respiration...'
+      error_found = .true.
+   end if
+   
+   if (error_found) then
+      write(*,*) '======================================================================='
+      write(*,*) ' C-13 sanity check error in ', call_loc, '!'
+      write(*,*) reason
+      write(*,*) '======================================================================='
+      write(*,*) ' patch : ', ipa
+      write(*,*) ' '
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,*) 'Pool Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
+      write(*,*) '-----------------------------------------------------------------------'
+      write(*,Cfmt) '       FAST_SOIL_C','       SLOW_SOIL_C',' STRUCTURAL_SOIL_C'       &
+                   ,' STRUCTURAL_SOIL_L','           CAN_CO2'
+      write(*,Rfmt) csite%fast_soil_C(ipa),csite%slow_soil_C(ipa)                        &
+                   ,csite%structural_soil_C(ipa),csite%structural_soil_L(ipa)            &
+                   ,csite%can_co2(ipa)
+      write(*,Rfmt) csite%fast_soil_c13(ipa),csite%slow_soil_c13(ipa)                    &
+                   ,csite%structural_soil_c13(ipa),csite%structural_soil_L_c13(ipa)      &
+                   ,csite%can_co2_c13(ipa)
+      write(*,Rfmt) fsc_delta, ssc_delta, stsc_delta, stsl_delta, can_co2_delta
+
+      call fatal_error(reason,call_loc,fname)
+   end if
+   
+   return
+end subroutine check_site_c13
+!==========================================================================================!
+!==========================================================================================!
+
+
+
+
+!==========================================================================================!
+!==========================================================================================!
+! Check if a C-13 var too high, ignoring tiny-value comparison, and get it's delta value.  !
+!------------------------------------------------------------------------------------------!
+subroutine check_c13(heavy,total,delta,valid)
+   use consts_coms, only : tiny_num    ! intent(in)
+   implicit none
+   !----- Arguments. ----------------------------------------------------------------------!
+   real   , intent(in)  :: heavy
+   real   , intent(in)  :: total
+   real   , intent(out) :: delta
+   logical, intent(out) :: valid
+   !---------------------------------------------------------------------------------------!
+   
+   if (heavy > tiny_num) then
+      if (total > tiny_num) then
+         if (heavy > total) then
+            valid = .false.
+         else
+            valid = .true.
+         end if
+      else
+         valid = .false.
+      end if
+   else
+      valid = .true.
+   end if
+   
+   delta = htIsoDelta(heavy,total)
+
+end subroutine
 !==========================================================================================!
 !==========================================================================================!
 

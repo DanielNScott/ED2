@@ -43,7 +43,8 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                              , resp_h2tc          & ! function
                              , htIsoDelta         & ! function
                              , hotc               & ! function
-                             , c13_sanity_check   ! ! function
+                             , check_patch_c13    & ! function
+                             , check_site_c13     ! ! function
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(sitetype)            , target      :: csite             ! Current site
@@ -624,7 +625,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                ! Compute ratio of assimilated C-13 to total C, and get gpp terms.          !
                !---------------------------------------------------------------------------!
                can_co2_d13C = htIsoDelta(csite%can_co2_c13(ipa),csite%can_co2(ipa))
-               assim_h2tc  = photo_h2tc   (can_co2_d13C                                    &
+               assim_h2tc   = photo_h2tc  (can_co2_d13C                                    &
                                           ,csite%can_co2(ipa)                              &
                                           ,cpatch%fs_open(ico)                             &
                                           ,cpatch%lsfc_co2_open(ico)                       &
@@ -688,7 +689,9 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                   !------------------------------------------------------------------------!
                   !lr_h2tc = resp_h2tc('leaf',cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
                   !cpatch%leaf_respiration_c13(ico) = lr_h2tc * cpatch%leaf_respiration(ico)
-                  cpatch%leaf_respiration_c13(ico) = hotc(cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
+                  
+                  !cpatch%leaf_respiration_c13(ico) = hotc(cpatch%bleaf_c13(ico),cpatch%bleaf(ico))
+                  cpatch%leaf_respiration_c13(ico) = assim_h2tc*cpatch%leaf_respiration(ico)
                   !------------------------------------------------------------------------!
                end if
                !----- The output variable must be in [kgC/plant/yr]. ----------------------!
@@ -701,11 +704,11 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                !---------------------------------------------------------------------------!
                ! No matter the case with c_alloc_flg, we update the daily sum of C-13 resp.
                !---------------------------------------------------------------------------!
-               cpatch%today_leaf_resp_c13 (ico) = cpatch%today_leaf_resp_c13(ico)          &
-                                                + cpatch%leaf_respiration_c13(ico)
+               !cpatch%today_leaf_resp_c13 (ico) = cpatch%today_leaf_resp_c13(ico)          &
+               !                                 + cpatch%leaf_respiration_c13(ico)
                !---------------------------------------------------------------------------!
 
-               call c13_sanity_check(cpatch,ico,'canopy_photosynthesis','photosyn_driv.f90')
+               call check_patch_c13(cpatch,ico,'canopy_photosynthesis','photosyn_driv.f90')
                !---------------------------------------------------------------------------!
             end if ! End of C-13 conditional (c13af > 0)
             !------------------------------------------------------------------------------!
@@ -815,6 +818,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
          call print_photo_details(cmet,csite,ipa,ico,limit_flag,vm,compp)
       end if
    end do cohortloop
+   call check_site_c13(csite,ipa,'dbalive_dt','growth_balive.f90')
    !---------------------------------------------------------------------------------------!
 
 

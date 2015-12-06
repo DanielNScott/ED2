@@ -50,9 +50,9 @@ module growth_balive
       !----- DS Additional Uses -----------------------------------------------------------!
       use iso_alloc       , only : resp_h2tc              & ! function
                                  , hotc                   & ! function
-                                 , c13_sanity_check       ! ! subroutine
+                                 , check_patch_c13        & ! subroutine
+                                 , check_site_c13         ! ! subroutine
       use isotopes        , only : c13af                  ! ! intent(in)
-!     use iso_checks      , only : c13_sanity_check       ! ! subroutine 
 
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -263,7 +263,7 @@ module growth_balive
                                          ,tr_broot_c13,tr_bsapwooda_c13                 &
                                          ,tr_bsapwoodb_c13,tr_bstorage_c13)
                      
-                     call c13_sanity_check(cpatch,ico,'dbalive_dt','growth_balive.f90')
+                     call check_patch_c13(cpatch,ico,'dbalive_dt','growth_balive.f90')
                      !---------------------------------------------------------------------!
 
                      call update_nitrogen(flushing,ipft,carbon_balance,cpatch%nplant(ico)  &
@@ -392,6 +392,7 @@ module growth_balive
                end if
             end do patchloop
             !------------------------------------------------------------------------------!
+            call check_site_c13(csite,ipa,'dbalive_dt','growth_balive.f90')
          end do siteloop
          !---------------------------------------------------------------------------------!
       end do polyloop

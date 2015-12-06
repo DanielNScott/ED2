@@ -16,8 +16,11 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
    use ed_misc_coms , only : dtlsm                    & ! intent(in)
                            , frqsum                   ! ! intent(in)
    !----- DS Additional Uses -----------------------------------------------------------!
-   use isotopes     , only : c13af                    ! ! intent(in)    !!!DSC!!!
-   use iso_alloc    , only : resp_h2tc                ! ! function      !!!DSC!!!
+   use isotopes     , only : c13af                    ! ! intent(in)
+   use iso_alloc    , only : resp_h2tc                & ! function
+                           , hotc                     & ! function
+                           , check_patch_c13          & ! function
+                           , check_site_c13           ! ! function
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(sitetype)                , target     :: csite
@@ -107,10 +110,10 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
       !------------------------------------------------------------------------------------!
       if (c13af > 0) then !!!DSC!!!
          cpatch%root_respiration_c13(ico) = cpatch%root_respiration (ico)                  &
-                                 * resp_h2tc('root',cpatch%broot_c13(ico),cpatch%broot(ico))
+                                          * hotc(cpatch%gpp_c13(ico),cpatch%gpp(ico))
          
-         cpatch%today_root_resp_c13(ico)  = cpatch%today_root_resp_c13 (ico)               &
-                                          + cpatch%root_respiration_c13(ico)
+         !cpatch%today_root_resp_c13(ico)  = cpatch%today_root_resp_c13 (ico)               &
+         !                                 + cpatch%root_respiration_c13(ico)
 
          cpatch%fmean_root_resp_c13(ico)  = cpatch%fmean_root_resp_c13 (ico)               &
                                           + cpatch%root_respiration_c13(ico)               &
@@ -118,6 +121,7 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
                                           / cpatch%nplant              (ico)
       end if
       !------------------------------------------------------------------------------------!
+      call check_patch_c13(cpatch,ico,'soil_respiration','soil_respiration.f90')
 
    end do
    !---------------------------------------------------------------------------------------!
@@ -198,6 +202,7 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
                                    * umols_2_kgCyr * dtlsm_o_frqsum
    end if
    !---------------------------------------------------------------------------------------!
+   call check_site_c13(csite,ipa,'soil_respiration','soil_respiration.f90')
 
    return
 end subroutine soil_respiration
