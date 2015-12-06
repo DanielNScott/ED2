@@ -893,6 +893,9 @@ module ed_state_vars
       !----- Daily mean (same units as fast mean). ----------------------------------------!
       real,pointer,dimension(:)   :: dmean_gpp_c13
       real,pointer,dimension(:)   :: dmean_npp_c13
+      real,pointer,dimension(:)   :: dmean_bleaf_c13
+      real,pointer,dimension(:)   :: dmean_broot_c13
+      real,pointer,dimension(:)   :: dmean_bstorage_c13
       real,pointer,dimension(:)   :: dmean_leaf_resp_c13
       real,pointer,dimension(:)   :: dmean_root_resp_c13
       real,pointer,dimension(:)   :: dmean_leaf_growth_resp_c13
