@@ -1549,23 +1549,23 @@ end subroutine pheninit_iso
 !==========================================================================================!
 !     This sub-routine does a pretty comprehensive sanity check on C-13 variables.         !
 !------------------------------------------------------------------------------------------!
-subroutine check_patch_c13(cpatch,ico,call_loc,fname,dtlsm_C_gain,dtlsm_c13_gain          &
-                           ,assim_h2tc,leaf_h2tc)
+subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs)
    use ed_max_dims    , only : str_len            ! ! intent(in)
    use ed_state_vars  , only : patchtype          ! ! structure
    use isotopes       , only : c13af              & ! intent(in)
                              , c_alloc_flg        ! ! intent(in)
    use isotopes       , only : larprop            ! ! intent(in)
-   implicit none
+   use ed_misc_coms   , only : current_time       ! ! intent(in)
+   use consts_coms    , only : umol_2_kgC         ! ! intent(in)
+   use ed_misc_coms   , only : dtlsm              ! ! intent(in)
+  implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(patchtype)           , intent(in) :: cpatch      ! Current patch
    integer                   , intent(in) :: ico         ! Current cohort number
    character(*)              , intent(in) :: call_loc    ! What routine called this check?
    character(*)              , intent(in) :: fname       ! What file is that routine in?
-   real        ,optional     , intent(in) :: dtlsm_C_gain
-   real        ,optional     , intent(in) :: dtlsm_c13_gain
-   real        ,optional     , intent(in) :: assim_h2tc  ! Ratio of C-13/C in assimilate
-   real        ,optional     , intent(in) :: leaf_h2tc   ! Ratio of C-13/C in leaves
+   real         , dimension(:), optional, intent(in) :: aux_vals
+   character(18), dimension(:), optional, intent(in) :: aux_labs
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
    character(60)  :: reason                              ! Error or warning diagnosis reason
@@ -1590,6 +1590,11 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,dtlsm_C_gain,dtlsm_c13_gain
    real           :: non_stor_resp                       ! Sum of non storage resps
    real           :: nsr_c13                             ! C-13 content of above
    logical        :: valid                               ! Valid C-13 to C ratio logical
+   integer        :: aux_size                            ! Length of auxiliary input
+   real           :: leaf_resp                             ! C-13 content of above
+   real           :: root_resp                            ! C-13 content of above
+   real           :: leaf_resp_c13                             ! C-13 content of above
+   real           :: root_resp_c13                             ! C-13 content of above
    !---------------------------------------------------------------------------------------!
    Cfmt = '(11A18)'
    Rfmt = '(11E18.2)'
@@ -1727,92 +1732,143 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,dtlsm_C_gain,dtlsm_c13_gain
       error_found = .true.
    end if
    
-   non_stor_resp = cpatch%leaf_respiration(ico) + cpatch%root_respiration(ico)        &
-                 + cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico)        &
-                 + cpatch%sapa_growth_resp(ico) + cpatch%sapb_growth_resp(ico)
-                 
+
+   leaf_resp = cpatch%leaf_respiration(ico) *umol_2_kgC *dtlsm /cpatch%nplant(ico)
+   root_resp = cpatch%root_respiration(ico) *umol_2_kgC *dtlsm /cpatch%nplant(ico)
+
+   leaf_resp_c13 = cpatch%leaf_respiration_c13(ico) *umol_2_kgC *dtlsm /cpatch%nplant(ico)
+   root_resp_c13 = cpatch%root_respiration_c13(ico) *umol_2_kgC *dtlsm /cpatch%nplant(ico)
+
+   non_stor_resp = cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico)              &
+                 + cpatch%sapa_growth_resp(ico) + cpatch%sapb_growth_resp(ico)              &
+                 + leaf_resp                    + root_resp   
+
    nsr_c13 = cpatch%leaf_respiration_c13(ico) + cpatch%root_respiration_c13(ico)      &
            + cpatch%leaf_growth_resp_c13(ico) + cpatch%root_growth_resp_c13(ico)      &
-           + cpatch%sapa_growth_resp_c13(ico) + cpatch%sapb_growth_resp_c13(ico)
+           + leaf_resp_c13                    + root_resp_c13
    
    if (error_found) then
       write(*,*) '======================================================================='
       write(*,*) ' C-13 sanity check error in ', call_loc, '!'
       write(*,*) ' ', reason
       write(*,*) '======================================================================='
+      write(*,'(A13,4I4)') ' Model Time: ', current_time%date, current_time%hour         &
+                                          , current_time%min , current_time%sec 
       write(*,*) ' cohort, pft, larprop : ', ico, cpatch%pft(ico), larprop
       write(*,*) ' '
       write(*,*) '-----------------------------------------------------------------------'
       write(*,*) 'Flux Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
       write(*,*) '-----------------------------------------------------------------------'
-      write(*,'(3A18)') '               GPP'          &
+      write(*,*) 'Units: umolC/m2/s'
+      write(*,'(4A18)') '               GPP'          &
                          ,'  LEAF_RESPIRATION'        &
                          ,'  ROOT_RESPIRATION'        &
                          ,'        **RESP_SUM'
-      write(*,'(3E18.2)')  cpatch%gpp(ico)                &
+      write(*,'(4E18.8)')  cpatch%gpp(ico)                &
                           ,cpatch%leaf_respiration(ico)   &
                           ,cpatch%root_respiration(ico)   &
                           ,non_stor_resp
-      write(*,'(3E18.2)')  cpatch%gpp_c13(ico)               &
+      write(*,'(4E18.8)')  cpatch%gpp_c13(ico)               &
                           ,cpatch%leaf_respiration_c13(ico)  &
                           ,cpatch%root_respiration_c13(ico)  &
                           ,nsr_c13
-      write(*,'(3E18.2)') gpp_delta,lr_delta,rr_delta, hotc(nsr_c13,non_stor_resp)
+      write(*,'(4E18.8)') gpp_delta,lr_delta,rr_delta, hotc(nsr_c13,non_stor_resp)
       write(*,*) ' '
-      write(*,'(4A18)') '  LEAF_GROWTH_RESP','  ROOT_GROWTH_RESP','  SAPA_GROWTH_RESP' &
+      write(*,*) 'Units: kgC/pl/yr'
+      write(*,'(5A18)') '  LEAF_GROWTH_RESP','  ROOT_GROWTH_RESP','  SAPA_GROWTH_RESP' &
                        ,'  SAPB_GROWTH_RESP'
-      write(*,'(4E18.2)') cpatch%leaf_growth_resp(ico) ,cpatch%root_growth_resp(ico)       &
+      write(*,'(5E18.8)') cpatch%leaf_growth_resp(ico) ,cpatch%root_growth_resp(ico)       &
                        ,cpatch%sapa_growth_resp(ico) ,cpatch%sapb_growth_resp(ico)
-      write(*,'(4E18.2)') cpatch%leaf_growth_resp_c13(ico)    &
+      write(*,'(5E18.8)') cpatch%leaf_growth_resp_c13(ico)    &
                        ,cpatch%root_growth_resp_c13(ico)    &
                        ,cpatch%sapa_growth_resp_c13(ico)    &
                        ,cpatch%sapb_growth_resp_c13(ico)
-      write(*,'(4E18.2)') lg_delta,rg_delta,sag_delta,sbg_delta
+      write(*,'(5E18.8)') lg_delta,rg_delta,sag_delta,sbg_delta
       write(*,*) ' '
-      write(*,'(4A18)') ' LEAF_STORAGE_RESP',' ROOT_STORAGE_RESP',' SAPA_STORAGE_RESP' &
+      write(*,*) 'Units: kgC/pl/yr'
+      write(*,'(5A18)') ' LEAF_STORAGE_RESP',' ROOT_STORAGE_RESP',' SAPA_STORAGE_RESP' &
                          ,' SAPB_STORAGE_RESP'
-      write(*,'(4E18.2)') cpatch%leaf_storage_resp(ico)       &
+      write(*,'(5E18.8)') cpatch%leaf_storage_resp(ico)       &
                        ,cpatch%root_storage_resp(ico)       &
                        ,cpatch%sapa_storage_resp(ico)       &
                        ,cpatch%sapb_storage_resp(ico)
-      write(*,'(4E18.2)') cpatch%leaf_storage_resp_c13(ico)   &
+      write(*,'(5E18.8)') cpatch%leaf_storage_resp_c13(ico)   &
                        ,cpatch%root_storage_resp_c13(ico)   &
                        ,cpatch%sapa_storage_resp_c13(ico)   &
                        ,cpatch%sapb_storage_resp_c13(ico)
-      write(*,'(4E18.2)') ls_delta,rs_delta,sas_delta,sbs_delta
+      write(*,'(5E18.8)') ls_delta,rs_delta,sas_delta,sbs_delta
 
-      write(*,*) ' **RESP_SUM is the sum of non-storage respiration terms.'
       write(*,*) ' '
+      write(*,*) ' **RESP_SUM is the sum of non-storage respiration terms.'
       write(*,*) '-----------------------------------------------------------------------'
       write(*,*) 'Pool Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
       write(*,*) '-----------------------------------------------------------------------'
-      write(*,'(4A10)') '     BLEAF','     BROOT',' BSAPWOODA','BSAPWOODB','  BSTORAGE'
-      write(*,'(4E10.2)') cpatch%bleaf(ico),cpatch%broot(ico),cpatch%bsapwooda(ico)      &
+      write(*,*) 'Units: kgC/pl'
+      write(*,'(5A14)') '         BLEAF','         BROOT','     BSAPWOODA'               &
+                        ,'    BSAPWOODB','      BSTORAGE'
+      write(*,'(5E14.6)') cpatch%bleaf(ico),cpatch%broot(ico),cpatch%bsapwooda(ico)      &
                          ,cpatch%bsapwoodb(ico), cpatch%bstorage(ico)
-      write(*,'(5E10.2)') cpatch%bleaf_c13(ico),cpatch%broot_c13(ico)                    &
+
+      write(*,'(5E14.6)') cpatch%bleaf_c13(ico),cpatch%broot_c13(ico)                    &
                          ,cpatch%bsapwooda_c13(ico),cpatch%bsapwoodb_c13(ico)            &
                          ,cpatch%bstorage_c13(ico)
 
-      write(*,'(5E10.2)') leaf_delta,root_delta,bsa_delta,bsb_delta,bst_delta
-
-      write(*,*) ' '
+      write(*,'(5E14.6)') leaf_delta,root_delta,bsa_delta,bsb_delta,bst_delta
       write(*,*) ' '
       write(*,*) '-----------------------------------------------------------------------'
-      if (present(assim_h2tc)) then
+      if (present(aux_vals)) then
+         aux_size = size(aux_vals)
+         write(*,*) 'Auxiliary Diagnostics (see labels). Row format as above.'
          write(*,*) '-----------------------------------------------------------------------'
-         write(*,*) ' Pieces of leaf C-13 respiration computation'
-         write(*,Cfmt) 'R Leaf Tissue', 'R Leaf Assim',                        &
-                       'Leaf C-13/C'  , '"leaf_h2tc" '
-         write(*,Rfmt) cpatch%leaf_respiration(ico) - cpatch%lassim_resp(ico), &
-                       cpatch%lassim_resp     (ico)                          , &
-                       cpatch%bleaf_c13       (ico) / cpatch%bleaf      (ico), &
-                       leaf_h2tc
-         write(*,*)
-         write(*,*) ' Leaf assimilate C-13/C ratio and recalculation from GPP and GPP_C13'
-         write(*,*) ' If this msg is not from canopy_photosynthesis, ignore them.        '
-         write(*,*) ' assim_h2tc : ', assim_h2tc, cpatch%gpp_c13(ico) / cpatch%gpp(ico)
+         write(*,'(4A18)')   aux_labs(1:min(4,aux_size))
+         write(*,'(4E18.8)') aux_vals(1:min(4,aux_size))
+         if (size(aux_labs) > 4) then
+            write(*,*) ' '
+            write(*,'(4A18)')   aux_labs(5:min(8,aux_size))
+            write(*,'(4E18.8)') aux_vals(5:min(8,aux_size))
+         end if
+         if (size(aux_labs) > 8) then
+            write(*,*) ' '
+            write(*,'(4A18)')   aux_labs(9:min(12,aux_size))
+            write(*,'(4E18.8)') aux_vals(9:min(12,aux_size))
+         end if
+         if (size(aux_labs) > 12) then
+            write(*,*) ' '
+            write(*,'(4A18)')   aux_labs(13:min(16,aux_size))
+            write(*,'(4E18.8)') aux_vals(13:min(16,aux_size))
+         end if
+         if (size(aux_labs) > 16) then
+            write(*,*) ' '
+            write(*,'(4A18)')   aux_labs(17:min(20,aux_size))
+            write(*,'(4E18.8)') aux_vals(17:min(20,aux_size))
+         end if
+         if (size(aux_labs) > 20) then
+            write(*,*) ' '
+            write(*,'(4A18)')   aux_labs(21:min(24,aux_size))
+            write(*,'(4E18.8)') aux_vals(21:min(24,aux_size))
+         end if
+         if (size(aux_labs) > 24) then
+            write(*,*) ' '
+            write(*,'(4A18)')   aux_labs(25:min(28,aux_size))
+            write(*,'(4E18.8)') aux_vals(25:min(28,aux_size))
+         end if
          write(*,*) '-----------------------------------------------------------------------'
       end if
+      !if (present(assim_h2tc)) then
+      !   write(*,*) '-----------------------------------------------------------------------'
+      !   write(*,*) ' Pieces of leaf C-13 respiration computation'
+      !   write(*,Cfmt) 'R Leaf Tissue', 'R Leaf Assim',                        &
+      !                 'Leaf C-13/C'  , '"leaf_h2tc" '
+      !   write(*,Rfmt) cpatch%leaf_respiration(ico) - cpatch%lassim_resp(ico), &
+      !                 cpatch%lassim_resp     (ico)                          , &
+      !                 cpatch%bleaf_c13       (ico) / cpatch%bleaf      (ico), &
+      !                 leaf_h2tc
+      !   write(*,*)
+      !   write(*,*) ' Leaf assimilate C-13/C ratio and recalculation from GPP and GPP_C13'
+      !   write(*,*) ' If this msg is not from canopy_photosynthesis, ignore them.        '
+      !   write(*,*) ' assim_h2tc : ', assim_h2tc, cpatch%gpp_c13(ico) / cpatch%gpp(ico)
+      !   write(*,*) '-----------------------------------------------------------------------'
+      !end if
       call fatal_error(reason,call_loc,fname)
    end if
    
@@ -1992,6 +2048,259 @@ subroutine leaf_root_resp_c13(csite,ipa)
    use isotopes       , only : c13af                     ! ! intent(in)
    use consts_coms    , only : tiny_num                  & ! intent(in)
                              , umols_2_kgCyr             ! ! intent(in)
+   use consts_coms    , only : umol_2_kgC         & ! intent(in)
+                             , day_sec            ! ! intent(in)
+   implicit none
+   !----- Arguments. ----------------------------------------------------------------------!
+   type(sitetype)            , intent(inout) :: csite    ! Current site
+   integer                   , intent(in)    :: ipa      ! Current patch number
+   !----- Local variables. ----------------------------------------------------------------!
+   type(patchtype), pointer :: cpatch                     ! Current patch
+   integer                  :: ico                        ! Current cohort number
+   real                     :: resp_loss                  ! Respiration excl. storage_resp
+   real                     :: carbon_balance             ! Respiration excl. storage_resp
+   real                     :: carbon_debt                ! Respiration excl. storage_resp
+   real                     :: bloss_max                  ! Respiration excl. storage_resp
+   real                     :: lf_bloss                   ! Respiration excl. storage_resp
+   real                     :: rf_bloss                   ! Respiration excl. storage_resp
+   real                     :: ff_gpp                     ! Fraction of above from gpp.
+   real                     :: ratio_gpp                  ! heavy:total carbon in GPP
+   real                     :: ratio_stor                 ! heavy:total carbon in storage
+   real                     :: ratio_resp                 ! heavy:total carbon in resp
+   real                     :: ratio_leaf                 ! heavy:total carbon in resp
+   real                     :: ratio_root                 ! heavy:total carbon in resp
+   real                     :: gpp_loss                   ! heavy:total carbon in resp
+   real                     :: stor_loss                  ! heavy:total carbon in resp
+   real                     :: leaf_loss                  ! heavy:total carbon in resp
+   real                     :: root_loss                  ! heavy:total carbon in resp
+   real                     :: f_leaf                     ! heavy:total carbon in resp
+   real                     :: f_root                     ! heavy:total carbon in resp
+   real                     :: f_lgr                      ! heavy:total carbon in resp
+   real                     :: f_rgr                      ! heavy:total carbon in resp
+   real                     :: f_sagr                     ! heavy:total carbon in resp
+   real                     :: f_sbgr                     ! heavy:total carbon in resp
+   real                     :: leaf_r_sum                     ! heavy:total carbon in resp
+   real                     :: root_r_sum                     ! heavy:total carbon in resp
+   real                     :: lrf                     ! heavy:total carbon in resp
+   real                     :: lgf                     ! heavy:total carbon in resp
+   real                     :: rrf                     ! heavy:total carbon in resp
+   real                     :: rgf                       ! heavy:total carbon in resp
+   real                     :: gen_loss                     ! heavy:total carbon in resp
+   real                     :: leaf_resp                  ! heavy:total carbon in resp
+   real                     :: root_resp                  ! heavy:total carbon in resp
+   real                     :: dtlsm_o_frqsum             ! heavy:total carbon in resp
+   !---------------------------------------------------------------------------------------!
+   dtlsm_o_frqsum = dtlsm/frqsum  
+
+   if (c13af == 0) then
+      return
+   end if
+   
+   !---------------------------------------------------------------------------------------!
+   !    Loop over all cohorts.                                                             !
+   !---------------------------------------------------------------------------------------!
+   cpatch => csite%patch(ipa)
+   cohortloop: do ico = 1,cpatch%ncohorts
+   
+      leaf_resp = cpatch%leaf_respiration(ico) *umol_2_kgC *dtlsm /cpatch%nplant(ico)
+      root_resp = cpatch%root_respiration(ico) *umol_2_kgC *dtlsm /cpatch%nplant(ico)
+
+      resp_loss = cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico)              &
+                + cpatch%sapa_growth_resp(ico) + cpatch%sapb_growth_resp(ico)              &
+                + leaf_resp                    + root_resp
+                 
+      carbon_balance = (cpatch%gpp(ico)*umol_2_kgC *dtlsm /cpatch%nplant(ico)) - resp_loss
+      carbon_debt    = 0.0
+
+      !------------------------------------------------------------------------------------!
+      ! When we call get_c_xfers() in growth_balive.f90, we will have 1 of three cases:    !
+      ! 1) (carbon_balance > 0)                         => Add new carbon to plant pools   !
+      ! 2) (carbon_balance < 0 & plants should grow)    => Lose storage first              !
+      ! 3) (carbon_balance < 0 & plants shouldn't grow) => Lose tissues first              !
+      !                                                                                    !
+      ! We determine which will occur and set flux 13C content appropriately. Note the     !
+      ! following variables which determine branching in get_c_xfers() later:              !
+      !                                                                                    !
+      ! available_carbon = cpatch%bstorage(ico) + carbon_balance                           !
+      ! time_to_flush    = carbon_balance > 0.0 .or.                                     & !
+      !                 ( available_carbon > 0.0 .and. cpatch%phenology_status(ico) == 1 ) !
+      !------------------------------------------------------------------------------------!
+      ratio_gpp  = hotc(cpatch%gpp_c13     (ico),cpatch%gpp     (ico))
+      ratio_leaf = hotc(cpatch%bleaf_c13   (ico),cpatch%bleaf   (ico))
+      ratio_root = hotc(cpatch%broot_c13   (ico),cpatch%broot   (ico))
+      ratio_stor = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+
+      if (carbon_balance > 0.0) then
+         !---------------------------------------------------------------------------------!
+         ! In get_c_xfers we will simply put carbon_balance into some pool(s), and since   !
+         ! carbon_balance = gpp - non_stor_resp_loss > 0.0                                 !
+         !                                                                                 !
+         ! We should set the signature of the respiration to the signature of gpp.         !
+         ! Note that this also implies carbon13_balance > 0.0.                             !
+         !---------------------------------------------------------------------------------!
+         gpp_loss  = ratio_gpp * carbon_balance
+         stor_loss = 0.0
+         leaf_loss = 0.0
+         root_loss = 0.0
+
+      elseif (cpatch%phenology_status(ico) == 1 .and. (carbon_balance <= 0.0)) then
+         !---------------------------------------------------------------------------------!
+         ! "time_to_flush" will be .true. in get_c_xfers and we will move storage into     !
+         ! plant pools despite having lost all gpp and some storage to respiration.        !
+         !---------------------------------------------------------------------------------!
+         gpp_loss  = cpatch%gpp_c13(ico)
+         stor_loss = -1.0*carbon_balance*ratio_stor
+         leaf_loss = 0.0
+         root_loss = 0.0
+      else
+         !---------------------------------------------------------------------------------!
+         ! In this case we aren't growing any tissues, we are only taking carbon out.      !
+         !                                                                                 !
+         ! Recall the phenology_status codes...           ... which later imply:           !
+         !  0 - plant has the maximum LAI, given its size  => Lose storage first           !
+         !  1 - plant is growing leaves                    => Lose storage first           !
+         ! -1 - plant is actively dropping leaves          => Lose biomass first           !
+         ! -2 - plant has no leaves                        => Lose biomass first           !
+         !---------------------------------------------------------------------------------!
+         carbon_debt = -1.0*carbon_balance
+         bloss_max   = cpatch%bleaf(ico) + cpatch%broot(ico)
+         lf_bloss    = cpatch%bleaf(ico) /bloss_max
+         rf_bloss    = cpatch%broot(ico) /bloss_max
+         
+         gpp_loss    = cpatch%gpp_c13(ico)
+         select case (cpatch%phenology_status(ico))
+         case (0,1)
+            if (cpatch%bstorage(ico) > carbon_debt) then
+               !--------------------------------------------------------------------------!
+               ! Only some storage loss necessary, no tissue loss necessary.              !
+               !--------------------------------------------------------------------------!
+               stor_loss = carbon_debt *ratio_stor
+               leaf_loss = 0.0
+               root_loss = 0.0
+            else
+               !--------------------------------------------------------------------------!
+               ! All storage lost, then some leaves + roots.                              !
+               ! 13C_removed = var_13C:C * proportion_from_var * total_C_being_removed    !
+               !--------------------------------------------------------------------------!
+               carbon_debt = carbon_debt - cpatch%bstorage(ico)
+               stor_loss   = cpatch%bstorage_c13(ico)
+               leaf_loss   = ratio_leaf * lf_bloss * min(bloss_max,carbon_debt)
+               root_loss   = ratio_root * rf_bloss * min(bloss_max,carbon_debt)
+            end if
+         case (-2,-1)
+            if (bloss_max > carbon_debt) then
+               !--------------------------------------------------------------------------!
+               ! All respiration has leaf or root substrate.                              !
+               ! 13C_removed = var_13C:C * proportion_from_var * total_C_being_removed    !
+               !--------------------------------------------------------------------------!
+               stor_loss = 0.0
+               leaf_loss = ratio_leaf * lf_bloss * min(bloss_max,carbon_debt)
+               root_loss = ratio_root * rf_bloss * min(bloss_max,carbon_debt)
+            else
+               !--------------------------------------------------------------------------!
+               ! All leaves and roots will go, then some storage.                         !
+               ! 13C_removed = var_13C:C * proportion_from_var * total_C_being_removed    !
+               !--------------------------------------------------------------------------!
+               stor_loss = min(cpatch%bstorage_c13(ico),carbon_debt - bloss_max)
+               leaf_loss = cpatch%bleaf_c13(ico)
+               root_loss = cpatch%broot_c13(ico)
+               !--------------------------------------------------------------------------!
+            end if
+         end select
+         !---------------------------------------------------------------------------------!
+      end if
+      !------------------------------------------------------------------------------------!
+
+
+      !------------------------------------------------------------------------------------!
+      ! Now we partition the total 13C loss sensibly among the respiration terms by...     !      
+      !------------------------------------------------------------------------------------!
+      ! 1) Finding the proportion of total respiration each term comprises                 !
+      !------------------------------------------------------------------------------------!
+      f_leaf = max(min(hotc(leaf_resp                   ,resp_loss),1.0),0.0)
+      f_root = max(min(hotc(root_resp                   ,resp_loss),1.0),0.0)
+      f_lgr  = max(min(hotc(cpatch%leaf_growth_resp(ico),resp_loss),1.0),0.0)
+      f_rgr  = max(min(hotc(cpatch%root_growth_resp(ico),resp_loss),1.0),0.0)
+      f_sagr = max(min(hotc(cpatch%sapa_growth_resp(ico),resp_loss),1.0),0.0)
+      f_sbgr = max(min(hotc(cpatch%sapb_growth_resp(ico),resp_loss),1.0),0.0)
+      
+      !------------------------------------------------------------------------------------!
+      ! 2) Finding the proportions to partition leaf-based and root-based resp.            !
+      !------------------------------------------------------------------------------------!
+      leaf_r_sum = leaf_resp + cpatch%leaf_growth_resp(ico)
+      root_r_sum = root_resp + cpatch%root_growth_resp(ico)
+                      
+      lrf = hotc(leaf_resp                   ,leaf_r_sum)
+      lgf = hotc(cpatch%leaf_growth_resp(ico),leaf_r_sum)
+      rrf = hotc(root_resp                   ,root_r_sum)
+      rgf = hotc(cpatch%root_growth_resp(ico),root_r_sum)
+
+      !------------------------------------------------------------------------------------!
+      ! 3) Dividing up storage and gpp based resp evenly and dividing leaf loss and root   !
+      !    loss evenly into leaf-based partitions and root-based partitions respectively.  ! 
+      !------------------------------------------------------------------------------------!
+      gen_loss = stor_loss + gpp_loss
+      cpatch%leaf_respiration_c13(ico) = f_leaf*(gen_loss) + leaf_loss*lrf
+      cpatch%root_respiration_c13(ico) = f_root*(gen_loss) + root_loss*rrf
+      cpatch%leaf_growth_resp_c13(ico) = f_lgr *(gen_loss) + leaf_loss*lgf
+      cpatch%root_growth_resp_c13(ico) = f_rgr *(gen_loss) + root_loss*rgf
+      cpatch%sapa_growth_resp_c13(ico) = f_sagr*(gen_loss)
+      cpatch%sapb_growth_resp_c13(ico) = f_sbgr*(gen_loss)
+      !------------------------------------------------------------------------------------!
+
+      
+      !------------------------------------------------------------------------------------!
+      ! Save the loss partitioning so it can be accounted for in get_c13_xfers later.      !
+      !------------------------------------------------------------------------------------!
+      cpatch%bleaf_c13_loss(ico) = max(leaf_loss,0.0)
+      cpatch%broot_c13_loss(ico) = max(root_loss,0.0)
+      cpatch%bstor_c13_loss(ico) = max(stor_loss,0.0)
+      !------------------------------------------------------------------------------------!
+
+      
+      !----- The output variables must be in [kgC/plant/yr]. ---------------------!
+      cpatch%fmean_leaf_resp_c13(ico) = cpatch%fmean_leaf_resp_c13 (ico)          &
+                                      + cpatch%leaf_respiration_c13(ico)          &
+                                      * dtlsm_o_frqsum * umols_2_kgCyr            &
+                                      / cpatch%nplant          (ico)
+      cpatch%fmean_root_resp_c13(ico) = cpatch%fmean_root_resp_c13 (ico)          &
+                                      + cpatch%root_respiration_c13(ico)          &
+                                      * dtlsm_o_frqsum * umols_2_kgCyr            &
+                                      / cpatch%nplant          (ico)
+      !---------------------------------------------------------------------------!
+      
+      call check_patch_c13(cpatch,ico,'leaf_root_resp_c13','iso_alloc.f90'                 &
+                          ,(/stor_loss,gpp_loss,leaf_loss,root_loss,f_leaf,f_root,f_lgr    &
+                            ,f_rgr,f_sagr,f_sbgr,lrf,lgf,rrf,rgf,carbon_balance     &
+                            ,carbon_debt/)                                                 &
+                          ,(/'         stor_loss','          gpp_loss','         leaf_loss'&
+                          ,  '         root_loss','   gen_frac_leaf_r','   gen_frac_root_r'&
+                          ,  '  gen_frac_leaf_gr' &
+                          ,  '  gen_frac_root_gr','  gen_frac_sapa_gr','  gen_frac_sapb_gr'&
+                          ,  '  leaf_frac_leaf_r',' leaf_frac_leaf_gr','  root_frac_root_r'&
+                          ,  ' root_frac_root_gr' &
+                          ,  '    carbon_balance','       carbon_debt','         bloss_max' /))
+   end do cohortloop
+   call check_site_c13(csite,ipa,'leaf_root_resp_c13','iso_alloc.f90')
+
+end subroutine leaf_root_resp_c13
+!==========================================================================================!
+!==========================================================================================!
+
+
+
+!==========================================================================================!
+!==========================================================================================!
+! This subroutine computes the leaf and root respiration 13C composition.                  !
+!------------------------------------------------------------------------------------------!
+subroutine leaf_root_resp_alt_c13(csite,ipa)
+   use ed_state_vars  , only : sitetype                  & ! structure
+                             , patchtype                 ! ! structure
+   use ed_misc_coms   , only : dtlsm                     & ! intent(in)
+                             , frqsum                    ! ! intent(in)
+   use isotopes       , only : c13af                     ! ! intent(in)
+   use consts_coms    , only : tiny_num                  & ! intent(in)
+                             , umols_2_kgCyr             ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(sitetype)            , intent(inout) :: csite    ! Current site
@@ -2033,15 +2342,6 @@ subroutine leaf_root_resp_c13(csite,ipa)
             ratio_resp = 0.0
          end if
          
-         !if (non_stor_resp <= cpatch%gpp(ico)) then
-         !   ratio_resp = ratio_gpp
-         !else
-         !   ratio_stor  = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
-         !   c_from_gpp  = cpatch%gpp(ico)
-         !   c_from_stor = min(non_stor_resp - c_from_gpp,cpatch%bstorage(ico))
-         !   ratio_resp  = (cpatch%gpp(ico) - non_stor_resp)/non_stor_resp
-         !end if
-         
          cpatch%leaf_respiration_c13(ico) = cpatch%leaf_respiration(ico) *ratio_resp
          cpatch%root_respiration_c13(ico) = cpatch%root_respiration(ico) *ratio_resp
          cpatch%leaf_growth_resp_c13(ico) = cpatch%leaf_growth_resp(ico) *ratio_resp
@@ -2069,9 +2369,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
    end do cohortloop
    call check_site_c13(csite,ipa,'leaf_root_resp_c13','iso_alloc.f90')
 
-end subroutine leaf_root_resp_c13
+end subroutine leaf_root_resp_alt_c13
 !==========================================================================================!
 !==========================================================================================!
-
 
 end module iso_alloc

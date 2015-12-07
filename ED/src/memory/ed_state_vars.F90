@@ -834,6 +834,9 @@ module ed_state_vars
       real ,pointer, dimension(:) :: bleaf_c13    			    ! (kgC/plant)
       real, pointer, dimension(:) :: broot_c13	             ! (kgC/plant)
       real ,pointer, dimension(:) :: bstorage_c13		       ! [kgC/plant]
+      real ,pointer, dimension(:) :: bleaf_c13_loss		    ! (kgC/plant)
+      real, pointer, dimension(:) :: broot_c13_loss          ! (kgC/plant)
+      real ,pointer, dimension(:) :: bstor_c13_loss	       ! [kgC/plant]
       real ,pointer, dimension(:) :: leaf_maintenance_c13    ! [kgC/plant]
       real ,pointer, dimension(:) :: root_maintenance_c13    ! [kgC/plant]
       real ,pointer, dimension(:) :: leaf_drop_c13          ! Leaf drop         [kgC/pl/yr]
@@ -5209,6 +5212,9 @@ module ed_state_vars
          allocate(cpatch%bleaf_c13    			             (                    ncohorts))
          allocate(cpatch%broot_c13	                      (                    ncohorts))
          allocate(cpatch%bstorage_c13		                (                    ncohorts))
+         allocate(cpatch%bleaf_c13_loss   	             (                    ncohorts))
+         allocate(cpatch%broot_c13_loss                   (                    ncohorts))
+         allocate(cpatch%bstor_c13_loss		             (                    ncohorts))
          allocate(cpatch%bseeds_c13                       (                    ncohorts))
          allocate(cpatch%leaf_maintenance_c13             (                    ncohorts))
          allocate(cpatch%root_maintenance_c13             (                    ncohorts))
@@ -7511,6 +7517,9 @@ module ed_state_vars
       nullify(cpatch%bsapwooda_c13             )          
       nullify(cpatch%bsapwoodb_c13             )          
       nullify(cpatch%bstorage_c13              )          
+      nullify(cpatch%bleaf_c13_loss            )          
+      nullify(cpatch%broot_c13_loss            )          
+      nullify(cpatch%bstor_c13_loss            )          
       nullify(cpatch%bseeds_c13                )          
       ! These should no longer exist (dbdt_push_down)
       nullify(cpatch%today_leaf_resp_c13       )          
@@ -9596,11 +9605,14 @@ module ed_state_vars
       if(associated(cpatch%bdead_c13                 )) deallocate(cpatch%bdead_c13                 )          
       if(associated(cpatch%bleaf_c13                 )) deallocate(cpatch%bleaf_c13                 )          
       if(associated(cpatch%balive_c13                )) deallocate(cpatch%balive_c13                )          
-      if(associated(cpatch%broot_c13                 )) deallocate(cpatch%broot_c13                 )          
+      if(associated(cpatch%broot_c13                 )) deallocate(cpatch%broot_c13                 )        
       if(associated(cpatch%bsapwooda_c13             )) deallocate(cpatch%bsapwooda_c13             )          
       if(associated(cpatch%bsapwoodb_c13             )) deallocate(cpatch%bsapwoodb_c13             )          
       if(associated(cpatch%bstorage_c13              )) deallocate(cpatch%bstorage_c13              )          
       if(associated(cpatch%bseeds_c13                )) deallocate(cpatch%bseeds_c13                )          
+      if(associated(cpatch%bleaf_c13_loss            )) deallocate(cpatch%bleaf_c13_loss            )          
+      if(associated(cpatch%broot_c13_loss            )) deallocate(cpatch%broot_c13_loss            )          
+      if(associated(cpatch%bstor_c13_loss            )) deallocate(cpatch%bstor_c13_loss            )          
       ! These should no longer exist (dbdt_push_down)
       if(associated(cpatch%today_leaf_resp_c13       )) deallocate(cpatch%today_leaf_resp_c13       )          
       if(associated(cpatch%today_root_resp_c13       )) deallocate(cpatch%today_root_resp_c13       )          
@@ -11719,6 +11731,9 @@ module ed_state_vars
             opatch%bsapwoodb_c13             (oco) = ipatch%bsapwoodb_c13             (ico)          
             opatch%bstorage_c13              (oco) = ipatch%bstorage_c13              (ico)          
             opatch%bseeds_c13                (oco) = ipatch%bseeds_c13                (ico)          
+            opatch%bleaf_c13_loss            (oco) = ipatch%bleaf_c13_loss            (ico)          
+            opatch%broot_c13_loss            (oco) = ipatch%broot_c13_loss            (ico)          
+            opatch%bstor_c13_loss            (oco) = ipatch%bstor_c13_loss            (ico)          
             ! These should no longer exist (dbdt_push_down)
             opatch%today_leaf_resp_c13       (oco) = ipatch%today_leaf_resp_c13       (ico)          
             opatch%today_root_resp_c13       (oco) = ipatch%today_root_resp_c13       (ico)          
@@ -12078,6 +12093,9 @@ module ed_state_vars
          opatch%bsapwoodb_c13             (1:z) = pack(ipatch%bsapwoodb_c13             ,lmask)          
          opatch%bstorage_c13              (1:z) = pack(ipatch%bstorage_c13              ,lmask)          
          opatch%bseeds_c13                (1:z) = pack(ipatch%bseeds_c13                ,lmask)          
+         opatch%bleaf_c13_loss            (1:z) = pack(ipatch%bleaf_c13_loss            ,lmask)          
+         opatch%broot_c13_loss            (1:z) = pack(ipatch%broot_c13_loss            ,lmask)          
+         opatch%bstor_c13_loss            (1:z) = pack(ipatch%bstor_c13_loss            ,lmask)          
          ! These should no longer exist (dbdt_push_down)
          opatch%today_leaf_resp_c13       (1:z) = pack(ipatch%today_leaf_resp_c13       ,lmask)          
          opatch%today_root_resp_c13       (1:z) = pack(ipatch%today_root_resp_c13       ,lmask)          
@@ -27440,6 +27458,27 @@ module ed_state_vars
            var_len,var_len_global,max_ptrs,'BSTORAGE_C13 :41:hist:anal:year:dail:mont:dcyc') 
          call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
       end if                                          
+
+      if (associated(cpatch%bleaf_c13_loss)) then              
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,cpatch%bleaf_c13_loss,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'BLEAF_C13_LOSS :41:hist:anal:year:dail:mont:dcyc') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if                                          
+
+      if (associated(cpatch%broot_c13_loss)) then              
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,cpatch%broot_c13_loss,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'BROOT_C13_LOSS :41:hist:anal:year:dail:mont:dcyc') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if                                          
+
+      if (associated(cpatch%bstor_c13_loss)) then              
+         nvar=nvar+1                                  
+           call vtable_edio_r(npts,cpatch%bstor_c13_loss,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'BSTOR_C13_LOSS :41:hist:anal:year:dail:mont:dcyc') 
+         call metadata_edio(nvar,igr,'No metadata available','[NA]','NA') 
+      end if                                          
       
       if (associated(cpatch%leaf_maintenance_c13)) then   
          nvar=nvar+1                                  
@@ -27675,7 +27714,34 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Net primary productivity'                    &
                            ,'[  kgC/m2/yr]','(icohort)'            )
-      end if                                          
+      end if
+      if (associated(cpatch%bleaf           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%bleaf                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'BLEAF_CO             :41:'//trim(fast_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Leaf biomass'                                     &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%broot           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%broot                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'BROOT_CO             :41:'//trim(fast_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Root biomass'                                     &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%bstorage        )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%bstorage                                     &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'BSTORAGE_CO          :41:'//trim(fast_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Storage biomass'                                 &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
       if (associated(cpatch%fmean_leaf_resp       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_leaf_resp                                    &
@@ -27692,6 +27758,24 @@ module ed_state_vars
                            ,'FMEAN_ROOT_RESP_CO         :41:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Root respiration'                            &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%leaf_maintenance       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%leaf_maintenance                             &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'LEAF_MAINTENANCE_CO         :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Leaf maintenance'                                &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%root_maintenance       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%root_maintenance                             &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'ROOT_MAINTENANCE_CO         :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Root maintenance'                                &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if
       if (associated(cpatch%fmean_leaf_growth_resp)) then
@@ -28227,7 +28311,52 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Net primary productivity'                    &
                            ,'[  kgC/m2/yr]','(icohort)'            )
-      end if                                          
+      end if
+      if (associated(cpatch%bleaf_c13           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%bleaf_c13                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'BLEAF_C13_CO             :41:'//trim(fast_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Leaf biomass Carbon 13'                                     &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%broot_c13           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%broot_c13                                        &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'BROOT_C13_CO             :41:'//trim(fast_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Root biomass carbon 13'                                     &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%bstorage_c13        )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%bstorage_c13                                     &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'BSTORAGE_C13_CO          :41:'//trim(fast_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Storage biomass carbon 13'                                 &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%leaf_maintenance_c13       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%leaf_maintenance_c13                             &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'LEAF_MAINTENANCE_C13_CO         :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Leaf maintenance carbon 13'                                &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
+      if (associated(cpatch%root_maintenance_c13       )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%root_maintenance_c13                             &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'ROOT_MAINTENANCE_C13_CO         :41:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Root maintenance carbon 13'                                &
+                           ,'[  kgC/m2/yr]','(icohort)'            )
+      end if
       if (associated(cpatch%fmean_leaf_resp_c13       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_leaf_resp_c13                                &
@@ -28263,7 +28392,7 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Root respiration'                            &
                            ,'[  kgC/m2/yr]','(icohort)'            )
-      end if                                          
+      end if
       if (associated(cpatch%fmean_leaf_growth_resp_c13)) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cpatch%fmean_leaf_growth_resp_c13                         &

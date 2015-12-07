@@ -1197,6 +1197,12 @@ module fuse_fiss_utils
                                             + cpatch%bstorage_c13        (donc) * dnplant
          cpatch%bseeds_c13           (recc) = cpatch%bseeds_c13          (recc) * rnplant  &
                                             + cpatch%bseeds_c13          (donc) * dnplant
+         cpatch%bleaf_c13_loss       (recc) = cpatch%bleaf_c13_loss      (recc) * rnplant  &
+                                            + cpatch%bleaf_c13_loss      (donc) * dnplant
+         cpatch%broot_c13_loss       (recc) = cpatch%broot_c13_loss      (recc) * rnplant  &
+                                            + cpatch%broot_c13_loss      (donc) * dnplant
+         cpatch%bstor_c13_loss       (recc) = cpatch%bstor_c13_loss      (recc) * rnplant  &
+                                            + cpatch%bstor_c13_loss      (donc) * dnplant
          cpatch%leaf_maintenance_c13 (recc) = cpatch%leaf_maintenance_c13(recc) * rnplant  &
                                             + cpatch%leaf_maintenance_c13(donc) * dnplant
          cpatch%root_maintenance_c13 (recc) = cpatch%root_maintenance_c13(recc) * rnplant  &

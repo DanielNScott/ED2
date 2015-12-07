@@ -76,6 +76,12 @@ module growth_balive
       real                          :: carbon_balance
       real                          :: carbon_balance_pot
       real                          :: balive_in
+      real                          :: bleaf_in
+      real                          :: broot_in
+      real                          :: bstorage_in
+      real                          :: bleaf_c13_in
+      real                          :: broot_c13_in
+      real                          :: bstorage_c13_in
       real                          :: nitrogen_supply
       real                          :: dndt
       real                          :: dlnndt
@@ -138,6 +144,12 @@ module growth_balive
                   salloc  = 1.0 + qsw(ipft) * cpatch%hite(ico) + q(ipft)
                   salloci = 1.0 / salloc
 
+                  bleaf_in    = cpatch%bleaf(ico)
+                  broot_in    = cpatch%broot(ico)
+                  bstorage_in = cpatch%bstorage(ico)
+                  bleaf_c13_in    = cpatch%bleaf_c13(ico)
+                  broot_c13_in    = cpatch%broot_c13(ico)
+                  bstorage_c13_in = cpatch%bstorage_c13(ico)
                   !------------------------------------------------------------------------!
                   !     Compute and apply maintenance costs and get dtlsm C gain.          !
                   !------------------------------------------------------------------------!
@@ -244,26 +256,39 @@ module growth_balive
                                      ,tr_bsapwooda,tr_bsapwoodb,tr_bstorage,carbon_debt    &
                                      ,flushing,balive_aim)
 
-                     call apply_c_xfers(cpatch,ico,carbon_balance,tr_bleaf,tr_broot        &
-                                       ,tr_bsapwooda,tr_bsapwoodb,tr_bstorage)
-                     
-                     call update_today_npp_vars(cpatch,ico,tr_bleaf,tr_broot,tr_bsapwooda  &
-                                                ,tr_bsapwoodb,carbon_balance)
-
-                     !---------------------------------------------------------------------!
-                     ! C-13                                                                !
-                     !---------------------------------------------------------------------!
-                     call get_c13_xfers(csite,ipa,ico,carbon_balance,tr_bleaf,tr_broot  &
+                     call get_c13_xfers(cpatch,ico,carbon_balance,tr_bleaf,tr_broot  &
                                        ,tr_bsapwooda,tr_bsapwoodb,tr_bstorage &
                                        ,carbon13_balance   &
                                        ,tr_bleaf_c13,tr_broot_c13,tr_bsapwooda_c13      &
-                                       ,tr_bsapwoodb_c13,tr_bstorage_c13,carbon13_debt)
+                                       ,tr_bsapwoodb_c13,tr_bstorage_c13)
+                                       
+                     call apply_c_xfers(cpatch,ico,carbon_balance,tr_bleaf,tr_broot        &
+                                       ,tr_bsapwooda,tr_bsapwoodb,tr_bstorage)
+                     
 
                      call apply_c13_xfers(cpatch,ico,carbon13_balance,tr_bleaf_c13      &
                                          ,tr_broot_c13,tr_bsapwooda_c13                 &
                                          ,tr_bsapwoodb_c13,tr_bstorage_c13)
                      
-                     call check_patch_c13(cpatch,ico,'dbalive_dt','growth_balive.f90')
+                     call update_today_npp_vars(cpatch,ico,tr_bleaf,tr_broot,tr_bsapwooda  &
+                                                ,tr_bsapwoodb,carbon_balance)
+
+                     call check_patch_c13(cpatch,ico,'dbalive_dt','growth_balive.f90'      &
+                            ,(/dtlsm_c_gain,dtlsm_c13_gain,carbon_balance                  &
+                              ,carbon13_balance,tr_bleaf,tr_bleaf_c13                      &
+                              ,tr_broot,tr_broot_c13,tr_bsapwooda,tr_bsapwooda_c13         &
+                              ,tr_bsapwoodb,tr_bsapwoodb_c13,tr_bstorage,tr_bstorage_c13   &
+                              ,cpatch%leaf_maintenance(ico),cpatch%root_maintenance(ico)   &
+                              ,bleaf_in,broot_in,bstorage_in,bleaf_c13_in,broot_c13_in     &
+                              ,bstorage_c13_in/)                             &
+                            ,(/'      dtlsm_c_gain','    dtlsm_c13_gain','    carbon_balance'    &
+                              ,'  carbon13_balance','          tr_bleaf'                       &
+                              ,'      tr_bleaf_c13','          tr_broot','      tr_broot_c13'    &
+                              ,'      tr_bsapwooda','      tr_bsapa_c13','      tr_bsapwoodb'    &
+                              ,'      tr_bsapb_c13','        tr_btorage','      tr_bstor_c13' &
+                              ,'  leaf_maintenance','  root_maintenance'                   &
+                              ,'          bleaf_in','          broot_in','       bstorage_in' &
+                              ,'      bleaf_c13_in','      broot_c13_in','   bstorage_c13_in'/))
                      !---------------------------------------------------------------------!
 
                      call update_nitrogen(flushing,ipft,carbon_balance,cpatch%nplant(ico)  &
@@ -488,26 +513,27 @@ module growth_balive
                      cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
                   end select
                   
-                  if (c13af > 0) then
-                     growth_resp_c13 = max(0.0,cpatch%today_npp_c13(ico)*growth_resp_factor(ipft))
+                  ! This is being done in leaf_
+                  !if (c13af > 0) then
+                  !   growth_resp_c13 = max(0.0,cpatch%today_npp_c13(ico)*growth_resp_factor(ipft))
                      !cpatch%growth_resp_c13(ico) = cpatch%growth_resp(ico)               &
                      !                            * hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
                      
-                     select case(growth_resp_scheme)
-                     case(0)
-                        cpatch%sapa_growth_resp_c13(ico) = max(0.0,cpatch%growth_resp(ico))
-                        cpatch%leaf_growth_resp_c13(ico) = 0.0
-                        cpatch%root_growth_resp_c13(ico) = 0.0
-                        cpatch%sapb_growth_resp_c13(ico) = 0.0
-                     case(1)
-                        growth_resp_int = max(0.0,growth_resp_c13/cpatch%balive_c13(ico))
+                  !   select case(growth_resp_scheme)
+                  !   case(0)
+                  !      cpatch%sapa_growth_resp_c13(ico) = max(0.0,cpatch%growth_resp(ico))
+                  !      cpatch%leaf_growth_resp_c13(ico) = 0.0
+                  !      cpatch%root_growth_resp_c13(ico) = 0.0
+                  !      cpatch%sapb_growth_resp_c13(ico) = 0.0
+                  !   case(1)
+                  !      growth_resp_int = max(0.0,growth_resp_c13/cpatch%balive_c13(ico))
 
-                        cpatch%leaf_growth_resp_c13(ico) = growth_resp_int * cpatch%bleaf_c13(ico)
-                        cpatch%root_growth_resp_c13(ico) = growth_resp_int * cpatch%broot_c13(ico)
-                        cpatch%sapa_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwooda_c13(ico)
-                        cpatch%sapb_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwoodb_c13(ico)
-                     end select
-                  end if
+                  !      cpatch%leaf_growth_resp_c13(ico) = growth_resp_int * cpatch%bleaf_c13(ico)
+                  !      cpatch%root_growth_resp_c13(ico) = growth_resp_int * cpatch%broot_c13(ico)
+                  !      cpatch%sapa_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwooda_c13(ico)
+                  !      cpatch%sapb_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwoodb_c13(ico)
+                  !   end select
+                  !end if
                   !------------------------------------------------------------------------!                  
                end do cohortloop
                !---------------------------------------------------------------------------!
@@ -1584,9 +1610,185 @@ module growth_balive
    
    
    
+   
    !=======================================================================================!
    !=======================================================================================!
-   subroutine get_c13_xfers(csite,ipa,ico,carbon_balance,tr_bleaf,tr_broot,tr_bsapwooda    &
+   subroutine get_c13_xfers(cpatch,ico,carbon_balance,tr_bleaf,tr_broot,tr_bsapwooda    &
+                           ,tr_bsapwoodb,tr_bstorage,carbon13_balance,tr_bleaf_c13,tr_broot_c13        &
+                           ,tr_bsapwooda_c13,tr_bsapwoodb_c13,tr_bstorage_c13)
+      use ed_state_vars , only : patchtype                ! ! structure
+      use pft_coms      , only : phenology                ! ! intent(in)
+      use isotopes      , only : c_alloc_flg              ! ! intent(in)
+      use iso_alloc     , only : hotc                     ! ! function
+      use pft_coms      , only : q            & ! intent(in)
+                               , qsw          & ! intent(in)
+                               , agf_bs       ! ! intent(in)
+      use allometry     , only : size2bl                  ! ! function
+      use decomp_coms   , only : f_labile     ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      type(patchtype), intent(in)    :: cpatch
+      integer        , intent(in)    :: ico
+      real           , intent(in)    :: carbon_balance
+      real           , intent(in)    :: tr_bleaf
+      real           , intent(in)    :: tr_broot
+      real           , intent(in)    :: tr_bsapwooda
+      real           , intent(in)    :: tr_bsapwoodb
+      real           , intent(in)    :: tr_bstorage
+      real           , intent(in)    :: carbon13_balance
+      real           , intent(out)   :: tr_bleaf_c13
+      real           , intent(out)   :: tr_broot_c13
+      real           , intent(out)   :: tr_bsapwooda_c13
+      real           , intent(out)   :: tr_bsapwoodb_c13
+      real           , intent(out)   :: tr_bstorage_c13
+      !real           , intent(out)   :: carbon13_debt
+      !----- Local variables. -------------------------------------------------------------!
+      real                           :: bloss_max
+      real                           :: available_carbon
+      real                           :: f_total
+      real                           :: f_bleaf
+      real                           :: f_broot
+      real                           :: f_bsapwooda
+      real                           :: f_bsapwoodb
+      real                           :: f_bstorage
+      real                           :: stor_ratio
+      real                           :: addnl_bleaf_c13
+      real                           :: addnl_broot_c13
+      real                           :: addnl_bsapa_c13
+      real                           :: addnl_bsapb_c13
+      real                           :: addnl_bstor_c13
+      real                           :: sum_tr
+      logical                        :: on_allometry
+      logical                        :: time_to_flush
+      logical          , parameter   :: printout = .false.
+      character(len=11), parameter   :: fracfile = 'cballoc.txt'
+      !----- Locally saved variables. -----------------------------------------------------!
+      logical          , save        :: first_time = .true.
+      !------------------------------------------------------------------------------------!
+
+      ! Initialize some variables.
+      addnl_bleaf_c13 = 0.0
+      addnl_broot_c13 = 0.0
+      addnl_bsapa_c13 = 0.0
+      addnl_bsapb_c13 = 0.0
+      addnl_bstor_c13 = 0.0
+      
+      !------------------------------------------------------------------------------------!
+      ! The variable sum_tr may be positive, negative, or zero.                            !
+      !                                                                                    !
+      ! If it is positive, then ...
+      !  1) xfers are coming exclusively from carbon_balance
+      !  2) xfers are coming exclusively from bstorage
+      !  3) xfers are coming from both                                      !
+      !                                                                                    !
+      ! In all of these cases we have succeeded at preferentially keeping root and leaf    !
+      ! carbon, with the result that:
+      !   In (1) carbon_balance is > 0.0, covers xfers, and [var]_c13_loss terms are 0.
+      !   In (2) bstorage provides resps, covers xfers, and [var]_c13_loss terms are 0.
+      !   In (3) C balance > 0 but not large enough ... and [var]_c13_loss terms are 0.
+      !                                                                                    !
+      ! If it is negative... 
+      !  4) carbon_balance < 0.0 and 
+      !    a) We're out of storage and taking from tissues                                 !
+      !    b) We're taking from tissues because we want to lose them before storage.       !
+      !                                                                                    !
+      ! In both cases [var]_c13_loss terms account for leaf, root, & storage xfers.        !
+      !   In (4a) bstor_c13_loss should be all of bstorage_c13                             !
+      !   In (4b) bstor_c13_loss should <= all of bstorage_c13                             !
+      !------------------------------------------------------------------------------------!
+      ! 1) Remove resp 13C losses from wherever they have been calculated as coming from.  !
+      ! 2) Move 13C if leaves or roots are getting a storage transfer, move it.            !
+      ! 3) 
+      !------------------------------------------------------------------------------------!
+      tr_bleaf_c13     = -1.0 *cpatch%bleaf_c13_loss(ico) ! Will be 0 if carbon_balance > 0
+      tr_broot_c13     = -1.0 *cpatch%broot_c13_loss(ico) ! Will be 0 if carbon_balance > 0
+      tr_bsapwooda_c13 =  0.0
+      tr_bsapwoodb_c13 =  0.0
+      tr_bstorage_c13  = -1.0 *cpatch%bstor_c13_loss(ico) ! Will be 0 if carbon_balance > 0
+      
+      sum_tr     = tr_bleaf + tr_broot + tr_bsapwooda + tr_bsapwoodb
+      stor_ratio = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+      
+      if (sum_tr > 0.0) then
+         !--------------------------------------------------------------------------------!
+         ! Storage, carbon_balance, or both are used, cases 1-3 from above.               !
+         !--------------------------------------------------------------------------------!
+         if (tr_bstorage > 0.0) then
+            ! Everything is gaining carbon. (i.e. case 1)
+            addnl_bleaf_c13 = (tr_bleaf    /(sum_tr + tr_bstorage)) *carbon13_balance
+            addnl_broot_c13 = (tr_broot    /(sum_tr + tr_bstorage)) *carbon13_balance
+            addnl_bsapa_c13 = (tr_bsapwooda/(sum_tr + tr_bstorage)) *carbon13_balance
+            addnl_bsapb_c13 = (tr_bsapwoodb/(sum_tr + tr_bstorage)) *carbon13_balance
+            addnl_bstor_c13 = (tr_bstorage /(sum_tr + tr_bstorage)) *carbon13_balance
+            
+         else
+            ! Carbon balance didn't cover the xfer to vars. (i.e. case 2)
+            addnl_bleaf_c13 = (tr_bleaf    /sum_tr)*(-1.0*tr_bstorage*stor_ratio)
+            addnl_broot_c13 = (tr_broot    /sum_tr)*(-1.0*tr_bstorage*stor_ratio)
+            addnl_bsapa_c13 = (tr_bsapwooda/sum_tr)*(-1.0*tr_bstorage*stor_ratio)
+            addnl_bsapb_c13 = (tr_bsapwooda/sum_tr)*(-1.0*tr_bstorage*stor_ratio)
+            addnl_bstor_c13 = tr_bstorage*stor_ratio
+            
+            !--------------------------------------------------------------------------------!
+            ! In perfect-math world we would leave addnl_bstor_c13 as above. However, this   !            
+            ! round-off-math world, we need to check that we don't end up with 0.0 storage   !
+            ! and positive storage c13.                                                      !
+            !                                                                                !
+            ! Equality comparisons with zero are often bad, but in ED tr_bstorage should be  !
+            ! a copy of bstorage when we want to zero bstroage.                              !
+            !--------------------------------------------------------------------------------!
+            if (cpatch%bstorage(ico) + tr_bstorage <= 0.0) then
+               tr_bstorage_c13 = -1.0 *cpatch%bstorage_c13(ico)
+            end if            
+            !--------------------------------------------------------------------------------!
+            
+            if (carbon_balance > 0.0) then
+               ! Carbon balance was divided up evenly (i.e. case 3)
+               addnl_bleaf_c13 = addnl_bleaf_c13 + (tr_bleaf    /sum_tr) *carbon13_balance
+               addnl_broot_c13 = addnl_broot_c13 + (tr_broot    /sum_tr) *carbon13_balance
+               addnl_bsapa_c13 = addnl_bsapa_c13 + (tr_bsapwooda/sum_tr) *carbon13_balance
+               addnl_bsapb_c13 = addnl_bsapb_c13 + (tr_bsapwoodb/sum_tr) *carbon13_balance
+            end if
+            
+         end if
+         !--------------------------------------------------------------------------------!
+
+      elseif (sum_tr < 0.0 .and. tr_bstorage > 0.0) then
+         !--------------------------------------------------------------------------------!
+         ! This should never happen; sum_tr can only be negative if carbon_balance < 0.
+         ! ... or is it that ...
+         ! We're dropping leaves, preferentially losing leaf + root mass, but gaining some
+         ! carbon none-the-less, so we'll put it in storage.
+         ! (?)
+         !--------------------------------------------------------------------------------!
+         addnl_bstor_c13 = carbon13_balance
+         write(*,*) 'Notice from get_c13_xfers in growth_balive.f90: Bad Casing?'
+         write(*,'(4A18)') '            sum_tr','       tr_bstorage','    carbon_balance' &
+                          ,'  carbon13_balance'
+         write(*,'(4E18.8)') sum_tr, tr_bstorage, carbon_balance, carbon13_balance
+                        
+      elseif (sum_tr < 0.0 .and. tr_bstorage < 0.0) then
+         ! There is only removal, as a result of respiration, and it is accounted for.
+      end if
+      
+      tr_bleaf_c13     = tr_bleaf_c13     + addnl_bleaf_c13
+      tr_broot_c13     = tr_broot_c13     + addnl_broot_c13
+      tr_bsapwooda_c13 = tr_bsapwooda_c13 + addnl_bsapa_c13
+      tr_bsapwoodb_c13 = tr_bsapwoodb_c13 + addnl_bsapb_c13
+      tr_bstorage_c13  = tr_bstorage_c13  + addnl_bstor_c13
+      
+      return
+   end subroutine get_c13_xfers
+   !=======================================================================================!
+   !=======================================================================================!
+
+   
+   
+   
+   
+   !=======================================================================================!
+   !=======================================================================================!
+   subroutine get_x13_xfers(csite,ipa,ico,carbon_balance,tr_bleaf,tr_broot,tr_bsapwooda    &
                            ,tr_bsapwoodb,tr_bstorage,carbon13_balance,tr_bleaf_c13,tr_broot_c13        &
                            ,tr_bsapwooda_c13,tr_bsapwoodb_c13,tr_bstorage_c13,carbon13_debt)
       use ed_state_vars , only : sitetype                 & ! structure
@@ -1725,7 +1927,7 @@ module growth_balive
                   tr_bstorage_c13  = tr_bstorage  * cbal_h2tc
                end if           
             
-            elseif (carbon13_balance > 0.0 .and. carbon_balance < 0.0) then 
+            elseif (carbon13_balance > 0.0 .and. carbon_balance < 0.0) then
                ! All carbon is coming from storage, but there's carbon-13 to be distributed...
                ! Consider it to have been a part of storage.
                
@@ -1914,7 +2116,7 @@ module growth_balive
       !------------------------------------------------------------------------------------!
 
       return
-   end subroutine get_c13_xfers
+   end subroutine get_x13_xfers
    !=======================================================================================!
    !=======================================================================================!
 
