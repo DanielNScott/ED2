@@ -17,7 +17,7 @@ subroutine soil_respiration(csite,ipa,mzg,ntext_soil)
                            , frqsum                   ! ! intent(in)
    !----- DS Additional Uses -----------------------------------------------------------!
    use isotopes     , only : c13af                    ! ! intent(in)
-   use iso_alloc    , only : resp_h2tc                & ! function
+   use iso_utils    , only : resp_h2tc                & ! function
                            , hotc                     & ! function
                            , check_patch_c13          & ! function
                            , check_site_c13           ! ! function
@@ -513,7 +513,7 @@ subroutine resp_rh(csite,ipa,Lc)
                            , cwd_frac        ! ! intent(in)
    !----- DS Additional Uses -----------------------------------------------------------!
    use isotopes     , only : c13af           ! ! intent(in) !!!DSC!!!
-   use iso_alloc    , only : resp_h2tc       ! ! funciton   !!!DSC!!!
+   use iso_utils    , only : resp_h2tc       ! ! funciton   !!!DSC!!!
 
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!

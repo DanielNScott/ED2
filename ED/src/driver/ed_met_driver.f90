@@ -853,7 +853,7 @@ subroutine update_met_drivers(cgrid)
                                    , rehuil            ! ! function
    use isotopes             , only : c13af             & ! intent(in)
                                    , initial_d13C      ! ! intent(in)
-   use iso_alloc            , only : d13C2Ratio        ! ! function
+   use iso_utils            , only : d13C2Ratio        ! ! function
    use met_driver_coms      , only : has_co2_c13       ! ! intent(in)
    implicit none
    !----- Arguments -----------------------------------------------------------------------!

@@ -189,7 +189,7 @@ subroutine update_phenology(doy, cpoly, isi, lat)
    !----- DS Additional Use Statements ----------------------------------------------------!
    use isotopes       , only : c13af                    & ! intent(in)
                              , cri_bdead                ! ! intent(in)
-   use iso_alloc      , only : hotc                     ! ! function
+   use iso_utils      , only : hotc                     ! ! function
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(polygontype)        , target     :: cpoly

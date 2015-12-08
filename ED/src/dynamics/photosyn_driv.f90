@@ -39,7 +39,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
    use isotopes       , only : c13af              & ! intent(in)
                              , c_alloc_flg        ! ! intent(in)
    use isotopes       , only : larprop            ! ! intent(in)
-   use iso_alloc      , only : photo_h2tc         & ! function
+   use iso_utils      , only : photo_h2tc         & ! function
                              , resp_h2tc          & ! function
                              , htIsoDelta         & ! function
                              , hotc               & ! function

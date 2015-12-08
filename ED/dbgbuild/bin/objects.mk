@@ -80,6 +80,7 @@ OBJ_MODEL =                        \
 	init_hydro_sites.o         \
 	invmondays.o               \
 	iso_alloc.o                \
+	iso_utils.o                \
 	isotopes.o                 \
 	landuse_init.o             \
 	lapse.o                    \

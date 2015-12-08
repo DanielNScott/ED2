@@ -125,7 +125,7 @@ ed_init_atm.o : $(ED_INIT)/ed_init_atm.F90
 
 ed_init_full_history.o : $(ED_IO)/ed_init_full_history.F90
 	cp -f $< $(<F:.F90=.F90)
-	$(FPP_COMMAND) $(HDF5_INCS) $(<F:.F90=.F90)
+	$(FPP_LOWO_COMMAND) $(HDF5_INCS) $(<F:.F90=.F90)
 	rm -f $(<F:.F90=.F90)
 
 ed_load_namelist.o : $(ED_IO)/ed_load_namelist.f90
@@ -354,6 +354,11 @@ isotopes.o : $(ED_MEMORY)/isotopes.f90
 	rm -f $(<F:.f90=.f90)
 
 iso_alloc.o : $(ED_DYNAMICS)/iso_alloc.f90
+	cp -f $< $(<F:.f90=.f90)
+	$(F90_COMMAND) $(<F:.f90=.f90)
+	rm -f $(<F:.f90=.f90)
+
+iso_utils.o : $(ED_UTILS)/iso_utils.f90
 	cp -f $< $(<F:.f90=.f90)
 	$(F90_COMMAND) $(<F:.f90=.f90)
 	rm -f $(<F:.f90=.f90)
