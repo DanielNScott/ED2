@@ -551,17 +551,14 @@ subroutine resp_rh(csite,ipa,Lc)
    if (c13af > 0) then
       !----- The following variables have units of [umol_CO2/m2/s]. -----------------------!
       fast_c13_loss       = kgCday_2_umols * csite%A_decomp(ipa)                           &
-                          * decay_rate_fsc * csite%fast_soil_C(ipa)                        &
-                          * resp_h2tc('het',csite%fast_soil_c13(ipa),csite%fast_soil_C(ipa))
+                          * decay_rate_fsc * csite%fast_soil_c13(ipa)
 
       structural_c13_loss =                                                                &
               kgCday_2_umols * csite%A_decomp(ipa) * Lc * decay_rate_stsc                  &
-              * csite%structural_soil_C(ipa)* csite%f_decomp(ipa)                          &
-              * resp_h2tc('het',csite%structural_soil_c13(ipa),csite%structural_soil_C(ipa))
+              * csite%structural_soil_c13(ipa)* csite%f_decomp(ipa)
                   
       slow_c13_loss       = kgCday_2_umols * csite%A_decomp(ipa)                           &
-                          * decay_rate_ssc * csite%slow_soil_C(ipa)                        &
-                          * resp_h2tc('het',csite%slow_soil_c13(ipa),csite%slow_soil_C(ipa))
+                          * decay_rate_ssc * csite%slow_soil_c13(ipa)
       !------------------------------------------------------------------------------------!
 
       !----- Find the heterotrophic respiration and the fraction due to CWD. --------------!

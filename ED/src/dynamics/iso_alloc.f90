@@ -55,6 +55,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
    use isotopes       , only : c13af                     ! ! intent(in)
    use iso_utils      , only : hotc                      & ! intent(in)
                              , check_patch_c13           & ! intent(in)
+                             , htIsoDelta                & ! intent(in)
                              , check_site_c13            ! ! intent(in)
    use consts_coms    , only : tiny_num                  & ! intent(in)
                              , umols_2_kgCyr             & ! intent(in)
@@ -239,15 +240,17 @@ subroutine leaf_root_resp_c13(csite,ipa)
          ! We should set the signature of the respiration to the signature of gpp.         !
          ! Note that this also implies carbon13_balance > 0.0.                             !
          !---------------------------------------------------------------------------------!
-         gpp_loss  = ratio_gpp * carbon_balance
+         gpp_loss  = ratio_gpp *resp_loss
+         
       elseif (cpatch%phenology_status(ico) == 1 .and. (carbon_balance <= 0.0)) then
          !---------------------------------------------------------------------------------!
          ! "time_to_flush" will be .true. in get_c_xfers and we will move storage into     !
          ! plant pools despite having lost all gpp and some storage to respiration.        !
          !---------------------------------------------------------------------------------!
          gpp_loss  = cpatch%gpp_c13(ico) *flux_fact
-         stor_loss = -1.0*carbon_balance*ratio_stor
-      else
+         stor_loss = -1.0*carbon_balance *ratio_stor
+         
+      elseif (cpatch%phenology_status(ico) /= 1 .and. (carbon_balance <= 0.0)) then
          !---------------------------------------------------------------------------------!
          ! In this case we aren't growing any tissues, we are only taking carbon out.      !
          !                                                                                 !
@@ -257,7 +260,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
          ! -1 - plant is actively dropping leaves          => Lose biomass first           !
          ! -2 - plant has no leaves                        => Lose biomass first           !
          !---------------------------------------------------------------------------------!
-         carbon_debt = -1.0*carbon_balance
+         carbon_debt = -1.0 *carbon_balance
          gpp_loss    = cpatch%gpp_c13(ico) *flux_fact
 
          select case (cpatch%phenology_status(ico))
@@ -267,6 +270,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
                ! Only some storage loss necessary, no tissue loss necessary.              !
                !--------------------------------------------------------------------------!
                stor_loss = carbon_debt *ratio_stor
+               
             else
                !--------------------------------------------------------------------------!
                ! All storage lost, then some leaves + roots.                              !
@@ -317,7 +321,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
                ! All leaves and roots will go, then some storage.                         !
                ! 13C_removed = var_13C:C * proportion_from_var * total_C_being_removed    !
                !--------------------------------------------------------------------------!
-               stor_loss = min(cpatch%bstorage_c13(ico),carbon_debt - bloss_max)
+               stor_loss = ratio_stor * min(cpatch%bstorage(ico), carbon_debt - bloss_max)
                leaf_loss = cpatch%bleaf_c13(ico)
                root_loss = cpatch%broot_c13(ico)
                !--------------------------------------------------------------------------!
@@ -381,7 +385,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
                                       * dtlsm_o_frqsum * umols_2_kgCyr            &
                                       / cpatch%nplant          (ico)
       !---------------------------------------------------------------------------!
-      
+      !write(*,*) htIsoDelta(cpatch%leaf_respiration_c13(ico),cpatch%leaf_respiration(ico)) &
+      !          ,htIsoDelta(cpatch%root_respiration_c13(ico),cpatch%root_respiration(ico))
       patch_check_vals = &
      (/carbon_balance, carbon13_balance,cpatch%gpp(ico)*flux_fact,cpatch%gpp_c13(ico)*flux_fact &
       ,     stor_loss,         gpp_loss,                leaf_loss,                    root_loss &
@@ -389,8 +394,9 @@ subroutine leaf_root_resp_c13(csite,ipa)
       ,           lrf,              rrf,                      lgf,                          rgf &
       ,        f_sagr,           f_sbgr,                 lf_bloss,                     rf_bloss &
       , leaf_int_loss,    root_int_loss,            lloss_overrun,                rloss_overrun &
-      ,     bloss_max, real(cpatch%phenology_status(ico)),hotc(dtlsm_c13_gain,dtlsm_c_gain)     &
-      , hotc(carbon13_balance,carbon_balance), dtlsm_c_gain, dtlsm_c13_gain      /)
+      ,     bloss_max, real(cpatch%phenology_status(ico))                                       &
+      , htIsoDelta(abs(dtlsm_c13_gain)  ,abs(dtlsm_c_gain))     &
+      , htIsoDelta(abs(carbon13_balance),abs(carbon_balance)), dtlsm_c_gain, dtlsm_c13_gain      /)
 
       patch_check_labs = &
      (/'    carbon_balance','  carbon13_balance','               gpp','           gpp_c13'&

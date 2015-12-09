@@ -385,7 +385,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs)
                  + cpatch%sapa_growth_resp(ico) + cpatch%sapb_growth_resp(ico)              &
                  + leaf_resp                    + root_resp   
 
-   nsr_c13 = cpatch%leaf_respiration_c13(ico) + cpatch%root_respiration_c13(ico)      &
+   nsr_c13 = cpatch%leaf_growth_resp_c13(ico) + cpatch%root_growth_resp_c13(ico)      &
            + cpatch%leaf_growth_resp_c13(ico) + cpatch%root_growth_resp_c13(ico)      &
            + leaf_resp_c13                    + root_resp_c13
    
@@ -414,7 +414,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs)
                           ,leaf_resp_c13  &
                           ,root_resp_c13  &
                           ,nsr_c13
-      write(*,'(4ES18.8)') gpp_delta,lr_delta,rr_delta, hotc(nsr_c13,non_stor_resp)
+      write(*,'(4ES18.8)') gpp_delta,lr_delta,rr_delta, htIsoDelta(nsr_c13,non_stor_resp)
       write(*,*) ' '
       write(*,*) 'Units: kgC/pl/yr'
       write(*,'(5A18)') '  LEAF_GROWTH_RESP','  ROOT_GROWTH_RESP','  SAPA_GROWTH_RESP' &
@@ -530,8 +530,8 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
    logical        :: valid                               ! Valid C-13 to C ratio logical
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
-   Cfmt = '(6A18)'
-   Rfmt = '(6E18.2)'
+   Cfmt = '(4A18)'
+   Rfmt = '(4E18.2)'
 
    call check_c13(csite%fast_soil_c13(ipa) &
                  ,csite%fast_soil_c  (ipa) &
@@ -572,19 +572,19 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
       write(*,*) 'Pool Diagnostics. Row 1: Totals. Row 2: Heavy C. Row 3: d13C.'
       write(*,*) '-----------------------------------------------------------------------'
       write(*,Cfmt) '       FAST_SOIL_C','       SLOW_SOIL_C',' STRUCTURAL_SOIL_C'       &
-                   ,' STRUCTURAL_SOIL_L','           CAN_CO2'
+                   ,' STRUCTURAL_SOIL_L'
       write(*,Rfmt) csite%fast_soil_C(ipa),csite%slow_soil_C(ipa)                        &
-                   ,csite%structural_soil_C(ipa),csite%structural_soil_L(ipa)            &
-                   ,csite%can_co2(ipa)
+                   ,csite%structural_soil_C(ipa),csite%structural_soil_L(ipa)
+                   
       write(*,Rfmt) csite%fast_soil_c13(ipa),csite%slow_soil_c13(ipa)                    &
-                   ,csite%structural_soil_c13(ipa),csite%structural_soil_L_c13(ipa)      &
-                   ,csite%can_co2_c13(ipa)
-      write(*,Rfmt) fsc_delta, ssc_delta, stsc_delta, stsl_delta, can_co2_delta
-
-      write(*,Cfmt) '               RH','             CWD_RH'
-      write(*,Rfmt) csite%rh(ipa),csite%cwd_rh(ipa)
-      write(*,Rfmt) csite%rh_c13(ipa),csite%cwd_rh_c13(ipa)
-      write(*,Rfmt) rh_delta,cwd_delta
+                   ,csite%structural_soil_c13(ipa),csite%structural_soil_L_c13(ipa)
+                   
+      write(*,Rfmt) fsc_delta, ssc_delta, stsc_delta, stsl_delta
+      write(*,*)    ' '
+      write(*,Cfmt) '           CAN_CO2','               RH','             CWD_RH'
+      write(*,Rfmt) csite%can_co2(ipa),csite%rh(ipa),csite%cwd_rh(ipa)
+      write(*,Rfmt) csite%can_co2_c13(ipa),csite%rh_c13(ipa),csite%cwd_rh_c13(ipa)
+      write(*,Rfmt) can_co2_delta,rh_delta,cwd_delta
       
 
       call fatal_error(reason,call_loc,fname)
@@ -632,7 +632,8 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,reason)
    end if
    
    delta = htIsoDelta(heavy,total)
-   if ( heavy > tiny(1.) .and. (-500.0 < delta .or. delta > 0.0) .and. check_delta) then
+   if ( ( total > tiny_num) .and. check_delta .and. &
+        ( delta <  -50.0   .or. tiny_num < delta)) then
       valid = .false.
       reason = 'delta C-13'
    end if

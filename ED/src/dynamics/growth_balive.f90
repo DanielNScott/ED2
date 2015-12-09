@@ -50,6 +50,7 @@ module growth_balive
       !----- DS Additional Uses -----------------------------------------------------------!
       use iso_utils       , only : resp_h2tc              & ! function
                                  , hotc                   & ! function
+                                 , htIsoDelta             & ! function
                                  , check_patch_c13        & ! subroutine
                                  , check_site_c13         ! ! subroutine
       use isotopes        , only : c13af                  ! ! intent(in)
@@ -243,7 +244,12 @@ module growth_balive
                               ,tr_bsapwoodb,tr_bsapwoodb_c13,tr_bstorage,tr_bstorage_c13   &
                               ,cpatch%leaf_maintenance(ico),cpatch%root_maintenance(ico)   &
                               ,bleaf_in,broot_in,bstorage_in,bleaf_c13_in,broot_c13_in     &
-                              ,bstorage_c13_in/)                             &
+                              ,bstorage_c13_in &
+                              ,htIsoDelta(abs(dtlsm_c13_gain),abs(dtlsm_c_gain))          &
+                              ,htIsoDelta(abs(carbon13_balance),abs(carbon_balance))                             &
+                              ,htIsoDelta(tr_bleaf_c13,tr_bleaf)                             &
+                              ,htIsoDelta(tr_broot_c13,tr_broot)                             &
+                              ,htIsoDelta(tr_bstorage_c13,tr_bstorage)/)                             &
                             ,(/'      dtlsm_c_gain','    dtlsm_c13_gain','    carbon_balance'    &
                               ,'  carbon13_balance','          tr_bleaf'                       &
                               ,'      tr_bleaf_c13','          tr_broot','      tr_broot_c13'    &
@@ -251,7 +257,9 @@ module growth_balive
                               ,'      tr_bsapb_c13','        tr_btorage','      tr_bstor_c13' &
                               ,'  leaf_maintenance','  root_maintenance'                   &
                               ,'          bleaf_in','          broot_in','       bstorage_in' &
-                              ,'      bleaf_c13_in','      broot_c13_in','   bstorage_c13_in'/))
+                              ,'      bleaf_c13_in','      broot_c13_in','   bstorage_c13_in' &
+                              ,'          dcg_d13C','   carbon_bal_d13C','      tr_bleaf_c13' &
+                              ,'      tr_broot_c13','   tr_bstorage_c13'/))
                      !---------------------------------------------------------------------!
 
                      call update_nitrogen(flushing,ipft,carbon_balance,cpatch%nplant(ico)  &
@@ -1814,7 +1822,7 @@ module growth_balive
             addnl_broot_c13 = (tr_broot    /sum_tr)*(-1.0*tr_bstorage*stor_ratio)
             addnl_bsapa_c13 = (tr_bsapwooda/sum_tr)*(-1.0*tr_bstorage*stor_ratio)
             addnl_bsapb_c13 = (tr_bsapwooda/sum_tr)*(-1.0*tr_bstorage*stor_ratio)
-            addnl_bstor_c13 = tr_bstorage*stor_ratio
+            addnl_bstor_c13 = tr_bstorage *stor_ratio
             
             !--------------------------------------------------------------------------------!
             ! In perfect-math world we would leave addnl_bstor_c13 as above. However, this   !            
@@ -1839,6 +1847,12 @@ module growth_balive
             
          end if
          !--------------------------------------------------------------------------------!
+      elseif (sum_tr == 0.0 .and. tr_bstorage > 0.0) then
+         ! We're just adding carbon_balance to storage. (i.e. case 1)
+         addnl_bstor_c13 = carbon13_balance
+         
+      elseif (sum_tr == 0.0 .and. tr_bstorage < 0.0) then
+         ! Then storage is being respired, which is already accounted for.
 
       elseif (sum_tr < 0.0 .and. tr_bstorage > 0.0) then
          !--------------------------------------------------------------------------------!
