@@ -247,9 +247,9 @@ module growth_balive
                               ,bstorage_c13_in &
                               ,htIsoDelta(abs(dtlsm_c13_gain),abs(dtlsm_c_gain))          &
                               ,htIsoDelta(abs(carbon13_balance),abs(carbon_balance))                             &
-                              ,htIsoDelta(tr_bleaf_c13,tr_bleaf)                             &
-                              ,htIsoDelta(tr_broot_c13,tr_broot)                             &
-                              ,htIsoDelta(tr_bstorage_c13,tr_bstorage)/)                             &
+                              ,htIsoDelta(abs(tr_bleaf_c13),abs(tr_bleaf))                             &
+                              ,htIsoDelta(abs(tr_broot_c13),abs(tr_broot))                             &
+                              ,htIsoDelta(abs(tr_bstorage_c13),abs(tr_bstorage))/)                             &
                             ,(/'      dtlsm_c_gain','    dtlsm_c13_gain','    carbon_balance'    &
                               ,'  carbon13_balance','          tr_bleaf'                       &
                               ,'      tr_bleaf_c13','          tr_broot','      tr_broot_c13'    &
@@ -258,8 +258,9 @@ module growth_balive
                               ,'  leaf_maintenance','  root_maintenance'                   &
                               ,'          bleaf_in','          broot_in','       bstorage_in' &
                               ,'      bleaf_c13_in','      broot_c13_in','   bstorage_c13_in' &
-                              ,'          dcg_d13C','   carbon_bal_d13C','      tr_bleaf_c13' &
-                              ,'      tr_broot_c13','   tr_bstorage_c13'/))
+                              ,'          dcg_d13C','   carbon_bal_d13C','     tr_bleaf_d13C' &
+                              ,'     tr_broot_d13C','  tr_bstorage_d13C'/) &
+                              ,(/1,1,2,2,3,3,4,4,5,5,6,6,7,7,0,0,8,9,10,8,9,10,0,0,0,0,0/))
                      !---------------------------------------------------------------------!
 
                      call update_nitrogen(flushing,ipft,carbon_balance,cpatch%nplant(ico)  &
@@ -1714,7 +1715,8 @@ module growth_balive
       use ed_state_vars , only : patchtype                ! ! structure
       use pft_coms      , only : phenology                ! ! intent(in)
       use isotopes      , only : c_alloc_flg              ! ! intent(in)
-      use iso_utils     , only : hotc                     ! ! function
+      use iso_utils     , only : hotc                     & ! function
+                               , sdiv8                    ! ! intent(in)
       use pft_coms      , only : q            & ! intent(in)
                                , qsw          & ! intent(in)
                                , agf_bs       ! ! intent(in)
@@ -1746,7 +1748,7 @@ module growth_balive
       real                           :: f_bsapwooda
       real                           :: f_bsapwoodb
       real                           :: f_bstorage
-      real                           :: stor_ratio
+      real(kind=8)                   :: stor_ratio
       real                           :: addnl_bleaf_c13
       real                           :: addnl_broot_c13
       real                           :: addnl_bsapa_c13
@@ -1802,7 +1804,7 @@ module growth_balive
       tr_bstorage_c13  = -1.0 *cpatch%bstor_c13_loss(ico) ! Will be 0 if carbon_balance > 0
       
       sum_tr     = tr_bleaf + tr_broot + tr_bsapwooda + tr_bsapwoodb
-      stor_ratio = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+      stor_ratio = sdiv8(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
       
       if (sum_tr > 0.0) then
          !--------------------------------------------------------------------------------!
@@ -1822,10 +1824,10 @@ module growth_balive
             addnl_broot_c13 = (tr_broot    /sum_tr)*(-1.0*tr_bstorage*stor_ratio)
             addnl_bsapa_c13 = (tr_bsapwooda/sum_tr)*(-1.0*tr_bstorage*stor_ratio)
             addnl_bsapb_c13 = (tr_bsapwooda/sum_tr)*(-1.0*tr_bstorage*stor_ratio)
-            addnl_bstor_c13 = tr_bstorage *stor_ratio
+            addnl_bstor_c13 = dble(tr_bstorage)*stor_ratio
             
             !--------------------------------------------------------------------------------!
-            ! In perfect-math world we would leave addnl_bstor_c13 as above. However, this   !            
+            ! In perfect-math world we would leave addnl_bstor_c13 as above. However, this   !
             ! round-off-math world, we need to check that we don't end up with 0.0 storage   !
             ! and positive storage c13.                                                      !
             !                                                                                !

@@ -229,6 +229,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
       
       lloss_aim     = 0.0
       rloss_aim     = 0.0
+      leaf_int_loss = 0.0
+      root_int_loss = 0.0
       lloss_overrun = 0.0
       rloss_overrun = 0.0
 
@@ -279,21 +281,27 @@ subroutine leaf_root_resp_c13(csite,ipa)
                carbon_debt = carbon_debt - cpatch%bstorage(ico)
                stor_loss   = cpatch%bstorage_c13(ico)
                
-               lloss_aim   = f_leaf*carbon_debt
-               rloss_aim   = f_root*carbon_debt
+               if (bloss_max > carbon_debt) then
+                  !--------------------------------------------------------------------------!
+                  ! All respiration has leaf or root substrate.                              !
+                  ! 13C_removed = var_13C:C * proportion_from_var * total_C_being_removed    !
+                  !--------------------------------------------------------------------------!               
+                  lloss_aim   = f_leaf*carbon_debt
+                  rloss_aim   = f_root*carbon_debt
 
-               ! Only one of these will be > 0, otherwise carbon_debt > bloss_max
-               lloss_overrun = max(lloss_aim - cpatch%bleaf(ico),0.0)
-               rloss_overrun = max(rloss_aim - cpatch%broot(ico),0.0)
- 
-               leaf_loss = min(cpatch%bleaf(ico),lloss_aim) *ratio_leaf                   &
-                         + rloss_overrun *ratio_root
-               
-               root_loss = min(cpatch%broot(ico),rloss_aim) *ratio_leaf                   &
-                         + lloss_overrun *ratio_root
+                  ! Only one of these will be > 0, otherwise carbon_debt > bloss_max
+                  lloss_overrun = max(lloss_aim - cpatch%bleaf(ico),0.0)
+                  rloss_overrun = max(rloss_aim - cpatch%broot(ico),0.0)
 
-               !leaf_loss = ratio_leaf * lf_bloss * min(bloss_max,carbon_debt)
-               !root_loss = ratio_root * rf_bloss * min(bloss_max,carbon_debt)
+                  leaf_int_loss = min(cpatch%bleaf(ico),lloss_aim) 
+                  root_int_loss = min(cpatch%broot(ico),rloss_aim)
+    
+                  leaf_loss = leaf_int_loss *ratio_leaf + rloss_overrun *ratio_root
+                  root_loss = root_int_loss *ratio_root + lloss_overrun *ratio_leaf
+               else
+                  leaf_loss = cpatch%bleaf_c13(ico)
+                  root_loss = cpatch%broot_c13(ico)
+               end if
             end if
          case (-2,-1)
             if (bloss_max > carbon_debt) then

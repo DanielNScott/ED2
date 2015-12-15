@@ -13802,11 +13802,27 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'Soil Carbon (Fast pool)'                             &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
+      if(associated(cgrid%fast_soil_c13    )) then      
+         nvar = nvar + 1                              
+         call vtable_edio_r(npts,cgrid%fast_soil_c13                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FAST_SOIL_C13_PY     :11:hist:anal:dail:opti')
+         call metadata_edio(nvar,igr,'Soil Carbon (Fast pool)'                             &
+                           ,'[kgC/m2]','(ipoly)')     
+      end if                                          
       if(associated(cgrid%slow_soil_c    )) then      
          nvar = nvar + 1                              
          call vtable_edio_r(npts,cgrid%slow_soil_c                                         &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'SLOW_SOIL_C_PY     :11:hist:anal:dail:opti')
+         call metadata_edio(nvar,igr,'Soil Carbon (Slow pool)'                             &
+                           ,'[kgC/m2]','(ipoly)')     
+      end if                                          
+      if(associated(cgrid%slow_soil_c13    )) then      
+         nvar = nvar + 1                              
+         call vtable_edio_r(npts,cgrid%slow_soil_c13                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'SLOW_SOIL_C13_PY     :11:hist:anal:dail:opti')
          call metadata_edio(nvar,igr,'Soil Carbon (Slow pool)'                             &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
@@ -13818,11 +13834,27 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'Soil Carbon (Structural pool)'                       &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
+      if(associated(cgrid%struct_soil_c13  )) then      
+         nvar = nvar + 1                              
+         call vtable_edio_r(npts,cgrid%struct_soil_c13                                       &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'STRUCT_SOIL_C13_PY   :11:hist:anal:dail:opti')
+         call metadata_edio(nvar,igr,'Soil Carbon (Structural pool)'                       &
+                           ,'[kgC/m2]','(ipoly)')     
+      end if                                          
       if(associated(cgrid%struct_soil_l  )) then      
          nvar = nvar + 1                              
          call vtable_edio_r(npts,cgrid%struct_soil_l                                       &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'STRUCT_SOIL_L_PY   :11:hist:anal:dail')
+                           ,'STRUCT_SOIL_L_PY   :11:hist:anal:dail:opti')
+         call metadata_edio(nvar,igr,'Soil Lignin (Structural pool)'                       &
+                           ,'[kgC/m2]','(ipoly)')     
+      end if                                          
+      if(associated(cgrid%struct_soil_l_c13  )) then      
+         nvar = nvar + 1                              
+         call vtable_edio_r(npts,cgrid%struct_soil_l_c13                                       &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'STRUCT_SOIL_L_C13_PY   :11:hist:anal:dail:opti')
          call metadata_edio(nvar,igr,'Soil Lignin (Structural pool)'                       &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
@@ -13830,7 +13862,15 @@ module ed_state_vars
          nvar = nvar + 1                              
          call vtable_edio_r(npts,cgrid%cwd_c                                               &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
-                           ,'CWD_C_PY    :11:hist:anal:dail')
+                           ,'CWD_C_PY    :11:hist:anal:dail:opti')
+         call metadata_edio(nvar,igr,'Coarse woody debris'                                 &
+                           ,'[kgC/m2]','(ipoly)')     
+      end if                                          
+      if(associated(cgrid%cwd_c13     )) then           
+         nvar = nvar + 1                              
+         call vtable_edio_r(npts,cgrid%cwd_c13                                               &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'CWD_C13_PY    :11:hist:anal:dail:opti')
          call metadata_edio(nvar,igr,'Coarse woody debris'                                 &
                            ,'[kgC/m2]','(ipoly)')     
       end if                                          
@@ -13923,6 +13963,15 @@ module ed_state_vars
                            ,'Sub-daily mean - Gross primary productivity'                  &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%fmean_gpp_c13             )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_gpp_c13                                           &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_GPP_C13_PY               :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Gross primary productivity'                  &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%fmean_npp             )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_npp                                           &
@@ -13932,11 +13981,29 @@ module ed_state_vars
                            ,'Sub-daily mean - Net primary productivity'                    &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%fmean_npp_c13          )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_npp_c13                                           &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_NPP_C13_PY               :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Net primary productivity'                    &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%fmean_leaf_resp       )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%fmean_leaf_resp                                     &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'FMEAN_LEAF_RESP_PY         :11:opti:'//trim(fast_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Sub-daily mean - Leaf respiration'                            &
+                           ,'[  kgC/m2/yr]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%fmean_leaf_resp_c13       )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%fmean_leaf_resp_c13                                     &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'FMEAN_LEAF_RESP_C13_PY         :11:opti:'//trim(fast_keys)     )
          call metadata_edio(nvar,igr                                                       &
                            ,'Sub-daily mean - Leaf respiration'                            &
                            ,'[  kgC/m2/yr]','(ipoly)'            )
@@ -15869,6 +15936,15 @@ module ed_state_vars
                            ,'Daily mean - Net Ecosystem productivity'                      &
                            ,'[   kg/m2/yr]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%dmean_nep_c13             )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%dmean_nep_c13                                           &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_NEP_C13_PY               :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Net Ecosystem productivity'                      &
+                           ,'[   kg/m2/yr]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%dmean_rk4step         )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%dmean_rk4step                                       &
@@ -17041,6 +17117,15 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Heterotrophic respiration'                     &
                            ,'[   kg/m2/yr]','(ipoly)'            )
+      end if                 
+      if (associated(cgrid%mmean_rh_c13              )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_rh_c13                                            &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_RH_C13_PY                :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Heterotrophic respiration'                     &
+                           ,'[   kg/m2/yr]','(ipoly)'            )
       end if                                          
       if (associated(cgrid%mmean_cwd_rh          )) then
          nvar = nvar+1                                
@@ -17051,11 +17136,29 @@ module ed_state_vars
                            ,'Monthly mean - Coarse woody debris respiration'               &
                            ,'[   kg/m2/yr]','(ipoly)'            )
       end if                                          
+      if (associated(cgrid%mmean_cwd_rh_c13          )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_cwd_rh_c13                                        &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_CWD_RH_C13_PY            :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Coarse woody debris respiration'               &
+                           ,'[   kg/m2/yr]','(ipoly)'            )
+      end if                                          
       if (associated(cgrid%mmean_nep             )) then
          nvar = nvar+1                                
          call vtable_edio_r(npts,cgrid%mmean_nep                                           &
                            ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
                            ,'MMEAN_NEP_PY               :11:'//trim(eorq_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Monthly mean - Net Ecosystem productivity'                    &
+                           ,'[   kg/m2/yr]','(ipoly)'            )
+      end if                                          
+      if (associated(cgrid%mmean_nep_c13             )) then
+         nvar = nvar+1                                
+         call vtable_edio_r(npts,cgrid%mmean_nep_c13                                           &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'MMEAN_NEP_C13_PY               :11:'//trim(eorq_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Monthly mean - Net Ecosystem productivity'                    &
                            ,'[   kg/m2/yr]','(ipoly)'            )

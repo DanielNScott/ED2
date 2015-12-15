@@ -35,6 +35,7 @@ subroutine structural_growth(cgrid, month)
    !----- DS Additional Use Statements ----------------------------------------------------!
    use isotopes       , only : c13af                  & ! intent(in)
                              , cri_bdead              ! ! intent(in)	!!!DSC!!!
+   use iso_utils      , only : check_patch_c13        ! ! intent(in)
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(edtype)     , target     :: cgrid
@@ -428,6 +429,10 @@ subroutine structural_growth(cgrid, month)
                !---------------------------------------------------------------------------!
                if (c13af > 0) then    !!!DSC!!!
                   !----- ORDER HERE MATTERS -----------------------------------------------!
+                  !write(*,'(6A16)') 'f_bdead','f_bseeds','bstorage_in','bstorage_c13_in' &
+                  !                 ,'bstorage','bstorage_c13'
+                  !write(*,'(6E16.6)') f_bdead, f_bseeds, bstorage_in,bstorage_c13_in   &
+                  !                    cpatch%bstorage(ico), cpatch%bstorage_c13(ico), htIsoDelta(cpatch%bstorage(ico),cpatch%bstorage)
                   cpatch%bdead_c13(ico)    = cpatch%bdead_c13(ico)                         &
                                            + f_bdead * cpatch%bstorage_c13(ico)      
                                            
@@ -451,6 +456,7 @@ subroutine structural_growth(cgrid, month)
                                         + ((1.0 - f_labile(ipft)) * balive_mort_litter_c13 &
                                         + struct_litter_c13) * l2n_stem                    &
                                         / c2n_stem(cpatch%pft(ico))
+                  call check_patch_c13(cpatch,ico,'structural_growth','structural_growth.f90')
                end if
                !---------------------------------------------------------------------------!
 

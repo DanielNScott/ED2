@@ -90,6 +90,26 @@ end function hotc
 !==========================================================================================!
 
 !==========================================================================================!
+real (kind=8) function sdiv8(heavy,total)
+   use consts_coms, only : tiny_num    ! intent(in)
+   implicit none
+   !------ Arguments ----------------------------------------------------------------------!
+   real              :: heavy       ! C-13
+   real              :: total       ! C-12 + C-13
+   !---------------------------------------------------------------------------------------!
+
+   ! This function computes the safe ratio of heavy to total carbon.
+   if (total > tiny_num) then
+      sdiv8 = dble(heavy)/dble(total)
+   else
+      sdiv8 = dble(0.0)
+   end if
+   
+   return
+end function sdiv8
+!==========================================================================================!
+
+!==========================================================================================!
 real(kind=8) function resp_h2tc(rtype,heavy,total)
    use isotopes,        only : R_std      & ! intent(in)
                              , iso_lrf    & ! intent(in)
@@ -250,7 +270,7 @@ end function d13C2Ratio8
 !==========================================================================================!
 !     This sub-routine does a pretty comprehensive sanity check on C-13 variables.         !
 !------------------------------------------------------------------------------------------!
-subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs)
+subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    use ed_max_dims    , only : str_len            ! ! intent(in)
    use ed_state_vars  , only : patchtype          ! ! structure
    use isotopes       , only : c13af              & ! intent(in)
@@ -267,6 +287,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs)
    character(*)              , intent(in) :: fname       ! What file is that routine in?
    real         , dimension(:), optional, intent(in) :: aux_vals
    character(18), dimension(:), optional, intent(in) :: aux_labs
+   integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
    logical        :: check_delta = .true.               ! Is there a problem?
@@ -298,7 +319,9 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs)
    real           :: leaf_resp_c13                             ! C-13 content of above
    real           :: root_resp_c13                             ! C-13 content of above
    integer        :: loop_ind                            ! Aux var printout loop index.
+   integer        :: loop_ind2                            ! Aux var printout loop index.
    real           :: flux_fact                       ! Aux var printout loop index.
+   real           :: loop_delta                       ! Aux var printout loop index.
    !---------------------------------------------------------------------------------------!
    Cfmt = '(11A18)'
    Rfmt = '(11E18.2)'
@@ -388,6 +411,24 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs)
    nsr_c13 = cpatch%leaf_growth_resp_c13(ico) + cpatch%root_growth_resp_c13(ico)      &
            + cpatch%leaf_growth_resp_c13(ico) + cpatch%root_growth_resp_c13(ico)      &
            + leaf_resp_c13                    + root_resp_c13
+   
+   if (present(aux_pair)) then
+      loop_ind = 1
+      aux_size = size(aux_vals)
+      do loop_ind = 1,aux_size
+         if (aux_pair(loop_ind) /= 0 .and. loop_ind < aux_size) then
+            do loop_ind2 = loop_ind+1,aux_size
+               if (aux_pair(loop_ind2) == aux_pair(loop_ind)) then
+                  !write(*,*) 'Checking ', aux_labs(loop_ind2), ' ', aux_labs(loop_ind)
+                  call check_c13(aux_vals(loop_ind2) &
+                                ,aux_vals(loop_ind)  &
+                                ,check_delta,loop_delta,valid,reason)
+                  exit
+               end if
+            end do
+         end if
+      end do
+   end if
    
    if (not(valid)) then
       write(*,*) '======================================================================='
@@ -610,6 +651,8 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,reason)
    real         , intent(out) :: delta
    logical      , intent(out) :: valid
    character(10), intent(out) :: reason
+   !----- Local Vars ----------------------------------------------------------------------!
+   logical                    :: all_bets_are_off
    !---------------------------------------------------------------------------------------!
    
    if (heavy > tiny_num) then
@@ -631,9 +674,12 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,reason)
       return
    end if
    
+   all_bets_are_off = total < 0.00000001 ! 10E-8
    delta = htIsoDelta(heavy,total)
-   if ( ( total > tiny_num) .and. check_delta .and. &
-        ( delta <  -50.0   .or. tiny_num < delta)) then
+   
+   ! Last condition here, delta /= delta is a NaN check.
+   if ( ( total > tiny_num) .and. check_delta .and. not(all_bets_are_off) .and. &
+        ( delta <  -50.0   .or. tiny_num < delta .or. delta /= delta)) then
       valid = .false.
       reason = 'delta C-13'
    end if
