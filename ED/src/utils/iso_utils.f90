@@ -188,11 +188,15 @@ real function htIsoDelta(heavy,total)
    
    heavy8 = dble(heavy)
    total8 = dble(total)
-   
-   if (total > tiny(1.0)) then
-      htIsoDelta = sngl((heavy8/(total8-heavy8))/R_std - 1.d0) * 1000.0
+      
+   if (abs(total) > tiny(1.0)) then
+      if (sign(1.0,heavy) /= sign(1.0,total)) then
+         htIsoDelta = huge(1.0)
+      else
+         htIsoDelta = sngl((abs(heavy8)/(abs(total8)-abs(heavy8)))/R_std - 1.d0) * 1000.0
+      end if
    else
-      if (heavy < tiny(1.0)) then
+      if (abs(heavy) < tiny(1.0)) then
          htIsoDelta = 0.0
       else
          htIsoDelta = huge(1.0)
@@ -291,7 +295,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
    logical        :: check_delta = .true.               ! Is there a problem?
-   character(10)  :: reason                              ! Error or warning diagnosis reason
+   character(40)  :: reason                              ! Error or warning diagnosis reason
    character(7)   :: Cfmt                                ! Character format, for strings
    character(9)   :: Rfmt                                ! Real format, for reals.
    real           :: gpp_delta                           ! Delta C-13 vals for variables.
@@ -313,6 +317,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    real           :: non_stor_resp                       ! Sum of non storage resps
    real           :: nsr_c13                             ! C-13 content of above
    logical        :: valid                               ! Valid C-13 to C ratio logical
+   logical        :: gpp_override                               ! Valid C-13 to C ratio logical
    integer        :: aux_size                            ! Length of auxiliary input
    real           :: leaf_resp                             ! C-13 content of above
    real           :: root_resp                            ! C-13 content of above
@@ -334,69 +339,79 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    ! analogue is to blame.                                                        !
    !------------------------------------------------------------------------------!
    ! Assimilated C-13 should not exceed assimilated C.
+   reason = ''
+
+   ! If gpp has a crazy delta, we should allow the model to proceed with
+   ! matching fluxes and even matching pool values if small enough. If we have a
+   ! real problem, this will manifest at a time when gpp has a normal delta too.  !
+   gpp_override = .false.
+
    call check_c13(cpatch%gpp_c13(ico) &
                  ,cpatch%gpp    (ico) &
-                 ,check_delta,gpp_delta,valid,reason)
+                 ,check_delta,gpp_delta,valid,'gpp',reason)
+   if (not(valid)) then
+      gpp_override = .true.
+   end if
    
    call check_c13(cpatch%leaf_respiration_c13(ico) &
                  ,cpatch%leaf_respiration    (ico) &
-                 ,check_delta,lr_delta,valid,reason)
+                 ,check_delta,lr_delta,valid,'leaf_resp',reason)
    
    call check_c13(cpatch%root_respiration_c13(ico) &
                  ,cpatch%root_respiration    (ico) &
-                 ,check_delta,rr_delta,valid,reason)
+                 ,check_delta,rr_delta,valid,'root_resp',reason)
    
    call check_c13(cpatch%leaf_growth_resp_c13(ico) &
                  ,cpatch%leaf_growth_resp    (ico) &
-                 ,check_delta,lg_delta,valid,reason)
+                 ,check_delta,lg_delta,valid,'leaf_grow_resp',reason)
                  
    call check_c13(cpatch%root_growth_resp_c13(ico) &
                  ,cpatch%root_growth_resp    (ico) &
-                 ,check_delta,rg_delta,valid,reason)
+                 ,check_delta,rg_delta,valid,'root_grow_resp',reason)
    
    call check_c13(cpatch%sapa_growth_resp_c13(ico) &
                  ,cpatch%sapa_growth_resp    (ico) &
-                 ,check_delta,sag_delta,valid,reason)
+                 ,check_delta,sag_delta,valid,'sapa_grow_resp',reason)
    
    call check_c13(cpatch%sapb_growth_resp_c13(ico) &
                  ,cpatch%sapb_growth_resp    (ico) &
-                 ,check_delta,sbg_delta,valid,reason)
+                 ,check_delta,sbg_delta,valid,'sapb_grow_resp',reason)
    
    call check_c13(cpatch%leaf_storage_resp_c13(ico) &
                  ,cpatch%leaf_storage_resp    (ico) &
-                 ,check_delta,ls_delta,valid,reason)
+                 ,check_delta,ls_delta,valid,'leaf_stor_resp',reason)
    
    call check_c13(cpatch%root_storage_resp_c13(ico) &
                  ,cpatch%root_storage_resp    (ico) &
-                 ,check_delta,rs_delta,valid,reason)
+                 ,check_delta,rs_delta,valid,'root_stor_resp',reason)
    
    call check_c13(cpatch%sapa_storage_resp_c13(ico) &
                  ,cpatch%sapa_storage_resp    (ico) &
-                 ,check_delta,sas_delta,valid,reason)
+                 ,check_delta,sas_delta,valid,'sapa_stor_resp',reason)
    
    call check_c13(cpatch%sapb_storage_resp_c13(ico) &
                  ,cpatch%sapb_storage_resp    (ico) &
-                 ,check_delta,sbs_delta,valid,reason)
+                 ,check_delta,sbs_delta,valid,'sapb_stor_resp',reason)
    
    call check_c13(cpatch%bleaf_c13(ico) &
                  ,cpatch%bleaf    (ico) &
-                 ,check_delta,leaf_delta,valid,reason)
+                 ,check_delta,leaf_delta,valid,'bleaf',reason)
    
    call check_c13(cpatch%broot_c13(ico) &
                  ,cpatch%broot    (ico) &
-                 ,check_delta,root_delta,valid,reason)
+                 ,check_delta,root_delta,valid,'broot',reason)
    
    call check_c13(cpatch%bsapwooda_c13(ico) &
                  ,cpatch%bsapwooda    (ico) &
-                 ,check_delta,bsa_delta,valid,reason)
+                 ,check_delta,bsa_delta,valid,'sapwooda',reason)
                  
    call check_c13(cpatch%bsapwoodb_c13(ico) &
                  ,cpatch%bsapwoodb    (ico) &
-                 ,check_delta,bsb_delta,valid,reason)
+                 ,check_delta,bsb_delta,valid,'sapwoodb',reason)
    
    call check_c13(cpatch%bstorage_c13(ico) &
                  ,cpatch%bstorage    (ico) &
-                 ,check_delta,bst_delta,valid,reason)
+                 ,check_delta,bst_delta,valid,'storage',reason)
 
    leaf_resp = cpatch%leaf_respiration(ico) *flux_fact
    root_resp = cpatch%root_respiration(ico) *flux_fact
@@ -415,26 +430,28 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    if (present(aux_pair)) then
       loop_ind = 1
       aux_size = size(aux_vals)
-      do loop_ind = 1,aux_size
+      outerloop: do loop_ind = 1,aux_size
          if (aux_pair(loop_ind) /= 0 .and. loop_ind < aux_size) then
             do loop_ind2 = loop_ind+1,aux_size
                if (aux_pair(loop_ind2) == aux_pair(loop_ind)) then
                   !write(*,*) 'Checking ', aux_labs(loop_ind2), ' ', aux_labs(loop_ind)
+                  !write(*,*) aux_vals(loop_ind2), aux_vals(loop_ind)
                   call check_c13(aux_vals(loop_ind2) &
                                 ,aux_vals(loop_ind)  &
-                                ,check_delta,loop_delta,valid,reason)
-                  exit
+                                ,check_delta,loop_delta,valid,aux_labs(loop_ind),reason)
+                  !valid = .false.
+                  exit outerloop
                end if
             end do
          end if
-      end do
+      end do outerloop
    end if
    
-   if (not(valid)) then
+   if (not(valid) .and. not(gpp_override)) then
       write(*,*) '======================================================================='
-      write(*,*) ' C-13 sanity check error in ', call_loc, '!'
       write(*,*) ' ', reason
-      write(*,*) '======================================================================='
+      write(*,*) ' C-13 sanity check error in ', call_loc, '!'
+      write(*,*) '======================================================================='      
       write(*,'(A13,4I4)') ' Model Time: ', current_time%date, current_time%hour         &
                                           , current_time%min , current_time%sec 
       write(*,*) ' cohort, pft, larprop : ', ico, cpatch%pft(ico), larprop
@@ -558,7 +575,7 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
    logical        :: check_delta = .true.               ! Is there a problem?
-   character(10)  :: reason                              ! Error or warning diagnosis reason
+   character(40)  :: reason                              ! Error or warning diagnosis reason
    character(6)   :: Cfmt                                ! Character format, for strings
    character(8)   :: Rfmt                                ! Real format, for reals.
    real           :: fsc_delta                           ! Delta C-13 vals for variables.
@@ -574,33 +591,34 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
    Cfmt = '(4A18)'
    Rfmt = '(4E18.2)'
 
+   reason = ''
    call check_c13(csite%fast_soil_c13(ipa) &
                  ,csite%fast_soil_c  (ipa) &
-                 ,check_delta,fsc_delta,valid,reason)
+                 ,check_delta,fsc_delta,valid,'fast_soil_c',reason)
    
    call check_c13(csite%slow_soil_c13(ipa) &
                  ,csite%slow_soil_c  (ipa) &
-                 ,check_delta,ssc_delta,valid,reason)
+                 ,check_delta,ssc_delta,valid,'slow_soil_c',reason)
    
    call check_c13(csite%structural_soil_c13(ipa) &
                  ,csite%structural_soil_c  (ipa) &
-                 ,check_delta,stsc_delta,valid,reason)
+                 ,check_delta,stsc_delta,valid,'struc_soil_c',reason)
    
    call check_c13(csite%structural_soil_L_c13(ipa) &
                  ,csite%structural_soil_L    (ipa) &
-                 ,check_delta,stsl_delta,valid,reason)
+                 ,check_delta,stsl_delta,valid,'struc_soil_L',reason)
    
    call check_c13(csite%can_co2_c13(ipa) &
                  ,csite%can_co2    (ipa) &
-                 ,check_delta,can_co2_delta,valid,reason)
+                 ,check_delta,can_co2_delta,valid,'can_co2',reason)
    
    call check_c13(csite%rh_c13(ipa) &
                  ,csite%rh    (ipa) &
-                 ,check_delta,rh_delta,valid,reason)
+                 ,check_delta,rh_delta,valid,'rh',reason)
    
    call check_c13(csite%cwd_rh_c13(ipa) &
                  ,csite%cwd_rh    (ipa) &
-                 ,check_delta,cwd_delta,valid,reason)
+                 ,check_delta,cwd_delta,valid,'cwd_rh',reason)
    
    if (not(valid)) then
       write(*,*) '======================================================================='
@@ -641,16 +659,17 @@ end subroutine check_site_c13
 !==========================================================================================!
 ! Check if a C-13 var too high, ignoring tiny-value comparison, and get it's delta value.  !
 !------------------------------------------------------------------------------------------!
-subroutine check_c13(heavy,total,check_delta,delta,valid,reason)
+subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
    use consts_coms, only : tiny_num    ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
-   real         , intent(in)  :: heavy
-   real         , intent(in)  :: total
-   logical      , intent(in)  :: check_delta
-   real         , intent(out) :: delta
-   logical      , intent(out) :: valid
-   character(10), intent(out) :: reason
+   real         , intent(in)    :: heavy
+   real         , intent(in)    :: total
+   logical      , intent(in)    :: check_delta
+   real         , intent(out)   :: delta
+   logical      , intent(out)   :: valid
+   character(*) , intent(in)    :: vname
+   character(*) , intent(out)   :: reason
    !----- Local Vars ----------------------------------------------------------------------!
    logical                    :: all_bets_are_off
    !---------------------------------------------------------------------------------------!
@@ -670,7 +689,7 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,reason)
    end if
    
    if (not(valid)) then
-      reason = 'total C-13'
+      reason = 'Bad ' // trim(vname) // ' total C-13'
       return
    end if
    
@@ -678,10 +697,10 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,reason)
    delta = htIsoDelta(heavy,total)
    
    ! Last condition here, delta /= delta is a NaN check.
-   if ( ( total > tiny_num) .and. check_delta .and. not(all_bets_are_off) .and. &
+   if ( ( abs(total) > tiny_num) .and. check_delta .and. not(all_bets_are_off) .and. &
         ( delta <  -50.0   .or. tiny_num < delta .or. delta /= delta)) then
       valid = .false.
-      reason = 'delta C-13'
+      reason = 'Bad ' // trim(adjustl(vname)) // ' delta C-13'
    end if
 
 end subroutine check_c13

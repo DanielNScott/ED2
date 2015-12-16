@@ -244,15 +244,16 @@ subroutine leaf_root_resp_c13(csite,ipa)
          !---------------------------------------------------------------------------------!
          gpp_loss  = ratio_gpp *resp_loss
          
-      elseif (cpatch%phenology_status(ico) == 1 .and. (carbon_balance <= 0.0)) then
+      !elseif (cpatch%phenology_status(ico) == 1 .and. (carbon_balance <= 0.0)) then
          !---------------------------------------------------------------------------------!
          ! "time_to_flush" will be .true. in get_c_xfers and we will move storage into     !
          ! plant pools despite having lost all gpp and some storage to respiration.        !
          !---------------------------------------------------------------------------------!
-         gpp_loss  = cpatch%gpp_c13(ico) *flux_fact
-         stor_loss = -1.0*carbon_balance *ratio_stor
+      !   gpp_loss  = cpatch%gpp_c13(ico) *flux_fact
+      !   stor_loss = -1.0*carbon_balance *ratio_stor
          
-      elseif (cpatch%phenology_status(ico) /= 1 .and. (carbon_balance <= 0.0)) then
+      !elseif (cpatch%phenology_status(ico) /= 1 .and. (carbon_balance <= 0.0)) then
+      elseif (carbon_balance <= 0.0) then
          !---------------------------------------------------------------------------------!
          ! In this case we aren't growing any tissues, we are only taking carbon out.      !
          !                                                                                 !
@@ -418,7 +419,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
 
  
       call check_patch_c13(cpatch,ico,'leaf_root_resp_c13','iso_alloc.f90',patch_check_vals&
-                          ,patch_check_labs)
+                          ,patch_check_labs &
+                          ,(/1,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3/))
    end do cohortloop
    call check_site_c13(csite,ipa,'leaf_root_resp_c13','iso_alloc.f90')
 
