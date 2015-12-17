@@ -513,7 +513,8 @@ subroutine resp_rh(csite,ipa,Lc)
                            , cwd_frac        ! ! intent(in)
    !----- DS Additional Uses -----------------------------------------------------------!
    use isotopes     , only : c13af           ! ! intent(in) !!!DSC!!!
-   use iso_utils    , only : resp_h2tc       ! ! funciton   !!!DSC!!!
+   use iso_utils    , only : resp_h2tc       & ! funciton   !!!DSC!!!
+                           , check_site_c13  ! ! subroutine
 
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
@@ -568,6 +569,12 @@ subroutine resp_rh(csite,ipa,Lc)
                                             + r_ssc * slow_c13_loss           )
       !------------------------------------------------------------------------------------!
    end if
+   call check_site_c13(csite,ipa,'resp_rh','soil_respiration.f90'    &
+     ,(/fast_C_loss,slow_C_loss,structural_C_loss               &
+       ,fast_c13_loss,slow_c13_loss,structural_c13_loss/)                      &
+     ,(/'fast_c_loss','slow_c_loss','structural_c_loss'       &
+       ,'fast_c13_loss','slow_c13_loss','structural_c13_loss'/)  &
+     ,(/1,2,3,1,2,3/))
    
    return
 end subroutine resp_rh
@@ -598,6 +605,7 @@ subroutine update_C_and_N_pools(cgrid)
    use consts_coms  , only : day_sec         ! ! intent(in) 
    !----- DS Additional Uses -----------------------------------------------------------!
    use isotopes     , only : c13af           ! ! intent(in)
+   use iso_utils    , only : check_site_c13  ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    type(edtype)     , target   :: cgrid
@@ -742,12 +750,28 @@ subroutine update_C_and_N_pools(cgrid)
                csite%slow_soil_c13(ipa)          = max(0.0,csite%slow_soil_c13(ipa))
             end if
             
+            call check_site_c13(csite,ipa,'update_C_and_N_pools','soil_respiration.f90'    &
+              ,(/fast_C_loss,slow_C_loss,structural_C_loss,structural_L_loss               &
+                ,fast_c13_loss,slow_c13_loss,structural_c13_loss,structural_L_c13_loss     &
+                ,csite%fsc_in(ipa),csite%ssc_in(ipa),csite%ssl_in(ipa),slow_C_input              &
+                ,csite%fsc13_in(ipa),csite%ssc13_in(ipa),csite%ssl_c13_in(ipa)          &
+                ,slow_c13_input/)                                                          &
+              ,(/'fast_c_loss','slow_c_loss','structural_c_loss','structural_L_loss'       &
+                ,'fast_c13_loss','slow_c13_loss','structural_c13_loss','structural_c13_loss' &
+                ,'fsc_in','ssc_in','ssl_in','slow_C_input'                                 &
+                ,'fsc13_in','ssc13_in','ssl_c13_in','slow_c13_input'/)                  &
+              ,(/1,2,3,4,1,2,3,4,5,6,7,8,5,6,7,8/))
 
             !----- Reset litter inputs. ---------------------------------------------------!
             csite%fsc_in(ipa) = 0.0
             csite%fsn_in(ipa) = 0.0
             csite%ssc_in(ipa) = 0.0
             csite%ssl_in(ipa) = 0.0
+            if (c13af > 0) then
+               csite%fsc13_in(ipa) = 0.0
+               csite%ssc13_in(ipa) = 0.0
+               csite%ssl_c13_in(ipa) = 0.0
+            end if
             !------------------------------------------------------------------------------!            
          end do patchloop
       end do siteloop

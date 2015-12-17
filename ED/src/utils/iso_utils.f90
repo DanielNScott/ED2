@@ -561,7 +561,7 @@ end subroutine check_patch_c13
 !==========================================================================================!
 !     This sub-routine does a pretty comprehensive sanity check on C-13 variables.         !
 !------------------------------------------------------------------------------------------!
-subroutine check_site_c13(csite,ipa,call_loc,fname)
+subroutine check_site_c13(csite,ipa,call_loc,fname,aux_vals,aux_labs,aux_pair)
    use ed_max_dims    , only : str_len            ! ! intent(in)
    use ed_state_vars  , only : sitetype           ! ! structure
    use isotopes       , only : c13af              & ! intent(in)
@@ -572,6 +572,9 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
    integer                   , intent(in) :: ipa         ! Current patch number
    character(*)              , intent(in) :: call_loc    ! What routine called this check?
    character(*)              , intent(in) :: fname       ! What file is that routine in?
+   real         , dimension(:), optional, intent(in) :: aux_vals
+   character(18), dimension(:), optional, intent(in) :: aux_labs
+   integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
    logical        :: check_delta = .true.               ! Is there a problem?
@@ -586,6 +589,11 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
    real           :: rh_delta                            ! ...
    real           :: cwd_delta                           ! ...
    logical        :: valid                               ! Valid C-13 to C ratio logical
+   integer        :: aux_size                            ! Aux var printout loop index.
+   integer        :: loop_ind                            ! Aux var printout loop index.
+   integer        :: loop_ind2                            ! Aux var printout loop index.
+   real           :: flux_fact                       ! Aux var printout loop index.
+   real           :: loop_delta                       ! Aux var printout loop index.
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    Cfmt = '(4A18)'
@@ -620,6 +628,26 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
                  ,csite%cwd_rh    (ipa) &
                  ,check_delta,cwd_delta,valid,'cwd_rh',reason)
    
+   if (present(aux_pair)) then
+      loop_ind = 1
+      aux_size = size(aux_vals)
+      outerloop: do loop_ind = 1,aux_size
+         if (aux_pair(loop_ind) /= 0 .and. loop_ind < aux_size) then
+            do loop_ind2 = loop_ind+1,aux_size
+               if (aux_pair(loop_ind2) == aux_pair(loop_ind)) then
+                  !write(*,*) 'Checking ', aux_labs(loop_ind2), ' ', aux_labs(loop_ind)
+                  !write(*,*) aux_vals(loop_ind2), aux_vals(loop_ind)
+                  call check_c13(aux_vals(loop_ind2) &
+                                ,aux_vals(loop_ind)  &
+                                ,check_delta,loop_delta,valid,aux_labs(loop_ind),reason)
+                  !valid = .false.
+                  exit outerloop
+               end if
+            end do
+         end if
+      end do outerloop
+   end if
+   
    if (not(valid)) then
       write(*,*) '======================================================================='
       write(*,*) ' C-13 sanity check error in ', call_loc, '!'
@@ -644,6 +672,22 @@ subroutine check_site_c13(csite,ipa,call_loc,fname)
       write(*,Rfmt) csite%can_co2(ipa),csite%rh(ipa),csite%cwd_rh(ipa)
       write(*,Rfmt) csite%can_co2_c13(ipa),csite%rh_c13(ipa),csite%cwd_rh_c13(ipa)
       write(*,Rfmt) can_co2_delta,rh_delta,cwd_delta
+      write(*,*) '-----------------------------------------------------------------------'
+      if (present(aux_vals)) then
+         aux_size = size(aux_vals)
+         write(*,*) 'Auxiliary Diagnostics (see labels). Row format as above.'
+         write(*,*) '-----------------------------------------------------------------------'
+         write(*,'(4A18)')    aux_labs(1:min(4,aux_size))
+         write(*,'(4ES18.8)') aux_vals(1:min(4,aux_size))
+         loop_ind = 5;
+         do while (aux_size > loop_ind .and. loop_ind < 100)
+            write(*,*) ' '
+            write(*,'(4A18)')    aux_labs(loop_ind:min(loop_ind+3,aux_size))
+            write(*,'(4ES18.8)') aux_vals(loop_ind:min(loop_ind+3,aux_size))
+            loop_ind = loop_ind + 4
+         end do
+         write(*,*) '-----------------------------------------------------------------------'
+      end if
       
 
       call fatal_error(reason,call_loc,fname)
