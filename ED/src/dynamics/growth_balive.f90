@@ -3669,7 +3669,6 @@ module growth_balive
 
 
 
-
    !=======================================================================================!
    !=======================================================================================!
    subroutine litter(csite,ipa)
@@ -3680,6 +3679,8 @@ module growth_balive
                               , c2n_stem  & ! intent(in)
                               , l2n_stem  ! ! intent(in)
       use decomp_coms  , only : f_labile  ! ! intent(in)
+      use isotopes     , only : c13af        ! ! intent(in) !!!DSC!!!
+      use grid_coms    , only : time         ! ! intent(in) !!!DSC!!!
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(sitetype)  , target     :: csite
@@ -3688,9 +3689,23 @@ module growth_balive
       type(patchtype) , pointer    :: cpatch
       integer                      :: ico
       integer                      :: ipft
+      integer                      :: doy
+      integer                      :: trdoy
       real                         :: plant_litter
       real                         :: plant_litter_f
       real                         :: plant_litter_s
+      real                         :: plant_litter_c13      !!!DSC!!!
+      real                         :: plant_litter_f_c13    !!!DSC!!!
+      real                         :: plant_litter_s_c13    !!!DSC!!!
+     !----- External functions. -----------------------------------------------------------!
+     integer          , external   :: date_abs_secs2
+     integer          , external   :: julday1000
+      !------------------------------------------------------------------------------------!
+
+
+
+      !------------------------------------------------------------------------------------!
+      !  For trenching experiment we want to turn off root input to litter pools.          !
       !------------------------------------------------------------------------------------!
 
       cpatch => csite%patch(ipa)
@@ -3703,6 +3718,9 @@ module growth_balive
 
          plant_litter   = ( cpatch%leaf_maintenance(ico) + cpatch%root_maintenance(ico) )  &
                         * cpatch%nplant(ico)
+         !if (time > trench_time) then 
+         !   plant_litter = cpatch%leaf_maintenance(ico) *cpatch%nplant(ico)
+         !end if
          plant_litter_f = plant_litter * f_labile(ipft)
          plant_litter_s = plant_litter - plant_litter_f
 
@@ -3711,11 +3729,24 @@ module growth_balive
 
          csite%ssc_in(ipa) = csite%ssc_in(ipa) + plant_litter_s
          csite%ssl_in(ipa) = csite%ssl_in(ipa) + plant_litter_s * l2n_stem / c2n_stem(ipft)
+         
+         if (c13af > 0) then !!!DSC!!!
+            plant_litter_c13   = (  cpatch%leaf_maintenance_c13(ico)                      &
+                                  + cpatch%root_maintenance_c13(ico) ) * cpatch%nplant(ico)
+            plant_litter_f_c13 = plant_litter_c13 * f_labile(ipft)
+            plant_litter_s_c13 = plant_litter_c13 - plant_litter_f_c13
+
+            csite%fsc13_in  (ipa) = csite%fsc13_in  (ipa) + plant_litter_f_c13
+            csite%ssc13_in  (ipa) = csite%ssc13_in  (ipa) + plant_litter_s_c13
+            csite%ssl_c13_in(ipa) = csite%ssl_c13_in(ipa)                                  &
+                                  + plant_litter_s_c13 * l2n_stem / c2n_stem(ipft)
+         end if
       end do
       return
    end subroutine litter
    !=======================================================================================!
    !=======================================================================================!
+   
 end module growth_balive
 !==========================================================================================!
 !==========================================================================================!
