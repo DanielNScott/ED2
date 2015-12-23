@@ -70,7 +70,7 @@ subroutine vegetation_dynamics(new_day,new_month,new_year)
       if (new_day) then
          !----- Standardise the fast-scale uptake and respiration, for growth rates. ------!
          call normalize_ed_today_vars(cgrid)
-         call update_growth_resp(cgrid)
+         !call update_growth_resp(cgrid)   ! Moved into leaf_root_c13_resp
          !----- Update phenology ----------------------------------------------------------!
          call phenology_driver(cgrid,doy,current_time%month, dtlsm_o_day)
       end if

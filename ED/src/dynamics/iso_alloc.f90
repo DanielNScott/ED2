@@ -51,6 +51,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
    use ed_state_vars  , only : sitetype                  & ! structure
                              , patchtype                 ! ! structure
    use ed_misc_coms   , only : dtlsm                     & ! intent(in)
+                             , current_time              & ! intent(in)
                              , frqsum                    ! ! intent(in)
    use isotopes       , only : c13af                     ! ! intent(in)
    use iso_utils      , only : hotc                      & ! intent(in)
@@ -65,6 +66,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
    use growth_balive  , only : get_maintenance        & ! intent(in)
                              , apply_maintenance      & ! intent(in)
                              , apply_maintenance_c13  & ! intent(in)
+                             , update_growth_resp_co  & ! intent(in)
                              , get_storage_resp       ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
@@ -147,7 +149,11 @@ subroutine leaf_root_resp_c13(csite,ipa)
    cohortloop: do ico = 1,cpatch%ncohorts     
       flux_fact     = umol_2_kgC *dtlsm /cpatch%nplant(ico)
       flux_fact_inv = cpatch%nplant(ico) /umol_2_kgC /dtlsm
-   
+      
+      if (current_time%time < dtlsm) then
+         !write(*,*) 'New day!'
+         call update_growth_resp_co(cpatch,ico)
+      end if
       
       call get_maintenance(cpatch,ico,tfact*dtlsm_o_daysec,csite%can_temp(ipa),cb_decrement)             
       call apply_maintenance(cpatch,ico)

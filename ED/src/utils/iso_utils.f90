@@ -717,6 +717,13 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
    !----- Local Vars ----------------------------------------------------------------------!
    logical                    :: all_bets_are_off
    !---------------------------------------------------------------------------------------!
+   delta = htIsoDelta(heavy,total)
+   
+   all_bets_are_off = abs(total) < 0.00000001 ! 10E-8
+   if (all_bets_are_off) then
+      valid = .true.
+      return
+   end if
    
    if (heavy > tiny_num) then
       if (total > tiny_num) then
@@ -737,12 +744,9 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
       return
    end if
    
-   all_bets_are_off = total < 0.00000001 ! 10E-8
-   delta = htIsoDelta(heavy,total)
-   
    ! Last condition here, delta /= delta is a NaN check.
-   if ( ( abs(total) > tiny_num) .and. check_delta .and. not(all_bets_are_off) .and. &
-        ( delta <  -50.0   .or. tiny_num < delta .or. delta /= delta)) then
+   if ( ( abs(total) > tiny_num) .and. check_delta .and. &
+        ( delta <  -200.0   .or. tiny_num < delta .or. delta /= delta)) then
       valid = .false.
       reason = 'Bad ' // trim(adjustl(vname)) // ' delta C-13'
    end if

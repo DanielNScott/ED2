@@ -523,6 +523,101 @@ module growth_balive
 
 
 
+
+   !=======================================================================================!
+   !=======================================================================================!
+   !     This subroutine will scale the daily averages of GPP and some respiration vari-   !
+   ! ables to normal units.  These variables are not for output, so they are done          !
+   ! separatedly.  There are also some output variables here, because these depend on the  !
+   ! average of the gpp, and leaf and root respiration and would need to be calculated     !
+   ! again otherwise.                                                                      !
+   !---------------------------------------------------------------------------------------!
+   subroutine update_growth_resp_co(cpatch,ico)
+      use ed_state_vars , only : patchtype          ! ! structure
+      use pft_coms      , only : growth_resp_factor ! ! intent(in)
+      use ed_misc_coms  , only : dtlsm              & ! intent(in)
+                               , growth_resp_scheme ! ! intent(in)
+      use consts_coms   , only : day_sec            ! ! intent(in)
+      use isotopes      , only : c13af              ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      type(patchtype)  , target    :: cpatch
+      !----- Local variables. -------------------------------------------------------------!
+      integer                       :: ico
+      integer                       :: ipft
+      real                          :: growth_resp_int         ! Growth resp / balive
+      real                          :: growth_resp_c13
+      real                          :: daysec_o_dtlsm
+      !------------------------------------------------------------------------------------!
+      daysec_o_dtlsm = day_sec / dtlsm
+      
+                  ipft = cpatch%pft(ico)
+                  !------------------------------------------------------------------------!
+                  !  Compute the growth respiration as a fraction of yesterday's NPP.      !
+                  !  This stays in units kgC/m^2 (per dtlsm) because it's used every dtlsm.!
+                  !------------------------------------------------------------------------!
+                  cpatch%growth_resp         (ico) = max(0.0,cpatch%today_npp         (ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_pot     (ico) = max(0.0,cpatch%today_npp_pot     (ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_lightmax(ico) = max(0.0,cpatch%today_npp_lightmax(ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_moistmax(ico) = max(0.0,cpatch%today_npp_moistmax(ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_mlmax   (ico) = max(0.0,cpatch%today_npp_mlmax   (ico)&
+                                                             * growth_resp_factor(ipft))
+                  !------------------------------------------------------------------------!
+                  
+                  !------------------------------------------------------------------------!
+                  !  Compute respiration rates for coming day [kgC/plant/day].             !
+                  !------------------------------------------------------------------------!
+                  select case(growth_resp_scheme)
+                  case(0)
+                     cpatch%sapa_growth_resp(ico) = max(0.0,cpatch%growth_resp(ico))
+                     cpatch%leaf_growth_resp(ico) = 0.0
+                     cpatch%root_growth_resp(ico) = 0.0
+                     cpatch%sapb_growth_resp(ico) = 0.0
+                  case(1)
+                     growth_resp_int = max(0.0,cpatch%growth_resp(ico)/cpatch%balive(ico))
+
+                     cpatch%leaf_growth_resp(ico) = growth_resp_int * cpatch%bleaf(ico)
+                     cpatch%root_growth_resp(ico) = growth_resp_int * cpatch%broot(ico)
+                     cpatch%sapa_growth_resp(ico) = growth_resp_int * cpatch%bsapwooda(ico)
+                     cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
+                  end select
+                  
+                  ! This is being done in leaf_
+                  !if (c13af > 0) then
+                  !   growth_resp_c13 = max(0.0,cpatch%today_npp_c13(ico)*growth_resp_factor(ipft))
+                     !cpatch%growth_resp_c13(ico) = cpatch%growth_resp(ico)               &
+                     !                            * hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+                     
+                  !   select case(growth_resp_scheme)
+                  !   case(0)
+                  !      cpatch%sapa_growth_resp_c13(ico) = max(0.0,cpatch%growth_resp(ico))
+                  !      cpatch%leaf_growth_resp_c13(ico) = 0.0
+                  !      cpatch%root_growth_resp_c13(ico) = 0.0
+                  !      cpatch%sapb_growth_resp_c13(ico) = 0.0
+                  !   case(1)
+                  !      growth_resp_int = max(0.0,growth_resp_c13/cpatch%balive_c13(ico))
+
+                  !      cpatch%leaf_growth_resp_c13(ico) = growth_resp_int * cpatch%bleaf_c13(ico)
+                  !      cpatch%root_growth_resp_c13(ico) = growth_resp_int * cpatch%broot_c13(ico)
+                  !      cpatch%sapa_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwooda_c13(ico)
+                  !      cpatch%sapb_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwoodb_c13(ico)
+                  !   end select
+                  !end if
+                  !------------------------------------------------------------------------!                  
+
+      return
+   end subroutine update_growth_resp_co
+   !=======================================================================================!
+   !=======================================================================================!
+
+
+
+
+
    !=======================================================================================!
    !=======================================================================================!
    !     This subroutine will compute the terms relative to growth of the living tissues,  !
