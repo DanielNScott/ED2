@@ -294,7 +294,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
-   logical        :: check_delta = .true.               ! Is there a problem?
+   logical        :: check_delta = .false.               ! Is there a problem?
    character(40)  :: reason                              ! Error or warning diagnosis reason
    character(7)   :: Cfmt                                ! Character format, for strings
    character(9)   :: Rfmt                                ! Real format, for reals.
@@ -577,7 +577,7 @@ subroutine check_site_c13(csite,ipa,call_loc,fname,aux_vals,aux_labs,aux_pair)
    integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
-   logical        :: check_delta = .true.               ! Is there a problem?
+   logical        :: check_delta = .false.               ! Is there a problem?
    character(40)  :: reason                              ! Error or warning diagnosis reason
    character(6)   :: Cfmt                                ! Character format, for strings
    character(8)   :: Rfmt                                ! Real format, for reals.
@@ -746,7 +746,7 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
    
    ! Last condition here, delta /= delta is a NaN check.
    if ( ( abs(total) > tiny_num) .and. check_delta .and. &
-        ( delta <  -200.0   .or. tiny_num < delta .or. delta /= delta)) then
+        ( delta <  -100.0   .or. tiny_num < delta .or. delta /= delta)) then
       valid = .false.
       reason = 'Bad ' // trim(adjustl(vname)) // ' delta C-13'
    end if
