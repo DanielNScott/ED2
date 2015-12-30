@@ -1391,6 +1391,19 @@ module fuse_fiss_utils
 
       cpatch%growth_resp_mlmax    (recc) = cpatch%growth_resp_mlmax    (recc)              &
                                          + cpatch%growth_resp_mlmax    (donc)
+      
+      cpatch%leaf_growth_resp     (recc) = cpatch%leaf_growth_resp     (recc)              &
+                                         + cpatch%leaf_growth_resp     (donc)
+
+      cpatch%root_growth_resp     (recc) = cpatch%root_growth_resp     (recc)              &
+                                         + cpatch%root_growth_resp     (donc)
+
+      cpatch%sapa_growth_resp     (recc) = cpatch%sapa_growth_resp     (recc)              &
+                                         + cpatch%sapa_growth_resp     (donc)
+
+      cpatch%sapb_growth_resp     (recc) = cpatch%sapb_growth_resp     (recc)              &
+                                         + cpatch%sapb_growth_resp     (donc)
+
       !if (c_alloc_flg > 0) then
       !   cpatch%today_lassim_resp  (recc) = cpatch%today_lassim_resp      (recc)           &
       !                                    + cpatch%today_lassim_resp      (donc)
@@ -1406,6 +1419,19 @@ module fuse_fiss_utils
  
       !   cpatch%today_root_resp_c13(recc) = cpatch%today_root_resp_c13    (recc)           &
       !                                    + cpatch%today_root_resp_c13    (donc)
+         cpatch%leaf_growth_resp_c13 (recc) = cpatch%leaf_growth_resp_c13 (recc)              &
+                                            + cpatch%leaf_growth_resp_c13 (donc)
+
+         cpatch%root_growth_resp_c13 (recc) = cpatch%root_growth_resp_c13 (recc)              &
+                                            + cpatch%root_growth_resp_c13 (donc)
+
+         cpatch%sapa_growth_resp_c13 (recc) = cpatch%sapa_growth_resp_c13 (recc)              &
+                                            + cpatch%sapa_growth_resp_c13 (donc)
+
+         cpatch%sapb_growth_resp_c13 (recc) = cpatch%sapb_growth_resp_c13 (recc)              &
+                                            + cpatch%sapb_growth_resp_c13 (donc)
+
+      !if (c_alloc_flg > 0) then
       !   if (c_alloc_flg > 0) then
       !      cpatch%today_lassim_resp_c13(recc) = cpatch%today_lassim_resp_c13    (recc)    &
       !                                         + cpatch%today_lassim_resp_c13    (donc)

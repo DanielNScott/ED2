@@ -293,8 +293,8 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    character(18), dimension(:), optional, intent(in) :: aux_labs
    integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
-   logical        :: error_found = .false.               ! Is there a problem?
-   logical        :: check_delta = .false.               ! Is there a problem?
+   logical        :: error_found                         ! Is there a problem?
+   logical        :: check_delta                         ! Is there a problem?
    character(40)  :: reason                              ! Error or warning diagnosis reason
    character(7)   :: Cfmt                                ! Character format, for strings
    character(9)   :: Rfmt                                ! Real format, for reals.
@@ -330,15 +330,13 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    !---------------------------------------------------------------------------------------!
    Cfmt = '(11A18)'
    Rfmt = '(11E18.2)'
-
    flux_fact = umol_2_kgC*dtlsm/cpatch%nplant(ico)
+
    !------------------------------------------------------------------------------!
-   ! Perform a great big sanity check. Today_XXX vars are included to potentially !
-   ! detect problems generated elsewhere in the code. Clearly it is the case in   !
-   ! this routine that if a today var is messed up it is because it's sub-daily   !
-   ! analogue is to blame.                                                        !
+   ! Perform sanity check.                                                        !
    !------------------------------------------------------------------------------!
-   ! Assimilated C-13 should not exceed assimilated C.
+   check_delta = .true.
+   error_found = .false.
    reason = ''
 
    ! If gpp has a crazy delta, we should allow the model to proceed with
@@ -577,7 +575,7 @@ subroutine check_site_c13(csite,ipa,call_loc,fname,aux_vals,aux_labs,aux_pair)
    integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
-   logical        :: check_delta = .false.               ! Is there a problem?
+   logical        :: check_delta = .true.                ! Is there a problem?
    character(40)  :: reason                              ! Error or warning diagnosis reason
    character(6)   :: Cfmt                                ! Character format, for strings
    character(8)   :: Rfmt                                ! Real format, for reals.
@@ -719,7 +717,8 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
    !---------------------------------------------------------------------------------------!
    delta = htIsoDelta(heavy,total)
    
-   all_bets_are_off = abs(total) < 0.00000001 ! 10E-8
+   all_bets_are_off = (abs(total) < 0.00000001 .and. abs(heavy) < 0.00000001) ! 10E-8
+   !all_bets_are_off = .true.
    if (all_bets_are_off) then
       valid = .true.
       return
@@ -746,7 +745,7 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
    
    ! Last condition here, delta /= delta is a NaN check.
    if ( ( abs(total) > tiny_num) .and. check_delta .and. &
-        ( delta <  -100.0   .or. tiny_num < delta .or. delta /= delta)) then
+        ( delta <  -50.0   .or. tiny_num < delta .or. delta /= delta)) then
       valid = .false.
       reason = 'Bad ' // trim(adjustl(vname)) // ' delta C-13'
    end if

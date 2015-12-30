@@ -547,9 +547,9 @@ module growth_balive
       integer                       :: ipft
       real                          :: growth_resp_int         ! Growth resp / balive
       real                          :: growth_resp_c13
-      real                          :: daysec_o_dtlsm
+      real                          :: dtlsm_o_daysec
       !------------------------------------------------------------------------------------!
-      daysec_o_dtlsm = day_sec / dtlsm
+      dtlsm_o_daysec = dtlsm / day_sec
       
                   ipft = cpatch%pft(ico)
                   !------------------------------------------------------------------------!
@@ -557,15 +557,20 @@ module growth_balive
                   !  This stays in units kgC/m^2 (per dtlsm) because it's used every dtlsm.!
                   !------------------------------------------------------------------------!
                   cpatch%growth_resp         (ico) = max(0.0,cpatch%today_npp         (ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_pot     (ico) = max(0.0,cpatch%today_npp_pot     (ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_lightmax(ico) = max(0.0,cpatch%today_npp_lightmax(ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_moistmax(ico) = max(0.0,cpatch%today_npp_moistmax(ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_mlmax   (ico) = max(0.0,cpatch%today_npp_mlmax   (ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   !------------------------------------------------------------------------!
                   
                   !------------------------------------------------------------------------!
@@ -578,6 +583,8 @@ module growth_balive
                      cpatch%root_growth_resp(ico) = 0.0
                      cpatch%sapb_growth_resp(ico) = 0.0
                   case(1)
+                     cpatch%balive(ico) = cpatch%bleaf(ico)     + cpatch%broot(ico)        &
+                                        + cpatch%bsapwooda(ico) + cpatch%bsapwoodb(ico)
                      growth_resp_int = max(0.0,cpatch%growth_resp(ico)/cpatch%balive(ico))
 
                      cpatch%leaf_growth_resp(ico) = growth_resp_int * cpatch%bleaf(ico)
@@ -1975,6 +1982,7 @@ module growth_balive
       tr_bsapwoodb_c13 = tr_bsapwoodb_c13 + addnl_bsapb_c13
       tr_bstorage_c13  = tr_bstorage_c13  + addnl_bstor_c13
       
+      !write (*,*) cpatch%bstorage(ico), cpatch%bstorage_c13(ico), tr_bstorage, tr_bstorage_c13
       return
    end subroutine get_c13_xfers
    !=======================================================================================!
@@ -2566,11 +2574,16 @@ module growth_balive
       !----- Alias for PFT type. ----------------------------------------------------------!
       ipft = cpatch%pft(ico)
       !------------------------------------------------------------------------------------!
+      !if (cpatch%growth_resp(ico) < cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico))then
 
       !------------------------------------------------------------------------------------!
       !       Calculate dtlsm carbon balance: kgC/plant/dtlsm.                             !
       !------------------------------------------------------------------------------------!
-      carbon_balance = dtlsm_c_gain - cpatch%growth_resp(ico)
+      !carbon_balance = dtlsm_c_gain - cpatch%growth_resp(ico)
+      carbon_balance = dtlsm_c_gain - cpatch%leaf_growth_resp(ico)                         &
+                                    - cpatch%root_growth_resp(ico)                         &
+                                    - cpatch%sapa_growth_resp(ico)                         &
+                                    - cpatch%sapb_growth_resp(ico)
       !------------------------------------------------------------------------------------!
 
       if (cpatch%nplant(ico) > tiny(1.0)) then

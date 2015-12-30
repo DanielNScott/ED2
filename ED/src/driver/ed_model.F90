@@ -173,7 +173,6 @@ subroutine ed_model()
 
       !----- Output initial state. --------------------------------------------------------!
       do ifm=1,ngrids
-         call zero_ed_yearly_vars(edgrid_g(ifm))         ! Zero growth rates etc.
          call update_ed_yearly_vars(edgrid_g(ifm))
       end do
    end if
@@ -236,6 +235,7 @@ subroutine ed_model()
                               ,current_time%year,' ',current_time%hour,':'                 &
                               ,current_time%min,':',current_time%sec,' UTC'
       end if
+
 
       !----- Define which cohorts are to be solved prognostically. ------------------------!
       do ifm=1,ngrids
@@ -457,18 +457,6 @@ subroutine ed_model()
       end if
       !------------------------------------------------------------------------------------!
 
-      
-      !------------------------------------------------------------------------------------!
-      !      Update the yearly variables. DS: This needs to happen before not after output.!
-      !------------------------------------------------------------------------------------!
-      !if (analysis_time .and. new_month .and. new_day .and. current_time%month == 6) then
-      if (annual_time) then
-         do ifm = 1,ngrids
-            call update_ed_yearly_vars(edgrid_g(ifm))
-         end do
-      end if
-      !------------------------------------------------------------------------------------!
-
 
       !------------------------------------------------------------------------------------!
       !     Call the model output driver.                                                  !
@@ -502,6 +490,18 @@ subroutine ed_model()
       if (new_day .and. new_month) then
          do ifm = 1,ngrids
             call updateHydroParms(edgrid_g(ifm))
+         end do
+      end if
+      !------------------------------------------------------------------------------------!
+
+
+
+      !------------------------------------------------------------------------------------!
+      !      Update the yearly variables.                                                  !
+      !------------------------------------------------------------------------------------!
+      if (analysis_time .and. new_month .and. new_day .and. current_time%month == 6) then
+         do ifm = 1,ngrids
+            call update_ed_yearly_vars(edgrid_g(ifm))
          end do
       end if
       !------------------------------------------------------------------------------------!

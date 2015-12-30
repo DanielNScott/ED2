@@ -1338,6 +1338,10 @@ subroutine update_cohort_extensive_props(cpatch,aco,zco,mult)
       cpatch%growth_resp_lightmax(ico) = cpatch%growth_resp_lightmax(ico) * mult
       cpatch%growth_resp_moistmax(ico) = cpatch%growth_resp_moistmax(ico) * mult
       cpatch%growth_resp_mlmax   (ico) = cpatch%growth_resp_mlmax   (ico) * mult
+      cpatch%leaf_growth_resp    (ico) = cpatch%leaf_growth_resp  (ico) * mult
+      cpatch%root_growth_resp    (ico) = cpatch%root_growth_resp  (ico) * mult
+      cpatch%sapa_growth_resp    (ico) = cpatch%sapa_growth_resp  (ico) * mult
+      cpatch%sapb_growth_resp    (ico) = cpatch%sapb_growth_resp  (ico) * mult
       cpatch%gpp                (ico) = cpatch%gpp                (ico) * mult
       cpatch%leaf_respiration   (ico) = cpatch%leaf_respiration   (ico) * mult
       cpatch%root_respiration   (ico) = cpatch%root_respiration   (ico) * mult
@@ -1487,6 +1491,10 @@ subroutine update_cohort_extensive_props(cpatch,aco,zco,mult)
          cpatch%gpp_c13                (ico) = cpatch%gpp_c13                (ico) * mult 
          cpatch%leaf_respiration_c13   (ico) = cpatch%leaf_respiration_c13   (ico) * mult 
          cpatch%root_respiration_c13   (ico) = cpatch%root_respiration_c13   (ico) * mult
+         cpatch%leaf_growth_resp_c13   (ico) = cpatch%leaf_growth_resp_c13   (ico) * mult
+         cpatch%root_growth_resp_c13   (ico) = cpatch%root_growth_resp_c13   (ico) * mult
+         cpatch%sapa_growth_resp_c13   (ico) = cpatch%sapa_growth_resp_c13   (ico) * mult
+         cpatch%sapb_growth_resp_c13   (ico) = cpatch%sapb_growth_resp_c13   (ico) * mult
          if (c_alloc_flg > 0) then
             cpatch%today_lassim_resp_c13 (ico) = cpatch%today_lassim_resp_c13(ico) * mult
          end if

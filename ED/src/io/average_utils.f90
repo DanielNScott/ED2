@@ -3594,20 +3594,24 @@ module average_utils
                   cpatch%today_nppseeds     (ico) = 0.0
                   cpatch%today_nppwood      (ico) = 0.0
                   cpatch%today_nppdaily     (ico) = 0.0
-                  cpatch%gpp_pot            (ico) = 0.0
-                  cpatch%gpp_lightmax       (ico) = 0.0
-                  cpatch%gpp_moistmax       (ico) = 0.0
-                  cpatch%gpp_mlmax          (ico) = 0.0
+                  !cpatch%gpp_pot            (ico) = 0.0
+                  !cpatch%gpp_lightmax       (ico) = 0.0
+                  !cpatch%gpp_moistmax       (ico) = 0.0
+                  !cpatch%gpp_mlmax          (ico) = 0.0
                   cpatch%today_npp           (ico) = 0.0
                   cpatch%today_npp_pot       (ico) = 0.0
                   cpatch%today_npp_lightmax  (ico) = 0.0
                   cpatch%today_npp_moistmax  (ico) = 0.0
                   cpatch%today_npp_mlmax     (ico) = 0.0
-                  cpatch%growth_resp         (ico) = 0.0
-                  cpatch%growth_resp_pot     (ico) = 0.0
-                  cpatch%growth_resp_lightmax(ico) = 0.0
-                  cpatch%growth_resp_moistmax(ico) = 0.0
-                  cpatch%growth_resp_mlmax   (ico) = 0.0
+                  !cpatch%growth_resp         (ico) = 0.0
+                  !cpatch%growth_resp_pot     (ico) = 0.0
+                  !cpatch%growth_resp_lightmax(ico) = 0.0
+                  !cpatch%growth_resp_moistmax(ico) = 0.0
+                  !cpatch%growth_resp_mlmax   (ico) = 0.0
+                  !cpatch%leaf_growth_resp    (ico) = 0.0
+                  !cpatch%root_growth_resp    (ico) = 0.0
+                  !cpatch%sapa_growth_resp    (ico) = 0.0
+                  !cpatch%sapb_growth_resp    (ico) = 0.0
                   
                   if (c_alloc_flg > 0) then
                      !cpatch%today_lassim_resp   (ico) = 0.0
@@ -3617,6 +3621,11 @@ module average_utils
                      !cpatch%today_gpp_c13       (ico) = 0.0
                      !cpatch%today_leaf_resp_c13 (ico) = 0.0
                      !cpatch%today_root_resp_c13 (ico) = 0.0
+                     
+                     !cpatch%leaf_growth_resp_c13    (ico) = 0.0
+                     !cpatch%root_growth_resp_c13    (ico) = 0.0
+                     !cpatch%sapa_growth_resp_c13    (ico) = 0.0
+                     !cpatch%sapb_growth_resp_c13    (ico) = 0.0
                      if (c_alloc_flg > 0) then
                         !cpatch%today_lassim_resp_c13  (ico) = 0.0
                      end if
