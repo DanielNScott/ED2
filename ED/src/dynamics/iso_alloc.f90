@@ -81,67 +81,70 @@ subroutine leaf_root_resp_c13(csite,ipa)
    real                     :: carbon_balance             ! Respiration excl. storage_resp
    real                     :: carbon_debt                ! Respiration excl. storage_resp
    real                     :: bloss_max                  ! Respiration excl. storage_resp
-   real                     :: lf_bloss                   ! Respiration excl. storage_resp
-   real                     :: rf_bloss                   ! Respiration excl. storage_resp
    real                     :: ff_gpp                     ! Fraction of above from gpp.
    real                     :: ratio_gpp                  ! heavy:total carbon in GPP
    real                     :: ratio_stor                 ! heavy:total carbon in storage
    real                     :: ratio_resp                 ! heavy:total carbon in resp
    real                     :: ratio_leaf                 ! heavy:total carbon in resp
    real                     :: ratio_root                 ! heavy:total carbon in resp
+
    real                     :: gpp_loss                   ! heavy:total carbon in resp
    real                     :: stor_loss                  ! heavy:total carbon in resp
    real                     :: leaf_loss                  ! heavy:total carbon in resp
    real                     :: root_loss                  ! heavy:total carbon in resp
-   real                     :: f_leaf                     ! heavy:total carbon in resp
-   real                     :: f_root                     ! heavy:total carbon in resp
+
+   real                     :: f_lr                       ! heavy:total carbon in resp
+   real                     :: f_rr                       ! heavy:total carbon in resp
    real                     :: f_lgr                      ! heavy:total carbon in resp
    real                     :: f_rgr                      ! heavy:total carbon in resp
    real                     :: f_sagr                     ! heavy:total carbon in resp
    real                     :: f_sbgr                     ! heavy:total carbon in resp
-   real                     :: leaf_r_sum                     ! heavy:total carbon in resp
-   real                     :: root_r_sum                     ! heavy:total carbon in resp
-   real                     :: lrf                     ! heavy:total carbon in resp
-   real                     :: lgf                     ! heavy:total carbon in resp
-   real                     :: rrf                     ! heavy:total carbon in resp
-   real                     :: rgf                       ! heavy:total carbon in resp
-   real                     :: gen_loss                     ! heavy:total carbon in resp
+
    real                     :: leaf_resp                  ! heavy:total carbon in resp
    real                     :: root_resp                  ! heavy:total carbon in resp
+   
    real                     :: dtlsm_o_frqsum             ! heavy:total carbon in resp
    real                     :: dtlsm_o_daysec             ! heavy:total carbon in resp
+   
    real                     :: tfact             ! heavy:total carbon in resp
    real                     :: cb_decrement             ! heavy:total carbon in resp
+
    real                     :: lloss_aim             ! heavy:total carbon in resp
    real                     :: rloss_aim    ! heavy:total carbon in resp
+
    real                     :: lloss_overrun         ! heavy:total carbon in resp
    real                     :: rloss_overrun         ! heavy:total carbon in resp
    real                     :: leaf_int_loss         ! heavy:total carbon in resp
    real                     :: root_int_loss    ! heavy:total carbon in resp
+
    real                     :: leaf_respiration_c13         ! heavy:total carbon in resp
    real                     :: root_respiration_c13         ! heavy:total carbon in resp
    real                     :: carbon13_balance         ! heavy:total carbon in resp
+
    real                     :: flux_fact
    real                     :: flux_fact_inv
    real                     :: dtlsm_c_gain
    real                     :: dtlsm_c13_gain
+
    real                     :: gpp_2_lrr
    real                     :: gpp_2_gr
+
    real                     :: stor_2_lrr
    real                     :: stor_2_gr
+
    real                     :: leaf_loss_2_lr
    real                     :: root_loss_2_rr
    real                     :: leaf_loss_2_lgr
    real                     :: root_loss_2_rgr
+
    real                     :: l2lrsum
    real                     :: r2lrsum
    real                     :: lgr2gr
    real                     :: rgr2gr
    real                     :: sagr2gr
    real                     :: sbgr2gr
-   real                     :: sagf
-   real                     :: sbgf
-   real                     :: r_carbon_debt_2_lrr
+
+   real                     :: f_debt_2_lrr
    real                     :: growth_resp
    real                     :: lrresp_residual
 
@@ -150,8 +153,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
    real                     :: rgr2rgr_plus_sbgr
    real                     :: sbgr2rgr_plus_sbgr
 
-   real         , dimension(54) :: patch_check_vals         ! heavy:total carbon in resp
-   character(18), dimension(54) :: patch_check_labs       ! heavy:total carbon in resp
+   real         , dimension(46) :: patch_check_vals         ! heavy:total carbon in resp
+   character(18), dimension(46) :: patch_check_labs       ! heavy:total carbon in resp
    !---------------------------------------------------------------------------------------!
    dtlsm_o_frqsum = dtlsm/frqsum  
    dtlsm_o_daysec = dtlsm/day_sec
@@ -179,7 +182,6 @@ subroutine leaf_root_resp_c13(csite,ipa)
       dummytime = current_time
       call update_model_time_dm(dummytime,dtlsm)
       if (dummytime%time < dtlsm) then
-         !write(*,*) 'New day!'
          call update_growth_resp_co(cpatch,ico)
       end if
       
@@ -188,11 +190,12 @@ subroutine leaf_root_resp_c13(csite,ipa)
       call apply_maintenance_c13(cpatch,ico)
       call get_storage_resp(cpatch,ico,tfact*dtlsm_o_daysec)
       
-      cpatch%bstorage(ico) = cpatch%bstorage(ico)                                          & 
-                           - cpatch%leaf_storage_resp(ico)                                 &
-                           - cpatch%root_storage_resp(ico)                                 &
-                           - cpatch%sapa_storage_resp(ico)                                 &
-                           - cpatch%sapb_storage_resp(ico)
+      cpatch%bstorage(ico)     = cpatch%bstorage(ico)                                          & 
+                               - cpatch%leaf_storage_resp(ico)                                 &
+                               - cpatch%root_storage_resp(ico)                                 &
+                               - cpatch%sapa_storage_resp(ico)                                 &
+                               - cpatch%sapb_storage_resp(ico)
+
       cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico)                      &
                                - cpatch%leaf_storage_resp_c13(ico)             &
                                - cpatch%root_storage_resp_c13(ico)             &
@@ -225,16 +228,6 @@ subroutine leaf_root_resp_c13(csite,ipa)
       !------------------------------------------------------------------------------------!
       ! Find the proportions to partition leaf-based and root-based resp.                  !
       !------------------------------------------------------------------------------------!
-      leaf_r_sum = leaf_resp + cpatch%leaf_growth_resp(ico) !+ cpatch%sapa_growth_resp(ico)
-      root_r_sum = root_resp + cpatch%root_growth_resp(ico) !+ cpatch%sapb_growth_resp(ico)
-                      
-      lrf  = hotc(leaf_resp                   ,leaf_r_sum)
-      lgf  = hotc(cpatch%leaf_growth_resp(ico),leaf_r_sum)
-      !sagf = hotc(cpatch%sapa_growth_resp(ico),leaf_r_sum)
-      
-      rrf  = hotc(root_resp                   ,root_r_sum)
-      rgf  = hotc(cpatch%root_growth_resp(ico),root_r_sum)
-      !sbgf = hotc(cpatch%sapb_growth_resp(ico),root_r_sum)
       
       dtlsm_c_gain   =  cpatch%gpp(ico)*flux_fact - leaf_resp - root_resp
       carbon_balance = (cpatch%gpp(ico)*flux_fact) - resp_loss
@@ -273,8 +266,6 @@ subroutine leaf_root_resp_c13(csite,ipa)
       root_loss_2_rgr = 0.0
 
       bloss_max   = cpatch%bleaf(ico) + cpatch%broot(ico)
-      lf_bloss    = cpatch%bleaf(ico) /bloss_max
-      rf_bloss    = cpatch%broot(ico) /bloss_max
       
       lloss_aim     = 0.0
       rloss_aim     = 0.0
@@ -284,12 +275,12 @@ subroutine leaf_root_resp_c13(csite,ipa)
       rloss_overrun = 0.0
       
       ! if dtlsm_c_gain < 0 then leaf and root resp are using more than just gpp.                           
-      r_carbon_debt_2_lrr = max(min(dtlsm_c_gain/carbon_balance,1.0),0.0)
+      f_debt_2_lrr = max(min(dtlsm_c_gain/carbon_balance,1.0),0.0)
       
       if (dtlsm_c_gain > 0.0) then
          ! None of leaf or root biomass is going to leaf_respiration or root_respiration.
-         f_leaf = 0.0
-         f_root = 0.0
+         f_lr = 0.0
+         f_rr = 0.0
 
          if (carbon_balance > 0.0) then
             ! There will be no leaf loss or root loss, so these fractions don't mean
@@ -309,8 +300,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
          ! Leaf/Root loss will be split evenly between the fraction of leaf_respiration not
          ! already accounted for and the other above/below-ground growth resps.
          lrresp_residual = abs(dtlsm_c_gain)
-         f_leaf = l2lrsum *hotc(abs(dtlsm_c_gain),growth_resp + abs(dtlsm_c_gain))
-         f_root = r2lrsum *hotc(abs(dtlsm_c_gain),growth_resp + abs(dtlsm_c_gain))
+         f_lr = l2lrsum *hotc(abs(dtlsm_c_gain),growth_resp + abs(dtlsm_c_gain))
+         f_rr = r2lrsum *hotc(abs(dtlsm_c_gain),growth_resp + abs(dtlsm_c_gain))
         
          f_lgr  = hotc(cpatch%leaf_growth_resp(ico),growth_resp + abs(dtlsm_c_gain)) 
          f_rgr  = hotc(cpatch%root_growth_resp(ico),growth_resp + abs(dtlsm_c_gain)) 
@@ -318,16 +309,6 @@ subroutine leaf_root_resp_c13(csite,ipa)
          f_sbgr = hotc(cpatch%sapb_growth_resp(ico),growth_resp + abs(dtlsm_c_gain)) 
 
       end if
-
-      ! Appears to run more or less properly with the following: 
-      ! However, there is a strange problem when taking out of leaves and roots.
-      !f_root = max(min(hotc(leaf_resp                   ,resp_loss),1.0),0.0)
-      !f_root = max(min(hotc(root_resp                   ,resp_loss),1.0),0.0)
-      !f_lgr  = max(min(hotc(cpatch%leaf_growth_resp(ico),resp_loss),1.0),0.0)
-      !f_rgr  = max(min(hotc(cpatch%root_growth_resp(ico),resp_loss),1.0),0.0)
-      !f_sagr = max(min(hotc(cpatch%sapa_growth_resp(ico),resp_loss),1.0),0.0)
-      !f_sbgr = max(min(hotc(cpatch%sapb_growth_resp(ico),resp_loss),1.0),0.0)
-      
 
       if (carbon_balance > 0.0) then
          !---------------------------------------------------------------------------------!
@@ -386,8 +367,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
                   ! All respiration has leaf or root substrate.                              !
                   ! 13C_removed = var_13C:C * proportion_from_var * total_C_being_removed    !
                   !--------------------------------------------------------------------------!               
-                  lloss_aim   = (f_leaf + f_lgr + f_sagr)*carbon_debt
-                  rloss_aim   = (f_root + f_rgr + f_sbgr)*carbon_debt
+                  lloss_aim   = (f_lr + f_lgr + f_sagr)*carbon_debt
+                  rloss_aim   = (f_rr + f_rgr + f_sbgr)*carbon_debt
 
                   ! Only one of these will be > 0, otherwise carbon_debt > bloss_max
                   lloss_overrun = max(lloss_aim - cpatch%bleaf(ico),0.0)
@@ -409,8 +390,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
                ! All respiration has leaf or root substrate.                              !
                ! 13C_removed = var_13C:C * proportion_from_var * total_C_being_removed    !
                !--------------------------------------------------------------------------!               
-               lloss_aim   = (f_leaf + f_lgr + f_sagr)*carbon_debt
-               rloss_aim   = (f_root + f_rgr + f_sbgr)*carbon_debt
+               lloss_aim   = (f_lr + f_lgr + f_sagr)*carbon_debt
+               rloss_aim   = (f_rr + f_rgr + f_sbgr)*carbon_debt
 
                ! Only one of these will be > 0, otherwise carbon_debt > bloss_max
                lloss_overrun = max(lloss_aim - cpatch%bleaf(ico),0.0)
@@ -422,8 +403,6 @@ subroutine leaf_root_resp_c13(csite,ipa)
                leaf_loss = leaf_int_loss *ratio_leaf + rloss_overrun *ratio_root
                root_loss = root_int_loss *ratio_root + lloss_overrun *ratio_leaf
                
-               !leaf_loss = ratio_leaf * lf_bloss * min(bloss_max,carbon_debt)
-               !root_loss = ratio_root * rf_bloss * min(bloss_max,carbon_debt)
             else
                !--------------------------------------------------------------------------!
                ! All leaves and roots will go, then some storage.                         !
@@ -454,13 +433,13 @@ subroutine leaf_root_resp_c13(csite,ipa)
          else
             gpp_2_lrr  = gpp_loss
             gpp_2_gr   = 0.0
-            stor_2_lrr = stor_loss *       r_carbon_debt_2_lrr
-            stor_2_gr  = stor_loss *(1.0 - r_carbon_debt_2_lrr)
+            stor_2_lrr = stor_loss *       f_debt_2_lrr
+            stor_2_gr  = stor_loss *(1.0 - f_debt_2_lrr)
            
-            leaf_loss_2_lr  = leaf_loss *        r_carbon_debt_2_lrr
-            root_loss_2_rr  = root_loss *        r_carbon_debt_2_lrr
-            leaf_loss_2_lgr = leaf_loss * (1.0 - r_carbon_debt_2_lrr)
-            root_loss_2_rgr = root_loss * (1.0 - r_carbon_debt_2_lrr)
+            leaf_loss_2_lr  = leaf_loss * hotc(           f_lr , (f_lr + f_sagr + f_lgr))
+            root_loss_2_rr  = root_loss * hotc(           f_rr , (f_rr + f_sbgr + f_rgr))
+            leaf_loss_2_lgr = leaf_loss * hotc((f_lgr + f_sagr), (f_lr + f_sagr + f_lgr))
+            root_loss_2_rgr = root_loss * hotc((f_rgr + f_sbgr), (f_rr + f_sbgr + f_rgr))
          end if 
       end if
       !------------------------------------------------------------------------------------!
@@ -482,8 +461,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
       ! if dtlsm_c_gain > 0 then gpp covers leaf & root resp.
       ! if dtlsm_c_gain < 0 then gpp does not cover leaf and root resp
       
-      leaf_respiration_c13 = (gpp_2_lrr + stor_2_lrr)*l2lrsum + leaf_loss_2_lr !*lrf
-      root_respiration_c13 = (gpp_2_lrr + stor_2_lrr)*r2lrsum + root_loss_2_rr !*rrf
+      leaf_respiration_c13 = (gpp_2_lrr + stor_2_lrr)*l2lrsum + leaf_loss_2_lr
+      root_respiration_c13 = (gpp_2_lrr + stor_2_lrr)*r2lrsum + root_loss_2_rr
 
       cpatch%leaf_respiration_c13(ico) = leaf_respiration_c13 * flux_fact_inv
       cpatch%root_respiration_c13(ico) = root_respiration_c13 * flux_fact_inv
@@ -493,7 +472,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
       cpatch%sapa_growth_resp_c13(ico) = (gpp_2_gr + stor_2_gr)*sagr2gr + leaf_loss_2_lgr *sagr2lgr_plus_sagr
       cpatch%sapb_growth_resp_c13(ico) = (gpp_2_gr + stor_2_gr)*sbgr2gr + root_loss_2_rgr *sbgr2rgr_plus_sbgr
      
-      if (r_carbon_debt_2_lrr < tiny(1.0) .and. &
+      if (f_debt_2_lrr < tiny(1.0) .and. &
              abs(carbon_debt) > tiny(1.0) .and. &
           htIsoDelta(cpatch%leaf_growth_resp_c13(ico),cpatch%leaf_growth_resp(ico)) /= ratio_leaf) then
           dtlsm_c13_gain = 10000
@@ -503,20 +482,6 @@ subroutine leaf_root_resp_c13(csite,ipa)
       ! 3) Dividing up storage and gpp based resp evenly and dividing leaf loss and root   !
       !    loss evenly into leaf-based partitions and root-based partitions respectively.  ! 
       !------------------------------------------------------------------------------------!
-      !
-      !gen_loss = stor_loss + gpp_loss
-
-      !leaf_respiration_c13 = f_leaf*(gen_loss) + leaf_loss*lrf
-      !root_respiration_c13 = f_root*(gen_loss) + root_loss*rrf
-      
-      !cpatch%leaf_respiration_c13(ico) = leaf_respiration_c13 * flux_fact_inv
-      !cpatch%root_respiration_c13(ico) = root_respiration_c13 * flux_fact_inv
-
-      !cpatch%leaf_growth_resp_c13(ico) = f_lgr *(gen_loss) + leaf_loss*lgf
-      !cpatch%root_growth_resp_c13(ico) = f_rgr *(gen_loss) + root_loss*rgf
-      !cpatch%sapa_growth_resp_c13(ico) = f_sagr*(gen_loss)
-      !cpatch%sapb_growth_resp_c13(ico) = f_sbgr*(gen_loss)
-      
       dtlsm_c13_gain   = cpatch%gpp_c13(ico) * flux_fact                                   &
                        - leaf_respiration_c13                                              &
                        - root_respiration_c13
@@ -554,9 +519,8 @@ subroutine leaf_root_resp_c13(csite,ipa)
       patch_check_vals = &
      (/carbon_balance, carbon13_balance,cpatch%gpp(ico)*flux_fact,cpatch%gpp_c13(ico)*flux_fact &
       ,     stor_loss,         gpp_loss,                leaf_loss,                    root_loss &
-      ,        f_leaf,           f_root,                    f_lgr,                        f_rgr &
-      ,           lrf,              rrf,                      lgf,                          rgf &
-      ,        f_sagr,           f_sbgr,                 lf_bloss,                     rf_bloss &
+      ,        f_lr,           f_rr,                    f_lgr,                        f_rgr &
+      ,        f_sagr,           f_sbgr                 &
       , leaf_int_loss,    root_int_loss,            lloss_overrun,                rloss_overrun &
       ,     bloss_max, real(cpatch%phenology_status(ico))                                       &
       , htIsoDelta(abs(dtlsm_c13_gain)  ,abs(dtlsm_c_gain))     &
@@ -564,16 +528,15 @@ subroutine leaf_root_resp_c13(csite,ipa)
       , gpp_2_lrr    ,         gpp_2_gr,               stor_2_lrr,                    stor_2_gr &
       ,       l2lrsum,          r2lrsum,                   lgr2gr,                       rgr2gr &
       ,       sagr2gr,          sbgr2gr,           leaf_loss_2_lr,               root_loss_2_rr &
-      ,leaf_loss_2_lgr, root_loss_2_rgr,              growth_resp,          r_carbon_debt_2_lrr &
-      ,          sagf,            sbgf ,             dtlsm_c_gain,               dtlsm_c13_gain &
+      ,leaf_loss_2_lgr, root_loss_2_rgr,              growth_resp,          f_debt_2_lrr &
+      ,             dtlsm_c_gain,               dtlsm_c13_gain &
       ,lgr2lgr_plus_sagr, sagr2lgr_plus_sagr,rgr2rgr_plus_sbgr,sbgr2rgr_plus_sbgr/)
 
       patch_check_labs = &
      (/'    carbon_balance','  carbon13_balance','               gpp','           gpp_c13'&
       ,'         stor_loss','          gpp_loss','         leaf_loss','         root_loss'&
       ,'   gen_frac_leaf_r','   gen_frac_root_r','  gen_frac_leaf_gr','  gen_frac_root_gr'&
-      ,'  leaf_frac_leaf_r','  root_frac_root_r',' leaf_frac_leaf_gr',' root_frac_root_gr'&
-      ,'  gen_frac_sapa_gr','  gen_frac_sapb_gr','          lf_bloss','          rf_bloss'&
+      ,'  gen_frac_sapa_gr','  gen_frac_sapb_gr'&
       ,'     leaf_int_loss','     root_int_loss','     lloss_overrun','     rloss_overrun'&
       ,'         bloss_max','  phenology_status','          dcg_d13C','   carbon_bal_d13C'&
       ,'      dtlsm_c_gain','    dtlsm_c13_gain'                                          &
@@ -581,7 +544,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
       ,'           l2lrsum','           r2lrsum','            lgr2gr','            rgr2gr'&
       ,'           sagr2gr','           sbgr2gr','    leaf_loss_2_lr','    root_loss_2_rr'&
       ,'   leaf_loss_2_lgr','   root_loss_2_rgr','       growth_resp','    r_c_debt_2_lrr'&
-      ,'  lgr_frac_leaf_gr','  rgf_frac_leaf_gr','      daily_c_gain','    daily_c13_gain'&
+      ,'      daily_c_gain','    daily_c13_gain'&
       ,' lgr2lgr_plus_sagr','sagr2lgr_plus_sagr',' rgr2rgr_plus_sbgr','sbgr2rgr_plus_sbgr'/)
 
  
