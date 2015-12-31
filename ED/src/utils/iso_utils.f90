@@ -717,7 +717,8 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
    !---------------------------------------------------------------------------------------!
    delta = htIsoDelta(heavy,total)
    
-   all_bets_are_off = (abs(total) < 0.00000001 .and. abs(heavy) < 0.00000001) ! 10E-8
+   !                                10E-7                         10E-8
+   all_bets_are_off = (abs(total) < 0.00000010 .and. abs(heavy) < 0.00000001)
    !all_bets_are_off = .true.
    if (all_bets_are_off) then
       valid = .true.
