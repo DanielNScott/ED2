@@ -2309,6 +2309,22 @@ module disturbance_utils
          csite%dmean_sensible_gg    (  :,np) = csite%dmean_sensible_gg    (  :,np)         &
                                              + csite%dmean_sensible_gg    (  :,cp)         &
                                              * area_fac
+         ! No site dmeans yet...
+         !csite%dmean_fast_soil_c    (    np) = csite%dmean_fast_soil_c    (    np)         &
+         !                                    + csite%dmean_fast_soil_c    (    cp)         &
+         !                                    * area_fac
+         !csite%dmean_slow_soil_c    (    np) = csite%dmean_slow_soil_c    (    np)         &
+         !                                    + csite%dmean_slow_soil_c    (    cp)         &
+         !                                    * area_fac
+         !csite%dmean_struct_soil_c  (    np) = csite%dmean_struct_soil_c  (    np)         &
+         !                                    + csite%dmean_struct_soil_c  (    cp)         &
+         !                                    * area_fac
+         !csite%dmean_struct_soil_l  (    np) = csite%dmean_struct_soil_l  (    np)         &
+         !                                    + csite%dmean_struct_soil_l  (    cp)         &
+         !                                    * area_fac
+         !csite%dmean_cwd_c          (    np) = csite%dmean_cwd_c          (    np)         &
+         !                                    + csite%dmean_cwd_c          (    cp)         &
+         !                                    * area_fac
       end if
       !------------------------------------------------------------------------------------!
 

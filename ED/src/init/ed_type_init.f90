@@ -160,6 +160,7 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%par_level_diffd       (ico) = 0.0
 
    cpatch%gpp                   (ico) = 0.0
+   cpatch%carbon_balance        (ico) = 0.0
    cpatch%leaf_respiration      (ico) = 0.0
    cpatch%root_respiration      (ico) = 0.0
    cpatch%leaf_growth_resp      (ico) = 0.0
@@ -326,8 +327,12 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       cpatch%dmean_nppdaily          (ico) = 0.0
       cpatch%dmean_gpp               (ico) = 0.0
       cpatch%dmean_npp               (ico) = 0.0
+      cpatch%dmean_lai               (ico) = 0.0
+      cpatch%dmean_cb                (ico) = 0.0
       cpatch%dmean_bleaf             (ico) = 0.0
       cpatch%dmean_broot             (ico) = 0.0
+      cpatch%dmean_bsapwooda         (ico) = 0.0
+      cpatch%dmean_bsapwoodb         (ico) = 0.0
       cpatch%dmean_bstorage          (ico) = 0.0
       cpatch%dmean_leaf_resp         (ico) = 0.0
       cpatch%dmean_root_resp         (ico) = 0.0
@@ -1772,6 +1777,11 @@ subroutine init_ed_poly_vars(cgrid)
          cgrid%dmean_smoist_gg          (:,ipy) = 0.0
          cgrid%dmean_transloss          (:,ipy) = 0.0
          cgrid%dmean_sensible_gg        (:,ipy) = 0.0
+         cgrid%dmean_fast_soil_c          (ipy) = 0.0
+         cgrid%dmean_slow_soil_c          (ipy) = 0.0
+         cgrid%dmean_struct_soil_c        (ipy) = 0.0
+         cgrid%dmean_struct_soil_l        (ipy) = 0.0
+         cgrid%dmean_cwd_c                (ipy) = 0.0
       end if
       !------------------------------------------------------------------------------------!
 

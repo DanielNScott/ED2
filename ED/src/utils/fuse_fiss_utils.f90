@@ -1166,6 +1166,8 @@ module fuse_fiss_utils
                                      + cpatch%root_maintenance(donc) * dnplant
       cpatch%leaf_drop        (recc) = cpatch%leaf_drop       (recc) * rnplant             &
                                      + cpatch%leaf_drop       (donc) * dnplant
+      cpatch%carbon_balance   (recc) = cpatch%carbon_balance  (recc) * rnplant             &
+                                     + cpatch%carbon_balance  (donc) * dnplant
       !------------------------------------------------------------------------------------!
 
 
@@ -1828,6 +1830,14 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%dmean_npp             (donc)         &
                                              * dnplant
+         cpatch%dmean_lai             (recc) = cpatch%dmean_lai             (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_lai             (donc)         &
+                                             * dnplant
+         cpatch%dmean_cb              (recc) = cpatch%dmean_cb              (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_cb              (donc)         &
+                                             * dnplant
          cpatch%dmean_bleaf           (recc) = cpatch%dmean_bleaf           (recc)         &
                                              * rnplant                                     &
                                              + cpatch%dmean_bleaf           (donc)         &
@@ -1835,6 +1845,14 @@ module fuse_fiss_utils
          cpatch%dmean_broot           (recc) = cpatch%dmean_broot           (recc)         &
                                              * rnplant                                     &
                                              + cpatch%dmean_broot           (donc)         &
+                                             * dnplant
+         cpatch%dmean_bsapwooda       (recc) = cpatch%dmean_bsapwooda       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_bsapwooda       (donc)         &
+                                             * dnplant
+         cpatch%dmean_bsapwoodb       (recc) = cpatch%dmean_bsapwoodb       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_bsapwoodb       (donc)         &
                                              * dnplant
          cpatch%dmean_bstorage        (recc) = cpatch%dmean_bstorage        (recc)         &
                                              * rnplant                                     &
