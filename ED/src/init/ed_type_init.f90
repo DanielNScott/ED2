@@ -279,6 +279,15 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    !---------------------------------------------------------------------------------------!
    cpatch%fmean_gpp               (ico) = 0.0
    cpatch%fmean_npp               (ico) = 0.0
+   cpatch%fmean_lai               (ico) = 0.0
+   cpatch%fmean_leaf_drop         (ico) = 0.0
+   cpatch%fmean_bleaf             (ico) = 0.0
+   cpatch%fmean_broot             (ico) = 0.0
+   cpatch%fmean_bsapwooda         (ico) = 0.0
+   cpatch%fmean_bsapwoodb         (ico) = 0.0
+   cpatch%fmean_bstorage          (ico) = 0.0
+   cpatch%fmean_leaf_maintenance  (ico) = 0.0
+   cpatch%fmean_root_maintenance  (ico) = 0.0
    cpatch%fmean_leaf_resp         (ico) = 0.0
    cpatch%fmean_root_resp         (ico) = 0.0
    cpatch%fmean_leaf_growth_resp  (ico) = 0.0
@@ -351,6 +360,14 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    if (c13af > 0) then
       cpatch%fmean_gpp_c13                (ico) = 0.0
       cpatch%fmean_npp_c13                (ico) = 0.0
+      cpatch%fmean_leaf_drop_c13          (ico) = 0.0
+      cpatch%fmean_bleaf_c13              (ico) = 0.0
+      cpatch%fmean_broot_c13              (ico) = 0.0
+      cpatch%fmean_bsapwooda_c13          (ico) = 0.0
+      cpatch%fmean_bsapwoodb_c13          (ico) = 0.0
+      cpatch%fmean_bstorage_c13           (ico) = 0.0
+      cpatch%fmean_leaf_maintenance_c13   (ico) = 0.0
+      cpatch%fmean_root_maintenance_c13   (ico) = 0.0
       cpatch%fmean_leaf_resp_c13          (ico) = 0.0
       cpatch%fmean_root_resp_c13          (ico) = 0.0
       cpatch%fmean_leaf_growth_resp_c13   (ico) = 0.0
@@ -387,8 +404,12 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       cpatch%dmean_nppdaily          (ico) = 0.0
       cpatch%dmean_gpp               (ico) = 0.0
       cpatch%dmean_npp               (ico) = 0.0
+      cpatch%dmean_lai               (ico) = 0.0
+      cpatch%dmean_leaf_drop         (ico) = 0.0
       cpatch%dmean_bleaf             (ico) = 0.0
       cpatch%dmean_broot             (ico) = 0.0
+      cpatch%dmean_bsapwooda         (ico) = 0.0
+      cpatch%dmean_bsapwoodb         (ico) = 0.0
       cpatch%dmean_bstorage          (ico) = 0.0
       cpatch%dmean_leaf_resp         (ico) = 0.0
       cpatch%dmean_root_resp         (ico) = 0.0
@@ -461,8 +482,11 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
       if (c13af > 0) then
          cpatch%dmean_gpp_c13                (ico) = 0.0
          cpatch%dmean_npp_c13                (ico) = 0.0
+         cpatch%dmean_leaf_drop_c13          (ico) = 0.0
          cpatch%dmean_bleaf_c13              (ico) = 0.0
          cpatch%dmean_broot_c13              (ico) = 0.0
+         cpatch%dmean_bsapwooda_c13          (ico) = 0.0
+         cpatch%dmean_bsapwoodb_c13          (ico) = 0.0
          cpatch%dmean_bstorage_c13           (ico) = 0.0
          cpatch%dmean_leaf_resp_c13          (ico) = 0.0
          cpatch%dmean_root_resp_c13          (ico) = 0.0
@@ -1695,6 +1719,15 @@ subroutine init_ed_poly_vars(cgrid)
       !----- Fast averages. ---------------------------------------------------------------!
       cgrid%fmean_gpp                  (ipy) = 0.0
       cgrid%fmean_npp                  (ipy) = 0.0
+      cgrid%fmean_lai                  (ipy) = 0.0
+      cgrid%fmean_leaf_drop            (ipy) = 0.0
+      cgrid%fmean_bleaf                (ipy) = 0.0
+      cgrid%fmean_broot                (ipy) = 0.0
+      cgrid%fmean_bsapwooda            (ipy) = 0.0
+      cgrid%fmean_bsapwoodb            (ipy) = 0.0
+      cgrid%fmean_bstorage             (ipy) = 0.0
+      cgrid%fmean_leaf_maintenance     (ipy) = 0.0
+      cgrid%fmean_root_maintenance     (ipy) = 0.0
       cgrid%fmean_leaf_resp            (ipy) = 0.0
       cgrid%fmean_root_resp            (ipy) = 0.0
       cgrid%fmean_leaf_growth_resp     (ipy) = 0.0
@@ -1831,6 +1864,14 @@ subroutine init_ed_poly_vars(cgrid)
       if (c13af > 0) then
          cgrid%fmean_gpp_c13                  (ipy) = 0.0
          cgrid%fmean_npp_c13                  (ipy) = 0.0
+         cgrid%fmean_leaf_drop_c13            (ipy) = 0.0
+         cgrid%fmean_bleaf_c13                (ipy) = 0.0
+         cgrid%fmean_broot_c13                (ipy) = 0.0
+         cgrid%fmean_bsapwooda_c13            (ipy) = 0.0
+         cgrid%fmean_bsapwoodb_c13            (ipy) = 0.0
+         cgrid%fmean_bstorage_c13             (ipy) = 0.0
+         cgrid%fmean_leaf_maintenance_c13     (ipy) = 0.0
+         cgrid%fmean_root_maintenance_c13     (ipy) = 0.0
          cgrid%fmean_leaf_resp_c13            (ipy) = 0.0
          cgrid%fmean_root_resp_c13            (ipy) = 0.0
          cgrid%fmean_leaf_growth_resp_c13     (ipy) = 0.0

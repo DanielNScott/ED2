@@ -1704,6 +1704,42 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%fmean_npp             (donc)         &
                                              * dnplant
+         cpatch%fmean_lai             (recc) = cpatch%fmean_lai             (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_lai             (donc)         &
+                                             * dnplant
+         cpatch%fmean_leaf_drop       (recc) = cpatch%fmean_leaf_drop       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_leaf_drop       (donc)         &
+                                             * dnplant
+         cpatch%fmean_bleaf           (recc) = cpatch%fmean_bleaf           (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_bleaf           (donc)         &
+                                             * dnplant
+         cpatch%fmean_broot           (recc) = cpatch%fmean_broot           (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_broot           (donc)         &
+                                             * dnplant
+         cpatch%fmean_bsapwooda       (recc) = cpatch%fmean_bsapwooda       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_bsapwooda       (donc)         &
+                                             * dnplant
+         cpatch%fmean_bsapwoodb       (recc) = cpatch%fmean_bsapwoodb       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_bsapwoodb       (donc)         &
+                                             * dnplant
+         cpatch%fmean_bstorage        (recc) = cpatch%fmean_bstorage       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_bstorage        (donc)         &
+                                             * dnplant
+         cpatch%fmean_leaf_maintenance(recc) = cpatch%fmean_leaf_maintenance(recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_leaf_maintenance(donc)         &
+                                             * dnplant
+         cpatch%fmean_root_maintenance(recc) = cpatch%fmean_root_maintenance(recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%fmean_root_maintenance(donc)         &
+                                             * dnplant
          cpatch%fmean_leaf_resp       (recc) = cpatch%fmean_leaf_resp       (recc)         &
                                              * rnplant                                     &
                                              + cpatch%fmean_leaf_resp       (donc)         &
@@ -1787,6 +1823,38 @@ module fuse_fiss_utils
             cpatch%fmean_npp_c13         (recc) = cpatch%fmean_npp_c13         (recc)       &
                                                 * rnplant                                   &
                                                 + cpatch%fmean_npp_c13         (donc)       &
+                                                * dnplant
+            cpatch%fmean_leaf_drop_c13   (recc) = cpatch%fmean_leaf_drop_c13       (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%fmean_leaf_drop_c13       (donc)         &
+                                                * dnplant
+            cpatch%fmean_bleaf_c13       (recc) = cpatch%fmean_bleaf_c13           (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%fmean_bleaf_c13           (donc)         &
+                                                * dnplant
+            cpatch%fmean_broot_c13       (recc) = cpatch%fmean_broot_c13           (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%fmean_broot_c13           (donc)         &
+                                                * dnplant
+            cpatch%fmean_bsapwooda_c13   (recc) = cpatch%fmean_bsapwooda_c13       (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%fmean_bsapwooda_c13       (donc)         &
+                                                * dnplant
+            cpatch%fmean_bsapwoodb_c13   (recc) = cpatch%fmean_bsapwoodb_c13       (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%fmean_bsapwoodb_c13       (donc)         &
+                                                * dnplant
+            cpatch%fmean_bstorage_c13    (recc) = cpatch%fmean_bstorage_c13       (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%fmean_bstorage_c13        (donc)         &
+                                                * dnplant
+            cpatch%fmean_leaf_maintenance_c13(recc) = cpatch%fmean_leaf_maintenance_c13(recc)         &
+                                                   * rnplant                                     &
+                                                   + cpatch%fmean_leaf_maintenance_c13(donc)         &
+                                                   * dnplant
+            cpatch%fmean_root_maintenance_c13(recc) = cpatch%fmean_root_maintenance_c13(recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%fmean_root_maintenance_c13(donc)         &
                                                 * dnplant
             cpatch%fmean_leaf_resp_c13   (recc) = cpatch%fmean_leaf_resp_c13   (recc)       &
                                                 * rnplant                                   &
@@ -2038,6 +2106,14 @@ module fuse_fiss_utils
                                              * rnplant                                     &
                                              + cpatch%dmean_npp             (donc)         &
                                              * dnplant
+         cpatch%dmean_lai             (recc) = cpatch%dmean_lai             (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_lai             (donc)         &
+                                             * dnplant
+         cpatch%dmean_leaf_drop       (recc) = cpatch%dmean_leaf_drop       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_leaf_drop       (donc)         &
+                                             * dnplant
          cpatch%dmean_bleaf           (recc) = cpatch%dmean_bleaf           (recc)         &
                                              * rnplant                                     &
                                              + cpatch%dmean_bleaf           (donc)         &
@@ -2045,6 +2121,14 @@ module fuse_fiss_utils
          cpatch%dmean_broot           (recc) = cpatch%dmean_broot           (recc)         &
                                              * rnplant                                     &
                                              + cpatch%dmean_broot           (donc)         &
+                                             * dnplant
+         cpatch%dmean_bsapwooda       (recc) = cpatch%dmean_bsapwooda       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_bsapwooda       (donc)         &
+                                             * dnplant
+         cpatch%dmean_bsapwoodb       (recc) = cpatch%dmean_bsapwoodb       (recc)         &
+                                             * rnplant                                     &
+                                             + cpatch%dmean_bsapwoodb       (donc)         &
                                              * dnplant
          cpatch%dmean_bstorage        (recc) = cpatch%dmean_bstorage        (recc)         &
                                              * rnplant                                     &
@@ -2140,6 +2224,10 @@ module fuse_fiss_utils
                                                   + cpatch%dmean_npp_c13         (donc)       &
                                                   * cpatch%nplant                (donc) )     &
                                                 * newni
+            cpatch%dmean_leaf_drop_c13   (recc) = cpatch%dmean_leaf_drop_c13     (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%dmean_leaf_drop_c13     (donc)         &
+                                                * dnplant
             cpatch%dmean_bleaf_c13       (recc) = cpatch%dmean_bleaf_c13           (recc)         &
                                                 * rnplant                                     &
                                                 + cpatch%dmean_bleaf_c13           (donc)         &
@@ -2147,6 +2235,14 @@ module fuse_fiss_utils
             cpatch%dmean_broot_c13       (recc) = cpatch%dmean_broot_c13           (recc)         &
                                                 * rnplant                                     &
                                                 + cpatch%dmean_broot_c13           (donc)         &
+                                                * dnplant
+            cpatch%dmean_bsapwooda_c13   (recc) = cpatch%dmean_bsapwooda_c13       (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%dmean_bsapwooda_c13       (donc)         &
+                                                * dnplant
+            cpatch%dmean_bsapwoodb_c13   (recc) = cpatch%dmean_bsapwoodb_c13       (recc)         &
+                                                * rnplant                                     &
+                                                + cpatch%dmean_bsapwoodb_c13       (donc)         &
                                                 * dnplant
             cpatch%dmean_bstorage_c13    (recc) = cpatch%dmean_bstorage_c13        (recc)     &
                                                 * rnplant                                     &
