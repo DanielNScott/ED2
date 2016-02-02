@@ -205,11 +205,11 @@ module average_utils
                                                   * cpatch%nplant              (ico)       &
                                                   * patch_wgt
                   cgrid%fmean_leaf_maintenance(ipy) = cgrid%fmean_leaf_maintenance(ipy)    &
-                                                    + cpatch%fmean_leaf_maintanance(ico)   &
+                                                    + cpatch%fmean_leaf_maintenance(ico)   &
                                                     * cpatch%nplant              (ico)     &
                                                     * patch_wgt
                   cgrid%fmean_root_maintenance(ipy) = cgrid%fmean_root_maintenance(ipy)    &
-                                                    + cpatch%fmean_root_maintanance(ico)   &
+                                                    + cpatch%fmean_root_maintenance(ico)   &
                                                     * cpatch%nplant              (ico)     &
                                                     * patch_wgt
                   cgrid%fmean_leaf_resp     (ipy) = cgrid%fmean_leaf_resp      (ipy)       &
@@ -435,13 +435,13 @@ module average_utils
                                                      * cpatch%nplant              (ico)       &
                                                      * patch_wgt
                      cgrid%fmean_leaf_maintenance_c13(ipy) = cgrid%fmean_leaf_maintenance_c13(ipy)    &
-                                                       + cpatch%fmean_leaf_maintanance_c13(ico)   &
-                                                       * cpatch%nplant              (ico)     &
-                                                       * patch_wgt
-                     cgrid%fmean_root_maintenanc_c13e(ipy) = cgrid%fmean_root_maintenance_c13(ipy)    &
-                                                       + cpatch%fmean_root_maintanance_c13(ico)   &
-                                                       * cpatch%nplant              (ico)     &
-                                                       * patch_wgt
+                                                           + cpatch%fmean_leaf_maintenance_c13(ico)   &
+                                                           * cpatch%nplant              (ico)     &
+                                                           * patch_wgt
+                     cgrid%fmean_root_maintenance_c13(ipy) = cgrid%fmean_root_maintenance_c13(ipy)    &
+                                                           + cpatch%fmean_root_maintenance_c13(ico)   &
+                                                           * cpatch%nplant              (ico)     &
+                                                           * patch_wgt
                      cgrid%fmean_leaf_resp_c13     (ipy) = cgrid%fmean_leaf_resp_c13      (ipy)       &
                                                          + cpatch%fmean_leaf_resp_c13     (ico)       &
                                                          * cpatch%nplant                  (ico)       &
@@ -5366,19 +5366,19 @@ module average_utils
                                                      + cpatch%lai                   (ico)  &
                                                      * ndaysi
                   cpatch%mmean_bleaf           (ico) = cpatch%mmean_bleaf           (ico)  &
-                                                     + cpatch%bleaf                 (ico)  &
+                                                     + cpatch%dmean_bleaf           (ico)  &
                                                      * ndaysi
                   cpatch%mmean_broot           (ico) = cpatch%mmean_broot           (ico)  &
-                                                     + cpatch%broot                 (ico)  &
+                                                     + cpatch%dmean_broot           (ico)  &
                                                      * ndaysi
                   cpatch%mmean_bstorage        (ico) = cpatch%mmean_bstorage        (ico)  &
-                                                     + cpatch%bstorage              (ico)  &
+                                                     + cpatch%dmean_bstorage        (ico)  &
                                                      * ndaysi
                   cpatch%mmean_mort_rate     (:,ico) = cpatch%mmean_mort_rate     (:,ico)  &
                                                      + cpatch%mort_rate           (:,ico)  &
                                                      * ndaysi
                   cpatch%mmean_leaf_drop       (ico) = cpatch%mmean_leaf_drop       (ico)  &
-                                                     + cpatch%leaf_drop             (ico)  &
+                                                     + cpatch%dmean_leaf_drop       (ico)  &
                                                      * ndaysi
                   cpatch%mmean_cb              (ico) = cpatch%mmean_cb              (ico)  &
                                                      + ( cpatch%dmean_gpp           (ico)  &
@@ -5389,22 +5389,22 @@ module average_utils
                                                        ) / yr_day * ndaysi
                   if (c13af > 0) then
                      cpatch%mmean_bleaf_c13           (ico) = cpatch%mmean_bleaf_c13           (ico)  &
-                                                            + cpatch%bleaf_c13                 (ico)  &
+                                                            + cpatch%dmean_bleaf_c13           (ico)  &
                                                             * ndaysi
                      cpatch%mmean_broot_c13           (ico) = cpatch%mmean_broot_c13           (ico)  &
-                                                            + cpatch%broot_c13                 (ico)  &
+                                                            + cpatch%dmean_broot_c13           (ico)  &
                                                             * ndaysi
                      cpatch%mmean_bstorage_c13        (ico) = cpatch%mmean_bstorage_c13        (ico)  &
-                                                            + cpatch%bstorage_c13              (ico)  &
+                                                            + cpatch%dmean_bstorage_c13        (ico)  &
                                                             * ndaysi
                      cpatch%mmean_leaf_maintenance_c13(ico) = cpatch%mmean_leaf_maintenance_c13(ico)  &
-                                                            + cpatch%leaf_maintenance_c13      (ico)  &
+                                                            + cpatch%dmean_leaf_maintenance_c13(ico)  &
                                                             * ndaysi
                      cpatch%mmean_root_maintenance_c13(ico) = cpatch%mmean_root_maintenance_c13(ico)  &
-                                                            + cpatch%root_maintenance_c13      (ico)  &
+                                                            + cpatch%dmean_root_maintenance_c13(ico)  &
                                                             * ndaysi
                      cpatch%mmean_leaf_drop_c13       (ico) = cpatch%mmean_leaf_drop_c13       (ico)  &
-                                                            + cpatch%leaf_drop_c13             (ico)  &
+                                                            + cpatch%dmean_leaf_drop_c13       (ico)  &
                                                             * ndaysi
                   end if
                   !------------------------------------------------------------------------!

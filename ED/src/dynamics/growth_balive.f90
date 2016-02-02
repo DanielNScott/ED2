@@ -263,6 +263,18 @@ module growth_balive
                               ,(/1,1,2,2,3,3,4,4,5,5,6,6,7,7,0,0,8,9,10,8,9,10,0,0,0,0,0/))
                      !---------------------------------------------------------------------!
 
+                     call update_fmean(cpatch%fmean_bleaf    (ico),cpatch%bleaf    (ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_broot    (ico),cpatch%broot    (ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_bsapwooda(ico),cpatch%bsapwooda(ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_bsapwoodb(ico),cpatch%bsapwoodb(ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_bstorage (ico),cpatch%bstorage (ico),cpatch%nplant(ico))
+   
+                     !cpatch%fmean_bleaf    (ico) = cpatch%bleaf    (ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_broot    (ico) = cpatch%broot    (ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_bsapwooda(ico) = cpatch%bsapwooda(ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_bsapwoodb(ico) = cpatch%bsapwoodb(ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_bstorage (ico) = cpatch%bstorage (ico) * cpatch%nplant(ico)
+
                      call update_nitrogen(flushing,ipft,carbon_balance,cpatch%nplant(ico)  &
                                           ,tr_bleaf,tr_broot,tr_bstorage,nitrogen_uptake   &
                                           ,csite%fsn_in(ipa))
@@ -401,6 +413,24 @@ module growth_balive
    !=======================================================================================!
 
 
+
+   !=======================================================================================!
+   !=======================================================================================!
+   subroutine update_fmean(fmean,var,nplant)
+      use ed_misc_coms  , only : dtlsm              & ! intent(in)
+                               , frqsum             ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      real, intent(inout) :: fmean
+      real, intent(in)    :: var
+      real, intent(in)    :: nplant      
+      !------------------------------------------------------------------------------------!
+
+      fmean = fmean + (var *nplant *dtlsm /frqsum)
+
+   end subroutine update_fmean
+   !=======================================================================================!
+   !=======================================================================================!
 
 
 
