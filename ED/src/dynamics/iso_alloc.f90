@@ -445,11 +445,11 @@ subroutine leaf_root_resp_c13(csite,ipa)
          end if 
       end if
       !------------------------------------------------------------------------------------!
-      lgr_o_lgr_sagr  = max(min(cpatch%leaf_growth_resp(ico)/(cpatch%leaf_growth_resp(ico)+cpatch%sapa_growth_resp(ico)),1.0),0.0)
-      sagr_o_lgr_sagr = max(min(cpatch%sapa_growth_resp(ico)/(cpatch%leaf_growth_resp(ico)+cpatch%sapa_growth_resp(ico)),1.0),0.0)
+      lgr_o_lgr_sagr  = max(min(hotc(cpatch%leaf_growth_resp(ico),(cpatch%leaf_growth_resp(ico)+cpatch%sapa_growth_resp(ico))),1.0),0.0)
+      sagr_o_lgr_sagr = max(min(hotc(cpatch%sapa_growth_resp(ico),(cpatch%leaf_growth_resp(ico)+cpatch%sapa_growth_resp(ico))),1.0),0.0)
           
-      rgr_o_rgr_sbgr  = max(min(cpatch%root_growth_resp(ico)/(cpatch%root_growth_resp(ico)+cpatch%sapb_growth_resp(ico)),1.0),0.0)
-      sbgr_o_rgr_sbgr = max(min(cpatch%sapb_growth_resp(ico)/(cpatch%root_growth_resp(ico)+cpatch%sapb_growth_resp(ico)),1.0),0.0)
+      rgr_o_rgr_sbgr  = max(min(hotc(cpatch%root_growth_resp(ico),(cpatch%root_growth_resp(ico)+cpatch%sapb_growth_resp(ico))),1.0),0.0)
+      sbgr_o_rgr_sbgr = max(min(hotc(cpatch%sapb_growth_resp(ico),(cpatch%root_growth_resp(ico)+cpatch%sapb_growth_resp(ico))),1.0),0.0)
 
 
       !------------------------------------------------------------------------------------!

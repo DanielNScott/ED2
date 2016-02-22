@@ -130,7 +130,7 @@ ifeq ($(KIND_COMP),E)
    USE_INTERF=1
    F_OPTS= -FR -O3 -recursive -traceback -assume byterecl -static
    C_OPTS= -O3 -DLITTLE -traceback -static
-   F_LOWO_OPTS=-FR -O2 -recursive -traceback -assume byterecl -static
+   F_LOWO_OPTS=-FR -O1 -recursive -traceback -assume byterecl -static
    LOADER_OPTS=-FR -O3 -recursive -traceback -assume byterecl
    #---------------------------------------------------------------------------------------#
 endif
