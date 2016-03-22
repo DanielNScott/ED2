@@ -469,6 +469,9 @@ module ed_state_vars
       ! Leaf loss to litter layer due to phenology [kgC/plant]
       real , pointer, dimension(:) :: leaf_drop
 
+      ! Instantaneous values of carbon balance [kgC/plant]
+      real ,pointer,dimension(:) :: carbon_balance
+      
       ! Instantaneous values of leaf and root respiration [umol/m2/s]
       real ,pointer,dimension(:) :: leaf_respiration
       real ,pointer,dimension(:) :: root_respiration
@@ -2764,6 +2767,11 @@ module ed_state_vars
       real,pointer,dimension(:)     :: dmean_pcpg
       real,pointer,dimension(:)     :: dmean_qpcpg
       real,pointer,dimension(:)     :: dmean_dpcpg
+      real,pointer,dimension(:)     :: dmean_fast_soil_c      ! Fast soil C     [    kgC/m2]
+      real,pointer,dimension(:)     :: dmean_slow_soil_c      ! Slow soil C     [    kgC/m2]
+      real,pointer,dimension(:)     :: dmean_struct_soil_c    ! Struct. soil C  [    kgC/m2]
+      real,pointer,dimension(:)     :: dmean_struct_soil_l    ! Struct. soil L  [    kgL/m2]
+      real,pointer,dimension(:)     :: dmean_cwd_c            ! CWD carbon      [    kgC/m2]
       !----- Monthly mean (same units as fast mean). --------------------------------------!
       real,pointer,dimension(:)     :: mmean_gpp
       real,pointer,dimension(:)     :: mmean_npp
@@ -3836,6 +3844,11 @@ module ed_state_vars
          allocate(cgrid%dmean_pcpg             (                     npolygons))
          allocate(cgrid%dmean_qpcpg            (                     npolygons))
          allocate(cgrid%dmean_dpcpg            (                     npolygons))
+         allocate(cgrid%dmean_fast_soil_c      (                     npolygons))
+         allocate(cgrid%dmean_slow_soil_c      (                     npolygons))
+         allocate(cgrid%dmean_struct_soil_c    (                     npolygons))
+         allocate(cgrid%dmean_struct_soil_l    (                     npolygons))
+         allocate(cgrid%dmean_cwd_c            (                     npolygons))
          
          !----- C Isotope Vars --------------------------------------------------!
          if (c_alloc_flg > 0) then
@@ -5193,6 +5206,7 @@ module ed_state_vars
       allocate(cpatch%leaf_maintenance             (                    ncohorts))
       allocate(cpatch%root_maintenance             (                    ncohorts))
       allocate(cpatch%leaf_drop                    (                    ncohorts))
+      allocate(cpatch%carbon_balance               (                    ncohorts))
       allocate(cpatch%leaf_respiration             (                    ncohorts))
       allocate(cpatch%root_respiration             (                    ncohorts))
       allocate(cpatch%gpp                          (                    ncohorts))
@@ -6054,6 +6068,11 @@ module ed_state_vars
       nullify(cgrid%dmean_pcpg              )
       nullify(cgrid%dmean_qpcpg             )
       nullify(cgrid%dmean_dpcpg             )
+      nullify(cgrid%dmean_fast_soil_c       )
+      nullify(cgrid%dmean_slow_soil_c       )
+      nullify(cgrid%dmean_struct_soil_c     )
+      nullify(cgrid%dmean_struct_soil_l     )
+      nullify(cgrid%dmean_cwd_c             )
       nullify(cgrid%mmean_lai               )
       nullify(cgrid%mmean_bleaf             )
       nullify(cgrid%mmean_broot             )
@@ -7307,6 +7326,7 @@ module ed_state_vars
       nullify(cpatch%leaf_maintenance      )
       nullify(cpatch%root_maintenance      )
       nullify(cpatch%leaf_drop             )
+      nullify(cpatch%carbon_balance        )
       nullify(cpatch%leaf_respiration      )
       nullify(cpatch%root_respiration      )
       nullify(cpatch%gpp                   )
@@ -8149,6 +8169,11 @@ module ed_state_vars
       if(associated(cgrid%dmean_pcpg            )) deallocate(cgrid%dmean_pcpg            )
       if(associated(cgrid%dmean_qpcpg           )) deallocate(cgrid%dmean_qpcpg           )
       if(associated(cgrid%dmean_dpcpg           )) deallocate(cgrid%dmean_dpcpg           )
+      if(associated(cgrid%dmean_fast_soil_c     )) deallocate(cgrid%dmean_fast_soil_c     )
+      if(associated(cgrid%dmean_slow_soil_c     )) deallocate(cgrid%dmean_slow_soil_c     )
+      if(associated(cgrid%dmean_struct_soil_c   )) deallocate(cgrid%dmean_struct_soil_c   )
+      if(associated(cgrid%dmean_struct_soil_l   )) deallocate(cgrid%dmean_struct_soil_l   )
+      if(associated(cgrid%dmean_cwd_c           )) deallocate(cgrid%dmean_cwd_c           )
       if(associated(cgrid%mmean_lai             )) deallocate(cgrid%mmean_lai             )
       if(associated(cgrid%mmean_bleaf           )) deallocate(cgrid%mmean_bleaf           )
       if(associated(cgrid%mmean_broot           )) deallocate(cgrid%mmean_broot           )
@@ -9432,6 +9457,7 @@ module ed_state_vars
       if(associated(cpatch%leaf_maintenance    )) deallocate(cpatch%leaf_maintenance    )
       if(associated(cpatch%root_maintenance    )) deallocate(cpatch%root_maintenance    )
       if(associated(cpatch%leaf_drop           )) deallocate(cpatch%leaf_drop           )
+      if(associated(cpatch%carbon_balance      )) deallocate(cpatch%carbon_balance      )
       if(associated(cpatch%leaf_respiration    )) deallocate(cpatch%leaf_respiration    )
       if(associated(cpatch%root_respiration    )) deallocate(cpatch%root_respiration    )
       if(associated(cpatch%gpp                 )) deallocate(cpatch%gpp                 )
@@ -11503,6 +11529,7 @@ module ed_state_vars
          opatch%leaf_maintenance      (oco) = ipatch%leaf_maintenance      (ico)
          opatch%root_maintenance      (oco) = ipatch%root_maintenance      (ico)
          opatch%leaf_drop             (oco) = ipatch%leaf_drop             (ico)
+         opatch%carbon_balance        (oco) = ipatch%carbon_balance        (ico)
          opatch%leaf_respiration      (oco) = ipatch%leaf_respiration      (ico)
          opatch%root_respiration      (oco) = ipatch%root_respiration      (ico)
          opatch%gpp                   (oco) = ipatch%gpp                   (ico)
@@ -12255,6 +12282,7 @@ module ed_state_vars
       opatch%leaf_maintenance      (1:z) = pack(ipatch%leaf_maintenance          ,lmask)
       opatch%root_maintenance      (1:z) = pack(ipatch%root_maintenance          ,lmask)
       opatch%leaf_drop             (1:z) = pack(ipatch%leaf_drop                 ,lmask)
+      opatch%carbon_balance        (1:z) = pack(ipatch%carbon_balance            ,lmask)
       opatch%leaf_respiration      (1:z) = pack(ipatch%leaf_respiration          ,lmask)
       opatch%root_respiration      (1:z) = pack(ipatch%root_respiration          ,lmask)
       opatch%gpp                   (1:z) = pack(ipatch%gpp                       ,lmask)
@@ -16951,7 +16979,43 @@ module ed_state_vars
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Precipitation depth'                             &
                            ,'[          m]','(ipoly)'            )
-      end if                                          
+      end if
+      if (associated(cgrid%dmean_fast_soil_c         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_fast_soil_c                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_FAST_SOIL_C_PY           :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Fast Soil C'                                     &
+                           ,'[   kgC/m2]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_slow_soil_c         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_slow_soil_c                                   &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_SLOW_SOIL_C_PY           :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Slow Soil C'                                     &
+                           ,'[   kgC/m2]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_struct_soil_c         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_struct_soil_c                                 &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_STRUCT_SOIL_C_PY           :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Struct Soil C'                                   &
+                           ,'[   kgC/m2]','(ipoly)'            )
+      end if
+      if (associated(cgrid%dmean_cwd_c         )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cgrid%dmean_cwd_c                                         &
+                           ,nvar,igr,init,cgrid%pyglob_id,var_len,var_len_global,max_ptrs  &
+                           ,'DMEAN_CWD_C_PY           :11:'//trim(dail_keys)     )
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Coarse Woody Debris C'                           &
+                           ,'[   kgC/m2]','(ipoly)'            )
+      end if
       !------------------------------------------------------------------------------------!
                                                       
       return                                          
@@ -29203,13 +29267,22 @@ module ed_state_vars
                            ,'Daily mean - Dropped leaf biomass'                                    &
                            ,'[     kgC/pl]','(icohort)'            )
       end if
-      if (associated(cpatch%dmean_bleaf           )) then
+      if (associated(cpatch%dmean_lai            )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%dmean_bleaf                                        &
+         call vtable_edio_r(npts,cpatch%dmean_lai                                          &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_BLEAF_CO             :41:'//trim(dail_keys))
+                           ,'DMEAN_LAI_CO               :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
-                           ,'Daily mean - Leaf biomass'                                    &
+                           ,'Daily mean - Leaf area index'                                 &
+                           ,'[     kgC/pl]','(icohort)'            )
+      end if
+      if (associated(cpatch%dmean_cb           )) then
+         nvar = nvar+1
+         call vtable_edio_r(npts,cpatch%dmean_cb                                           &
+                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
+                           ,'DMEAN_CB_CO               :41:'//trim(dail_keys))
+         call metadata_edio(nvar,igr                                                       &
+                           ,'Daily mean - Carbon Balance'                                  &
                            ,'[     kgC/pl]','(icohort)'            )
       end if
       if (associated(cpatch%dmean_broot           )) then
@@ -29221,22 +29294,22 @@ module ed_state_vars
                            ,'daiy mean - Root biomass'                                     &
                            ,'[     kgC/pl]','(icohort)'            )
       end if
-      if (associated(cpatch%dmean_bsapwooda       )) then
+      if (associated(cpatch%dmean_bsapwooda           )) then
          nvar = nvar+1
          call vtable_edio_r(npts,cpatch%dmean_bsapwooda                                    &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_BSAPWOODA_CO         :41:'//trim(dail_keys))
+                           ,'DMEAN_BSAPWOODA_CO             :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
-                           ,'daiy mean - Sapa biomass'                                     &
+                           ,'daiy mean - Aboveground Sapwood biomass'                      &
                            ,'[     kgC/pl]','(icohort)'            )
       end if
-      if (associated(cpatch%dmean_bsapwoodb       )) then
+      if (associated(cpatch%dmean_bsapwoodb           )) then
          nvar = nvar+1
          call vtable_edio_r(npts,cpatch%dmean_bsapwoodb                                    &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_BSAPWOODB_CO         :41:'//trim(dail_keys))
+                           ,'DMEAN_BSAPWOODB_CO             :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
-                           ,'daiy mean - SapB biomass'                                     &
+                           ,'daiy mean - Belowground Sapwood Biomass'                      &
                            ,'[     kgC/pl]','(icohort)'            )
       end if
       if (associated(cpatch%dmean_bstorage        )) then

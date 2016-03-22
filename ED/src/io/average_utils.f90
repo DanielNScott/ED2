@@ -2349,6 +2349,21 @@ module average_utils
          cgrid%dmean_sensible_gg  (:,ipy) = cgrid%dmean_sensible_gg  (:,ipy)               &
                                           + cgrid%fmean_sensible_gg  (:,ipy)               &
                                           * frqsum_o_daysec
+         cgrid%dmean_fast_soil_c    (ipy) = cgrid%dmean_fast_soil_c    (ipy)               &
+                                          + cgrid%fast_soil_c          (ipy)               &
+                                          * frqsum_o_daysec
+         cgrid%dmean_slow_soil_c    (ipy) = cgrid%dmean_slow_soil_c    (ipy)               &
+                                          + cgrid%slow_soil_c          (ipy)               &
+                                          * frqsum_o_daysec
+         cgrid%dmean_struct_soil_c  (ipy) = cgrid%dmean_struct_soil_c  (ipy)               &
+                                          + cgrid%struct_soil_c        (ipy)               &
+                                          * frqsum_o_daysec
+         cgrid%dmean_struct_soil_l  (ipy) = cgrid%dmean_struct_soil_l  (ipy)               &
+                                          + cgrid%struct_soil_l        (ipy)               &
+                                          * frqsum_o_daysec
+         cgrid%dmean_cwd_c          (ipy) = cgrid%dmean_cwd_c          (ipy)               &
+                                          + cgrid%cwd_c                (ipy)               &
+                                          * frqsum_o_daysec
          if (c_alloc_flg > 0) then
             cgrid%dmean_lassim_resp     (ipy) = cgrid%dmean_lassim_resp   (ipy)               &
                                               + cgrid%fmean_lassim_resp   (ipy)               &
@@ -2723,6 +2738,12 @@ module average_utils
                                                    * frqsum_o_daysec
                   cpatch%dmean_bsapwoodb     (ico) = cpatch%dmean_bsapwoodb       (ico)  &
                                                    + cpatch%fmean_bsapwoodb       (ico)  &
+                                                   * frqsum_o_daysec
+                  cpatch%dmean_bsapwooda     (ico) = cpatch%dmean_bsapwooda       (ico)  &
+                                                   + cpatch%bsapwooda             (ico)  &
+                                                   * frqsum_o_daysec
+                  cpatch%dmean_bsapwoodb     (ico) = cpatch%dmean_bsapwoodb       (ico)  &
+                                                   + cpatch%bsapwoodb             (ico)  &
                                                    * frqsum_o_daysec
                   cpatch%dmean_bstorage      (ico) = cpatch%dmean_bstorage        (ico)  &
                                                    + cpatch%fmean_bstorage        (ico)  &
@@ -3953,6 +3974,11 @@ module average_utils
          cgrid%dmean_pcpg               (ipy) = 0.0
          cgrid%dmean_qpcpg              (ipy) = 0.0
          cgrid%dmean_dpcpg              (ipy) = 0.0
+         cgrid%dmean_fast_soil_c        (ipy) = 0.0
+         cgrid%dmean_slow_soil_c        (ipy) = 0.0
+         cgrid%dmean_struct_soil_c      (ipy) = 0.0
+         cgrid%dmean_struct_soil_l      (ipy) = 0.0
+         cgrid%dmean_cwd_c              (ipy) = 0.0
          
          if (c_alloc_flg > 0) then
             cgrid%dmean_lassim_resp            (ipy) = 0.0
@@ -4344,19 +4370,19 @@ module average_utils
                                                + cgrid%leaf_drop              (:,:,ipy)    &
                                                * ndaysi
          cgrid%mmean_fast_soil_c         (ipy) = cgrid%mmean_fast_soil_c          (ipy)    &
-                                               + cgrid%fast_soil_c                (ipy)    &
+                                               + cgrid%dmean_fast_soil_c          (ipy)    &
                                                * ndaysi
          cgrid%mmean_slow_soil_c         (ipy) = cgrid%mmean_slow_soil_c          (ipy)    &
-                                               + cgrid%slow_soil_c                (ipy)    &
+                                               + cgrid%dmean_slow_soil_c          (ipy)    &
                                                * ndaysi
          cgrid%mmean_struct_soil_c       (ipy) = cgrid%mmean_struct_soil_c        (ipy)    &
-                                               + cgrid%struct_soil_c              (ipy)    &
+                                               + cgrid%dmean_struct_soil_c        (ipy)    &
                                                * ndaysi
          cgrid%mmean_struct_soil_l       (ipy) = cgrid%mmean_struct_soil_l        (ipy)    &
-                                               + cgrid%struct_soil_l              (ipy)    &
+                                               + cgrid%dmean_struct_soil_l        (ipy)    &
                                                * ndaysi
          cgrid%mmean_cwd_c               (ipy) = cgrid%mmean_cwd_c                (ipy)    &
-                                               + cgrid%cwd_c                      (ipy)    &
+                                               + cgrid%dmean_cwd_c                (ipy)    &
                                                * ndaysi
          cgrid%mmean_fast_soil_n         (ipy) = cgrid%mmean_fast_soil_n          (ipy)    &
                                                + cgrid%fast_soil_n                (ipy)    &
@@ -5363,7 +5389,7 @@ module average_utils
                   ! because their time step is one day.                                    !
                   !------------------------------------------------------------------------!
                   cpatch%mmean_lai             (ico) = cpatch%mmean_lai             (ico)  &
-                                                     + cpatch%lai                   (ico)  &
+                                                     + cpatch%dmean_lai             (ico)  &
                                                      * ndaysi
                   cpatch%mmean_bleaf           (ico) = cpatch%mmean_bleaf           (ico)  &
                                                      + cpatch%dmean_bleaf           (ico)  &
@@ -5371,6 +5397,12 @@ module average_utils
                   cpatch%mmean_broot           (ico) = cpatch%mmean_broot           (ico)  &
                                                      + cpatch%dmean_broot           (ico)  &
                                                      * ndaysi
+                  !cpatch%mmean_bsapwooda       (ico) = cpatch%mmean_bsapwooda       (ico)  &
+                  !                                   + cpatch%dmean_bsapwooda       (ico)  &
+                  !                                   * ndaysi
+                  !cpatch%mmean_bsapwoodb       (ico) = cpatch%mmean_bsapwoodb       (ico)  &
+                  !                                   + cpatch%dmean_bsapwoodb       (ico)  &
+                  !                                   * ndaysi
                   cpatch%mmean_bstorage        (ico) = cpatch%mmean_bstorage        (ico)  &
                                                      + cpatch%dmean_bstorage        (ico)  &
                                                      * ndaysi

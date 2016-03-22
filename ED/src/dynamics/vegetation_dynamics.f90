@@ -1,8 +1,11 @@
 !==========================================================================================!
 !==========================================================================================!
-!     This subroutine is the main driver for the longer-term vegetation dynamics.  This    !
-! has become a file by itself to reduce the number of sub-routines that are doubled        !
-! between ED-2.1 stand alone and the coupled model.                                        !
+! SUBROUTINE: VEGETATION_DYNAMICS
+!
+!> \brief   Handles vegetation growth, phenology, reproduction, and disturbance.
+!> \details This subroutine first handles any prescribed events, then moves on to phenology,
+!>          biomass growth, structural growth, reproduction, then disturbance.
+!> \author  Translated from ED1 by Ryan Knox and Marcos Longo
 !------------------------------------------------------------------------------------------!
 subroutine vegetation_dynamics(new_day,new_month,new_year)
    use grid_coms        , only : ngrids
@@ -29,8 +32,8 @@ subroutine vegetation_dynamics(new_day,new_month,new_year)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
    logical          , intent(in)   :: new_day
-   logical          , intent(in)   :: new_month
-   logical          , intent(in)   :: new_year
+   logical          , intent(in)   :: new_month             !< First dtlsm of a new month?
+   logical          , intent(in)   :: new_year              !< First dtlsm of a new year?
    !----- Local variables. ----------------------------------------------------------------!
    type(edtype)     , pointer      :: cgrid
    type(polygontype), pointer      :: cpoly
