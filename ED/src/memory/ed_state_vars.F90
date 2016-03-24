@@ -469,9 +469,6 @@ module ed_state_vars
       ! Leaf loss to litter layer due to phenology [kgC/plant]
       real , pointer, dimension(:) :: leaf_drop
 
-      ! Instantaneous values of carbon balance [kgC/plant]
-      real ,pointer,dimension(:) :: carbon_balance
-      
       ! Instantaneous values of leaf and root respiration [umol/m2/s]
       real ,pointer,dimension(:) :: leaf_respiration
       real ,pointer,dimension(:) :: root_respiration
@@ -5206,7 +5203,6 @@ module ed_state_vars
       allocate(cpatch%leaf_maintenance             (                    ncohorts))
       allocate(cpatch%root_maintenance             (                    ncohorts))
       allocate(cpatch%leaf_drop                    (                    ncohorts))
-      allocate(cpatch%carbon_balance               (                    ncohorts))
       allocate(cpatch%leaf_respiration             (                    ncohorts))
       allocate(cpatch%root_respiration             (                    ncohorts))
       allocate(cpatch%gpp                          (                    ncohorts))
@@ -7326,7 +7322,6 @@ module ed_state_vars
       nullify(cpatch%leaf_maintenance      )
       nullify(cpatch%root_maintenance      )
       nullify(cpatch%leaf_drop             )
-      nullify(cpatch%carbon_balance        )
       nullify(cpatch%leaf_respiration      )
       nullify(cpatch%root_respiration      )
       nullify(cpatch%gpp                   )
@@ -9457,7 +9452,6 @@ module ed_state_vars
       if(associated(cpatch%leaf_maintenance    )) deallocate(cpatch%leaf_maintenance    )
       if(associated(cpatch%root_maintenance    )) deallocate(cpatch%root_maintenance    )
       if(associated(cpatch%leaf_drop           )) deallocate(cpatch%leaf_drop           )
-      if(associated(cpatch%carbon_balance      )) deallocate(cpatch%carbon_balance      )
       if(associated(cpatch%leaf_respiration    )) deallocate(cpatch%leaf_respiration    )
       if(associated(cpatch%root_respiration    )) deallocate(cpatch%root_respiration    )
       if(associated(cpatch%gpp                 )) deallocate(cpatch%gpp                 )
@@ -11529,7 +11523,6 @@ module ed_state_vars
          opatch%leaf_maintenance      (oco) = ipatch%leaf_maintenance      (ico)
          opatch%root_maintenance      (oco) = ipatch%root_maintenance      (ico)
          opatch%leaf_drop             (oco) = ipatch%leaf_drop             (ico)
-         opatch%carbon_balance        (oco) = ipatch%carbon_balance        (ico)
          opatch%leaf_respiration      (oco) = ipatch%leaf_respiration      (ico)
          opatch%root_respiration      (oco) = ipatch%root_respiration      (ico)
          opatch%gpp                   (oco) = ipatch%gpp                   (ico)
@@ -12282,7 +12275,6 @@ module ed_state_vars
       opatch%leaf_maintenance      (1:z) = pack(ipatch%leaf_maintenance          ,lmask)
       opatch%root_maintenance      (1:z) = pack(ipatch%root_maintenance          ,lmask)
       opatch%leaf_drop             (1:z) = pack(ipatch%leaf_drop                 ,lmask)
-      opatch%carbon_balance        (1:z) = pack(ipatch%carbon_balance            ,lmask)
       opatch%leaf_respiration      (1:z) = pack(ipatch%leaf_respiration          ,lmask)
       opatch%root_respiration      (1:z) = pack(ipatch%root_respiration          ,lmask)
       opatch%gpp                   (1:z) = pack(ipatch%gpp                       ,lmask)
@@ -29249,13 +29241,13 @@ module ed_state_vars
                            ,'Daily mean - Net primary productivity'                        &
                            ,'[  kgC/m2/yr]','(icohort)'            )
       end if                                          
-      if (associated(cpatch%dmean_lai           )) then
+      if (associated(cpatch%dmean_bleaf           )) then
          nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%dmean_lai                                        &
+         call vtable_edio_r(npts,cpatch%dmean_bleaf                                        &
                            ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_LAI_CO             :41:'//trim(dail_keys))
+                           ,'DMEAN_BLEAF_CO             :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
-                           ,'Daily mean - LAI'                                    &
+                           ,'Daily mean leaf biomass'                                      &
                            ,'[     kgC/pl]','(icohort)'            )
       end if
       if (associated(cpatch%dmean_leaf_drop           )) then
@@ -29274,15 +29266,6 @@ module ed_state_vars
                            ,'DMEAN_LAI_CO               :41:'//trim(dail_keys))
          call metadata_edio(nvar,igr                                                       &
                            ,'Daily mean - Leaf area index'                                 &
-                           ,'[     kgC/pl]','(icohort)'            )
-      end if
-      if (associated(cpatch%dmean_cb           )) then
-         nvar = nvar+1
-         call vtable_edio_r(npts,cpatch%dmean_cb                                           &
-                           ,nvar,igr,init,cpatch%coglob_id,var_len,var_len_global,max_ptrs &
-                           ,'DMEAN_CB_CO               :41:'//trim(dail_keys))
-         call metadata_edio(nvar,igr                                                       &
-                           ,'Daily mean - Carbon Balance'                                  &
                            ,'[     kgC/pl]','(icohort)'            )
       end if
       if (associated(cpatch%dmean_broot           )) then

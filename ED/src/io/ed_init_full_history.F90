@@ -5154,8 +5154,8 @@ subroutine fill_history_patch(cpatch,paco_index,ncohorts_global)
                      ,'ROOT_MAINTENANCE          ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpatch%leaf_drop                                                     &
                      ,'LEAF_DROP                 ',dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpatch%carbon_balance                                                &
-                     ,'CARBON_BALANCE            ',dsetrank,iparallel,.true. ,foundvar)
+!   call hdf_getslab_r(cpatch%carbon_balance                                                &
+!                     ,'CARBON_BALANCE            ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpatch%leaf_respiration                                              &
                      ,'LEAF_RESPIRATION          ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpatch%root_respiration                                              &
@@ -5196,8 +5196,8 @@ subroutine fill_history_patch(cpatch,paco_index,ncohorts_global)
                         ,'DMEAN_NPP_CO              ',dsetrank,iparallel,.false.,foundvar)
       call hdf_getslab_r(cpatch%dmean_lai                                                  &
                         ,'DMEAN_LAI_CO              ',dsetrank,iparallel,.false.,foundvar)
-      call hdf_getslab_r(cpatch%dmean_cb                                                   &
-                        ,'DMEAN_CB_CO               ',dsetrank,iparallel,.false.,foundvar)
+!      call hdf_getslab_r(cpatch%dmean_cb                                                   &
+!                        ,'DMEAN_CB_CO               ',dsetrank,iparallel,.false.,foundvar)
       call hdf_getslab_r(cpatch%dmean_bleaf                                                &
                         ,'DMEAN_BLEAF_CO            ',dsetrank,iparallel,.false.,foundvar)
       call hdf_getslab_r(cpatch%dmean_broot                                                &

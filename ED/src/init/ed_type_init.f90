@@ -163,7 +163,7 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%par_level_diffd       (ico) = 0.0
 
    cpatch%gpp                   (ico) = 0.0
-   cpatch%carbon_balance        (ico) = 0.0
+   !cpatch%carbon_balance        (ico) = 0.0
    cpatch%leaf_respiration      (ico) = 0.0
    cpatch%root_respiration      (ico) = 0.0
    cpatch%leaf_growth_resp      (ico) = 0.0
