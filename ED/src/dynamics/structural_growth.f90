@@ -93,7 +93,7 @@ subroutine structural_growth(cgrid, month)
    integer                       :: icol
    logical, parameter            :: dbg_growth = .false.       ! Debugging output flag 
    integer, dimension(2,4)       :: phen_table                 ! counts, status & phen bins 
-   logical          , parameter  :: printout  = .true.
+   logical          , parameter  :: printout  = .false.
    character(len=17), parameter  :: fracfile  = 'struct_growth.txt'
    !----- Locally saved variables. --------------------------------------------------------!
    logical          , save       :: first_time = .true.
