@@ -184,7 +184,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
       dummytime = current_time
       call update_model_time_dm(dummytime,dtlsm)
       if (dummytime%time < dtlsm) then
-         call update_growth_resp_co(cpatch,ico)
+         call update_growth_resp(cpatch,ico)
       end if
       
       call get_maintenance(cpatch,ico,tfact*dtlsm_o_daysec,csite%can_temp(ipa),cb_decrement)             
