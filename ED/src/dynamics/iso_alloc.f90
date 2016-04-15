@@ -184,25 +184,25 @@ subroutine leaf_root_resp_c13(csite,ipa)
       dummytime = current_time
       call update_model_time_dm(dummytime,dtlsm)
       if (dummytime%time < dtlsm) then
-         call update_growth_resp(cpatch,ico)
+         call update_growth_resp_co(cpatch,ico)
       end if
       
       call get_maintenance(cpatch,ico,tfact*dtlsm_o_daysec,csite%can_temp(ipa),cb_decrement)             
       call apply_maintenance(cpatch,ico)
       call apply_maintenance_c13(cpatch,ico)
-      call get_storage_resp(cpatch,ico,tfact*dtlsm_o_daysec)
+      call get_storage_resp(cpatch,ico,tfact)
       
-      cpatch%bstorage(ico)     = cpatch%bstorage(ico)                                          & 
-                               - cpatch%leaf_storage_resp(ico)                                 &
-                               - cpatch%root_storage_resp(ico)                                 &
-                               - cpatch%sapa_storage_resp(ico)                                 &
-                               - cpatch%sapb_storage_resp(ico)
+      cpatch%bstorage(ico)     = cpatch%bstorage(ico)                                      & 
+                               - ( cpatch%leaf_storage_resp(ico)                           &
+                                 + cpatch%root_storage_resp(ico)                           &
+                                 + cpatch%sapa_storage_resp(ico)                           &
+                                 + cpatch%sapb_storage_resp(ico)     ) *dtlsm_o_daysec
 
-      cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico)                      &
-                               - cpatch%leaf_storage_resp_c13(ico)             &
-                               - cpatch%root_storage_resp_c13(ico)             &
-                               - cpatch%sapa_storage_resp_c13(ico)             &
-                               - cpatch%sapb_storage_resp_c13(ico)
+      cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico)                                  &
+                               - ( cpatch%leaf_storage_resp_c13(ico)                       &
+                                 + cpatch%root_storage_resp_c13(ico)                       &
+                                 + cpatch%sapa_storage_resp_c13(ico)                       &
+                                 + cpatch%sapb_storage_resp_c13(ico) ) *dtlsm_o_daysec
 
       !------------------------------------------------------------------------------------!
       ! Standardize respiration units and get total respiration                            !
@@ -210,7 +210,7 @@ subroutine leaf_root_resp_c13(csite,ipa)
       leaf_resp = cpatch%leaf_respiration(ico) *flux_fact
       root_resp = cpatch%root_respiration(ico) *flux_fact
       
-      growth_resp= cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico)              &
+      growth_resp= cpatch%leaf_growth_resp(ico) + cpatch%root_growth_resp(ico)             &
                  + cpatch%sapa_growth_resp(ico) + cpatch%sapb_growth_resp(ico)
 
       resp_sum = growth_resp + leaf_resp + root_resp

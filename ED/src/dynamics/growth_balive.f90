@@ -154,22 +154,22 @@ module growth_balive
                   salloc  = 1.0 + qsw(ipft) * cpatch%hite(ico) + q(ipft)
                   salloci = 1.0 / salloc
 
-                  !----- Save inputs for sanity check. ------------------------------------!
-                  bleaf_in        = cpatch%bleaf(ico)
-                  broot_in        = cpatch%broot(ico)
-                  bstorage_in     = cpatch%bstorage(ico)
+                  bleaf_in    = cpatch%bleaf(ico)
+                  broot_in    = cpatch%broot(ico)
+                  bstorage_in = cpatch%bstorage(ico)
                   bleaf_c13_in    = cpatch%bleaf_c13(ico)
                   broot_c13_in    = cpatch%broot_c13(ico)
                   bstorage_c13_in = cpatch%bstorage_c13(ico)
                   !------------------------------------------------------------------------!
                   !     Compute and apply maintenance costs and get dtlsm C gain.          !
                   !------------------------------------------------------------------------!
-                  call get_maintenance(cpatch,ico,tfact*dtlsm_o_daysec,csite%can_temp(ipa))
+                  call get_maintenance(cpatch,ico,tfact*dtlsm_o_daysec,csite%can_temp(ipa) &
+                                      ,cb_decrement)
                   call get_dtlsm_c_gain(cpatch,ico,dtlsm_c_gain)
                   call get_dtlsm_c13_gain(cpatch,ico,dtlsm_c13_gain,lloss_resp_c13)
                   
-                  call apply_maintenance(cpatch,ico,cb_decrement)
-                  call apply_maintenance_c13(cpatch,ico)
+                  !call apply_maintenance(cpatch,ico,tfact,cb_decrement)
+                  !call apply_maintenance_c13(cpatch,ico,tfact,lloss_resp_c13)
                   
                   call update_cb(cpatch,ico,cb_decrement)
 
@@ -179,51 +179,20 @@ module growth_balive
                   !------------------------------------------------------------------------!
 
 
-                  !------------------------------------------------------------------------!
-                  !     The commented line is an experimental and arbitrary test, borrowed !
-                  ! from maintainence temperature dependency. [[MCD]]                      !
-                  !------------------------------------------------------------------------!
-                  ! temp_dep = 1.0                                                         &
-                  !          / ( 1.0  + exp( 0.4 * (278.15 - csite%avg_daily_temp(ipa))))
-                  temp_dep = 1.0
-                  !------------------------------------------------------------------------!
-                  select case(storage_resp_scheme)
-                  case(0)
-                     cpatch%leaf_storage_resp(ico) = 0.0
-                     cpatch%root_storage_resp(ico) = 0.0
-                     cpatch%sapa_storage_resp(ico) = cpatch%bstorage(ico)                  &
-                                                   * storage_turnover_rate(ipft)           &
-                                                   * tfact * temp_dep
-                     cpatch%sapb_storage_resp(ico) = 0.0
-
-                     cpatch%bstorage(ico) = cpatch%bstorage(ico)                           &
-                                            - cpatch%sapa_storage_resp(ico) * dtlsm_o_daysec
-                  case(1)
-                     storage_resp_int = cpatch%bstorage(ico) / cpatch%balive(ico)          &
-                                      * storage_turnover_rate(ipft) * tfact * temp_dep
-
-                     cpatch%leaf_storage_resp(ico) = storage_resp_int *cpatch%bleaf(ico)
-                     cpatch%root_storage_resp(ico) = storage_resp_int *cpatch%broot(ico)
-                     cpatch%sapa_storage_resp(ico) = storage_resp_int *cpatch%bsapwooda(ico)
-                     cpatch%sapb_storage_resp(ico) = storage_resp_int *cpatch%bsapwoodb(ico)
-
-                     cpatch%bstorage(ico) = cpatch%bstorage(ico)                           &
-                                          - (  cpatch%leaf_storage_resp(ico)               &
-                                             + cpatch%root_storage_resp(ico)               &
-                                             + cpatch%sapa_storage_resp(ico)               &
-                                             + cpatch%sapb_storage_resp(ico))*dtlsm_o_daysec
-                  end select
-
-                  !---- Update isotopic storage respiration -------------------------------!
-                  hotc_bstorage = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
-                  cpatch%leaf_storage_resp_c13(ico) = cpatch%leaf_storage_resp(ico)        &
-                                                    * hotc_bstorage
-                  cpatch%root_storage_resp_c13(ico) = cpatch%root_storage_resp(ico)        &
-                                                    * hotc_bstorage
-                  cpatch%sapa_storage_resp_c13(ico) = cpatch%sapa_storage_resp(ico)        &
-                                                    * hotc_bstorage
-                  cpatch%sapb_storage_resp_c13(ico) = cpatch%sapb_storage_resp(ico)        &
-                                                    * hotc_bstorage
+                  !call get_storage_resp(cpatch,ico,tfact)
+                     
+                  !cpatch%bstorage(ico) = cpatch%bstorage(ico)                           &
+                  !                     - (  cpatch%leaf_storage_resp(ico)               &
+                  !                        + cpatch%root_storage_resp(ico)               &
+                  !                        + cpatch%sapa_storage_resp(ico)               &
+                  !                        + cpatch%sapb_storage_resp(ico))*dtlsm_o_daysec
+                  
+                  !cpatch%bstorage_c13(ico) = cpatch%bstorage_c13(ico)                      &
+                  !                         - cpatch%leaf_storage_resp_c13(ico)             &
+                  !                         - cpatch%root_storage_resp_c13(ico)             &
+                  !                         - cpatch%sapa_storage_resp_c13(ico)             &
+                  !                         - cpatch%sapb_storage_resp_c13(ico)
+      
 
                   !------------------------------------------------------------------------!
                   !     When storage carbon is lost, allow the associated nitrogen to go   !
@@ -305,11 +274,17 @@ module growth_balive
                               ,(/1,1,2,2,3,3,4,4,5,5,6,6,7,7,0,0,8,9,10,8,9,10,0,0,0,0,0/))
                      !---------------------------------------------------------------------!
 
-                     cpatch%fmean_bleaf    (ico) = cpatch%bleaf    (ico) * cpatch%nplant(ico)
-                     cpatch%fmean_broot    (ico) = cpatch%broot    (ico) * cpatch%nplant(ico)
-                     cpatch%fmean_bsapwooda(ico) = cpatch%bsapwooda(ico) * cpatch%nplant(ico)
-                     cpatch%fmean_bsapwoodb(ico) = cpatch%bsapwoodb(ico) * cpatch%nplant(ico)
-                     cpatch%fmean_bstorage (ico) = cpatch%bstorage (ico) * cpatch%nplant(ico)
+                     call update_fmean(cpatch%fmean_bleaf    (ico),cpatch%bleaf    (ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_broot    (ico),cpatch%broot    (ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_bsapwooda(ico),cpatch%bsapwooda(ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_bsapwoodb(ico),cpatch%bsapwoodb(ico),cpatch%nplant(ico))
+                     call update_fmean(cpatch%fmean_bstorage (ico),cpatch%bstorage (ico),cpatch%nplant(ico))
+   
+                     !cpatch%fmean_bleaf    (ico) = cpatch%bleaf    (ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_broot    (ico) = cpatch%broot    (ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_bsapwooda(ico) = cpatch%bsapwooda(ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_bsapwoodb(ico) = cpatch%bsapwoodb(ico) * cpatch%nplant(ico)
+                     !cpatch%fmean_bstorage (ico) = cpatch%bstorage (ico) * cpatch%nplant(ico)
 
                      call update_nitrogen(flushing,ipft,carbon_balance,cpatch%nplant(ico)  &
                                           ,tr_bleaf,tr_broot,tr_bstorage,nitrogen_uptake   &
@@ -452,6 +427,26 @@ module growth_balive
 
    !=======================================================================================!
    !=======================================================================================!
+   subroutine update_fmean(fmean,var,nplant)
+      use ed_misc_coms  , only : dtlsm              & ! intent(in)
+                               , frqsum             ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      real, intent(inout) :: fmean
+      real, intent(in)    :: var
+      real, intent(in)    :: nplant      
+      !------------------------------------------------------------------------------------!
+
+      fmean = fmean + (var *nplant *dtlsm /frqsum)
+
+   end subroutine update_fmean
+   !=======================================================================================!
+   !=======================================================================================!
+
+
+
+   !=======================================================================================!
+   !=======================================================================================!
    !     This subroutine will scale the daily averages of GPP and some respiration vari-   !
    ! ables to normal units.  These variables are not for output, so they are done          !
    ! separatedly.  There are also some output variables here, because these depend on the  !
@@ -513,10 +508,8 @@ module growth_balive
                                                              * growth_resp_factor(ipft))
                   !------------------------------------------------------------------------!
                   
-
                   !------------------------------------------------------------------------!
                   !  Compute respiration rates for coming day [kgC/plant/day].             !
-                  !  C-13 components are updated in leaf_root_resp_c13()
                   !------------------------------------------------------------------------!
                   select case(growth_resp_scheme)
                   case(0)
@@ -532,6 +525,28 @@ module growth_balive
                      cpatch%sapa_growth_resp(ico) = growth_resp_int * cpatch%bsapwooda(ico)
                      cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
                   end select
+                  
+                  ! This is being done in leaf_
+                  !if (c13af > 0) then
+                  !   growth_resp_c13 = max(0.0,cpatch%today_npp_c13(ico)*growth_resp_factor(ipft))
+                     !cpatch%growth_resp_c13(ico) = cpatch%growth_resp(ico)               &
+                     !                            * hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+                     
+                  !   select case(growth_resp_scheme)
+                  !   case(0)
+                  !      cpatch%sapa_growth_resp_c13(ico) = max(0.0,cpatch%growth_resp(ico))
+                  !      cpatch%leaf_growth_resp_c13(ico) = 0.0
+                  !      cpatch%root_growth_resp_c13(ico) = 0.0
+                  !      cpatch%sapb_growth_resp_c13(ico) = 0.0
+                  !   case(1)
+                  !      growth_resp_int = max(0.0,growth_resp_c13/cpatch%balive_c13(ico))
+
+                  !      cpatch%leaf_growth_resp_c13(ico) = growth_resp_int * cpatch%bleaf_c13(ico)
+                  !      cpatch%root_growth_resp_c13(ico) = growth_resp_int * cpatch%broot_c13(ico)
+                  !      cpatch%sapa_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwooda_c13(ico)
+                  !      cpatch%sapb_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwoodb_c13(ico)
+                  !   end select
+                  !end if
                   !------------------------------------------------------------------------!                  
                end do cohortloop
                !---------------------------------------------------------------------------!
@@ -544,6 +559,101 @@ module growth_balive
 
       return
    end subroutine update_growth_resp
+   !=======================================================================================!
+   !=======================================================================================!
+
+
+
+
+   !=======================================================================================!
+   !=======================================================================================!
+   !     This subroutine will scale the daily averages of GPP and some respiration vari-   !
+   ! ables to normal units.  These variables are not for output, so they are done          !
+   ! separatedly.  There are also some output variables here, because these depend on the  !
+   ! average of the gpp, and leaf and root respiration and would need to be calculated     !
+   ! again otherwise.                                                                      !
+   !---------------------------------------------------------------------------------------!
+   subroutine update_growth_resp_co(cpatch,ico)
+      use ed_state_vars , only : patchtype          ! ! structure
+      use pft_coms      , only : growth_resp_factor ! ! intent(in)
+      use ed_misc_coms  , only : dtlsm              & ! intent(in)
+                               , growth_resp_scheme ! ! intent(in)
+      use consts_coms   , only : day_sec            ! ! intent(in)
+      use isotopes      , only : c13af              ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      type(patchtype)  , target    :: cpatch
+      !----- Local variables. -------------------------------------------------------------!
+      integer                       :: ico
+      integer                       :: ipft
+      real                          :: growth_resp_int         ! Growth resp / balive
+      real                          :: growth_resp_c13
+      real                          :: dtlsm_o_daysec
+      !------------------------------------------------------------------------------------!
+      dtlsm_o_daysec = dtlsm / day_sec
+      
+                  ipft = cpatch%pft(ico)
+                  !------------------------------------------------------------------------!
+                  !  Compute the growth respiration as a fraction of yesterday's NPP.      !
+                  !  This stays in units kgC/m^2 (per dtlsm) because it's used every dtlsm.!
+                  !------------------------------------------------------------------------!
+                  cpatch%growth_resp         (ico) = max(0.0,cpatch%today_npp         (ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_pot     (ico) = max(0.0,cpatch%today_npp_pot     (ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_lightmax(ico) = max(0.0,cpatch%today_npp_lightmax(ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_moistmax(ico) = max(0.0,cpatch%today_npp_moistmax(ico)&
+                                                             * growth_resp_factor(ipft))
+                  cpatch%growth_resp_mlmax   (ico) = max(0.0,cpatch%today_npp_mlmax   (ico)&
+                                                             * growth_resp_factor(ipft))
+                  !------------------------------------------------------------------------!
+                  
+                  !------------------------------------------------------------------------!
+                  !  Compute respiration rates for coming day [kgC/plant/day].             !
+                  !------------------------------------------------------------------------!
+                  select case(growth_resp_scheme)
+                  case(0)
+                     cpatch%sapa_growth_resp(ico) = max(0.0,cpatch%growth_resp(ico))
+                     cpatch%leaf_growth_resp(ico) = 0.0
+                     cpatch%root_growth_resp(ico) = 0.0
+                     cpatch%sapb_growth_resp(ico) = 0.0
+                  case(1)
+                     cpatch%balive(ico) = cpatch%bleaf(ico)     + cpatch%broot(ico)        &
+                                        + cpatch%bsapwooda(ico) + cpatch%bsapwoodb(ico)
+                     growth_resp_int = max(0.0,cpatch%growth_resp(ico)/cpatch%balive(ico))
+
+                     cpatch%leaf_growth_resp(ico) = growth_resp_int * cpatch%bleaf(ico)
+                     cpatch%root_growth_resp(ico) = growth_resp_int * cpatch%broot(ico)
+                     cpatch%sapa_growth_resp(ico) = growth_resp_int * cpatch%bsapwooda(ico)
+                     cpatch%sapb_growth_resp(ico) = growth_resp_int * cpatch%bsapwoodb(ico)
+                  end select
+                  
+                  ! This is being done in leaf_
+                  !if (c13af > 0) then
+                  !   growth_resp_c13 = max(0.0,cpatch%today_npp_c13(ico)*growth_resp_factor(ipft))
+                     !cpatch%growth_resp_c13(ico) = cpatch%growth_resp(ico)               &
+                     !                            * hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+                     
+                  !   select case(growth_resp_scheme)
+                  !   case(0)
+                  !      cpatch%sapa_growth_resp_c13(ico) = max(0.0,cpatch%growth_resp(ico))
+                  !      cpatch%leaf_growth_resp_c13(ico) = 0.0
+                  !      cpatch%root_growth_resp_c13(ico) = 0.0
+                  !      cpatch%sapb_growth_resp_c13(ico) = 0.0
+                  !   case(1)
+                  !      growth_resp_int = max(0.0,growth_resp_c13/cpatch%balive_c13(ico))
+
+                  !      cpatch%leaf_growth_resp_c13(ico) = growth_resp_int * cpatch%bleaf_c13(ico)
+                  !      cpatch%root_growth_resp_c13(ico) = growth_resp_int * cpatch%broot_c13(ico)
+                  !      cpatch%sapa_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwooda_c13(ico)
+                  !      cpatch%sapb_growth_resp_c13(ico) = growth_resp_int * cpatch%bsapwoodb_c13(ico)
+                  !   end select
+                  !end if
+                  !------------------------------------------------------------------------!                  
+
+      return
+   end subroutine update_growth_resp_co
    !=======================================================================================!
    !=======================================================================================!
 
@@ -801,6 +911,79 @@ module growth_balive
 
 
 
+
+   !=======================================================================================!
+   !=======================================================================================!
+   subroutine get_storage_resp(cpatch,ico,tfact)
+      use ed_state_vars, only : patchtype             ! ! structure
+      use pft_coms     , only : storage_turnover_rate ! ! intent(in)
+      use consts_coms  , only : umol_2_kgC            & ! intent(in)
+                              , day_sec               ! ! intent(in)
+      use ed_misc_coms , only : storage_resp_scheme   ! ! intent(in)
+      use iso_utils    , only : hotc                  ! ! intent(in)
+      implicit none
+      !----- Arguments. -------------------------------------------------------------------!
+      type(patchtype), target       :: cpatch
+      integer        , intent(in)   :: ico
+      real           , intent(in)   :: tfact
+      !----- Local Vars. ------------------------------------------------------------------!
+      real                          :: temp_dep
+      real                          :: storage_resp_int         ! Growth resp / balive
+      real                          :: hotc_bstorage
+      integer                       :: ipft
+      !------------------------------------------------------------------------------------!
+      ipft = cpatch%pft(ico)
+ 
+      !------------------------------------------------------------------------!
+      !     The commented line is an experimental and arbitrary test, borrowed !
+      ! from maintainence temperature dependency. [[MCD]]                      !
+      !------------------------------------------------------------------------!
+      ! temp_dep = 1.0                                                         &
+      !          / ( 1.0  + exp( 0.4 * (278.15 - csite%avg_daily_temp(ipa))))
+      temp_dep = 1.0
+      !------------------------------------------------------------------------!
+      
+
+      select case(storage_resp_scheme)
+                  case(0)
+                     cpatch%leaf_storage_resp(ico) = 0.0
+                     cpatch%root_storage_resp(ico) = 0.0
+                     cpatch%sapa_storage_resp(ico) = cpatch%bstorage(ico)                  &
+                                                   * storage_turnover_rate(ipft)           &
+                                                   * tfact * temp_dep
+                     cpatch%sapb_storage_resp(ico) = 0.0
+
+                  case(1)
+                     storage_resp_int = cpatch%bstorage(ico) / cpatch%balive(ico)          &
+                                      * storage_turnover_rate(ipft) * tfact * temp_dep
+
+                     cpatch%leaf_storage_resp(ico) = storage_resp_int *cpatch%bleaf(ico)
+                     cpatch%root_storage_resp(ico) = storage_resp_int *cpatch%broot(ico)
+                     cpatch%sapa_storage_resp(ico) = storage_resp_int *cpatch%bsapwooda(ico)
+                     cpatch%sapb_storage_resp(ico) = storage_resp_int *cpatch%bsapwoodb(ico)
+
+                  end select
+
+                  hotc_bstorage = hotc(cpatch%bstorage_c13(ico),cpatch%bstorage(ico))
+                  cpatch%leaf_storage_resp_c13(ico) = cpatch%leaf_storage_resp(ico)        &
+                                                    * hotc_bstorage
+                  cpatch%root_storage_resp_c13(ico) = cpatch%root_storage_resp(ico)        &
+                                                    * hotc_bstorage
+                  cpatch%sapa_storage_resp_c13(ico) = cpatch%sapa_storage_resp(ico)        &
+                                                    * hotc_bstorage
+                  cpatch%sapb_storage_resp_c13(ico) = cpatch%sapb_storage_resp(ico)        &
+                                                    * hotc_bstorage
+                  
+      !------------------------------------------------------------------------------------!
+      
+   end subroutine get_storage_resp
+   !=======================================================================================!
+   !=======================================================================================!
+
+
+
+
+
    !=======================================================================================!
    !=======================================================================================!
    !    This subroutine will transfer some of the stored carbon to balive in order to put  !
@@ -874,7 +1057,7 @@ module growth_balive
 
    !=======================================================================================!
    !=======================================================================================!
-   subroutine get_maintenance(cpatch,ico,tfact,tempk)
+   subroutine get_maintenance(cpatch,ico,tfact,tempk,cb_decrement)
       use ed_state_vars, only : patchtype             ! ! structure
       use pft_coms     , only : phenology             & ! intent(in)
                               , root_turnover_rate    & ! intent(in)
@@ -890,6 +1073,7 @@ module growth_balive
       integer        , intent(in)   :: ico
       real           , intent(in)   :: tfact
       real           , intent(in)   :: tempk
+      real           , intent(out)   :: cb_decrement
       !----- Local variables. -------------------------------------------------------------!
       integer                       :: ipft
       real                          :: maintenance_temp_dep
@@ -940,7 +1124,9 @@ module growth_balive
       cpatch%root_maintenance_c13(ico) = cpatch%root_maintenance(ico)                      &
                                        * hotc(cpatch%broot_c13(ico),cpatch%broot(ico))
       !------------------------------------------------------------------------------------!
-            
+      
+      cb_decrement = cpatch%leaf_maintenance(ico) + cpatch%root_maintenance(ico)
+      
       return
    end subroutine get_maintenance
    !=======================================================================================!
@@ -950,7 +1136,7 @@ module growth_balive
    
    !=======================================================================================!
    !=======================================================================================!
-   subroutine apply_maintenance(cpatch,ico,cb_decrement)
+   subroutine apply_maintenance(cpatch,ico)
       use ed_state_vars, only : patchtype             ! ! structure
       use pft_coms     , only : storage_turnover_rate ! ! intent(in)
       use consts_coms  , only : umol_2_kgC            & ! intent(in)
@@ -960,7 +1146,6 @@ module growth_balive
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype), target       :: cpatch
       integer        , intent(in)   :: ico
-      real           , intent(out)  :: cb_decrement
       !------------------------------------------------------------------------------------!
       
       !------------------------------------------------------------------------------------!
@@ -972,8 +1157,6 @@ module growth_balive
                                     
       cpatch%bleaf(ico)    = cpatch%bleaf(ico)    - cpatch%leaf_maintenance(ico)
       cpatch%broot(ico)    = cpatch%broot(ico)    - cpatch%root_maintenance(ico)
-      
-      cb_decrement = cpatch%leaf_maintenance(ico) + cpatch%root_maintenance(ico)
       !------------------------------------------------------------------------------------!
       
    end subroutine apply_maintenance
