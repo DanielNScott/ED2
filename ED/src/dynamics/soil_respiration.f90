@@ -572,8 +572,8 @@ subroutine resp_rh(csite,ipa,Lc)
    call check_site_c13(csite,ipa,'resp_rh','soil_respiration.f90'    &
      ,(/fast_C_loss,slow_C_loss,structural_C_loss               &
        ,fast_c13_loss,slow_c13_loss,structural_c13_loss/)                      &
-     ,(/'fast_c_loss','slow_c_loss','structural_c_loss'       &
-       ,'fast_c13_loss','slow_c13_loss','structural_c13_loss'/)  &
+     ,(/'        fast_c_loss','        slow_c_loss','  structural_c_loss'       &
+       ,'      fast_c13_loss','      slow_c13_loss','structural_c13_loss'/)  &
      ,(/1,2,3,1,2,3/))
    
    return
@@ -756,10 +756,12 @@ subroutine update_C_and_N_pools(cgrid)
                 ,csite%fsc_in(ipa),csite%ssc_in(ipa),csite%ssl_in(ipa),slow_C_input              &
                 ,csite%fsc13_in(ipa),csite%ssc13_in(ipa),csite%ssl_c13_in(ipa)          &
                 ,slow_c13_input/)                                                          &
-              ,(/'fast_c_loss','slow_c_loss','structural_c_loss','structural_L_loss'       &
-                ,'fast_c13_loss','slow_c13_loss','structural_c13_loss','structural_c13_loss' &
-                ,'fsc_in','ssc_in','ssl_in','slow_C_input'                                 &
-                ,'fsc13_in','ssc13_in','ssl_c13_in','slow_c13_input'/)                  &
+              ,(/'          fast_c_loss','          slow_c_loss','    structural_c_loss'   &
+                ,'    structural_L_loss','        fast_c13_loss','        slow_c13_loss'   &
+                ,'  structural_c13_loss','structural_L_c13_loss','               fsc_in'   &
+                ,'               ssc_in','               ssl_in','         slow_C_input'   &
+                ,'             fsc13_in','             ssc13_in','           ssl_c13_in'   &
+                ,'       slow_c13_input'/)                  &
               ,(/1,2,3,4,1,2,3,4,5,6,7,8,5,6,7,8/))
 
             !----- Reset litter inputs. ---------------------------------------------------!
@@ -781,3 +783,4 @@ subroutine update_C_and_N_pools(cgrid)
 end subroutine update_C_and_N_pools
 !==========================================================================================!
 !==========================================================================================!
+

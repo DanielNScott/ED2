@@ -290,7 +290,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    character(*)              , intent(in) :: call_loc    ! What routine called this check?
    character(*)              , intent(in) :: fname       ! What file is that routine in?
    real         , dimension(:), optional, intent(in) :: aux_vals
-   character(18), dimension(:), optional, intent(in) :: aux_labs
+   character(*) , dimension(:), optional, intent(in) :: aux_labs
    integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found                         ! Is there a problem?
@@ -347,7 +347,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
    call check_c13(cpatch%gpp_c13(ico) &
                  ,cpatch%gpp    (ico) &
                  ,check_delta,gpp_delta,valid,'gpp',reason)
-   if (not(valid)) then
+   if (.not. valid) then
       gpp_override = .true.
    end if
    
@@ -445,7 +445,7 @@ subroutine check_patch_c13(cpatch,ico,call_loc,fname,aux_vals,aux_labs,aux_pair)
       end do outerloop
    end if
    
-   if (not(valid) .and. not(gpp_override)) then
+   if (.not. valid .and. .not. gpp_override) then
       write(*,*) '======================================================================='
       write(*,*) ' ', reason
       write(*,*) ' C-13 sanity check error in ', call_loc, '!'
@@ -571,7 +571,7 @@ subroutine check_site_c13(csite,ipa,call_loc,fname,aux_vals,aux_labs,aux_pair)
    character(*)              , intent(in) :: call_loc    ! What routine called this check?
    character(*)              , intent(in) :: fname       ! What file is that routine in?
    real         , dimension(:), optional, intent(in) :: aux_vals
-   character(18), dimension(:), optional, intent(in) :: aux_labs
+   character(*) , dimension(:), optional, intent(in) :: aux_labs
    integer      , dimension(:), optional, intent(in) :: aux_pair
    !----- Local variables. ----------------------------------------------------------------!
    logical        :: error_found = .false.               ! Is there a problem?
@@ -646,7 +646,7 @@ subroutine check_site_c13(csite,ipa,call_loc,fname,aux_vals,aux_labs,aux_pair)
       end do outerloop
    end if
    
-   if (not(valid)) then
+   if (.not. valid) then
       write(*,*) '======================================================================='
       write(*,*) ' C-13 sanity check error in ', call_loc, '!'
       write(*,*) reason
@@ -739,7 +739,7 @@ subroutine check_c13(heavy,total,check_delta,delta,valid,vname,reason)
       valid = .true.
    end if
    
-   if (not(valid)) then
+   if (.not. valid) then
       reason = 'Bad ' // trim(vname) // ' total C-13'
       return
    end if
@@ -756,3 +756,4 @@ end subroutine check_c13
 !==========================================================================================!
 
 end module iso_utils
+

@@ -540,12 +540,12 @@ subroutine leaf_root_resp_c13(csite,ipa)
       ,'     leaf_int_loss','     root_int_loss','     lloss_overrun','     rloss_overrun'&
       ,'         bloss_max','  phenology_status','          dcg_d13C','   carbon_bal_d13C'&
       ,'      dtlsm_c_gain','    dtlsm_c13_gain'                                          &
-      ,'         gloss_via_lrr','          gloss_via_gr','        sloss_via_lrr','         sloss_via_gr'&
-      ,'           lr_o_lrr','           rr_o_lrr','            lgr_o_gr','            rgr_o_gr'&
-      ,'           sagr_o_gr','           sbgr_o_gr','    lloss_via_lr','    rloss_via_rr'&
-      ,'   lloss_via_lgr','   rloss_via_rgr','       growth_resp','    r_c_debt_2_lrr'&
+      ,'     gloss_via_lrr','      gloss_via_gr','     sloss_via_lrr','      sloss_via_gr'&
+      ,'          lr_o_lrr','          rr_o_lrr','          lgr_o_gr','          rgr_o_gr'&
+      ,'         sagr_o_gr','         sbgr_o_gr','      lloss_via_lr','      rloss_via_rr'&
+      ,'     lloss_via_lgr','     rloss_via_rgr','       growth_resp','    r_c_debt_2_lrr'&
       ,'      daily_c_gain','    daily_c13_gain'&
-      ,' lgr_o_lgr_sagr','sagr_o_lgr_sagr',' rgr_o_rgr_sbgr','sbgr_o_rgr_sbgr'/)
+      ,'    lgr_o_lgr_sagr','   sagr_o_lgr_sagr','    rgr_o_rgr_sbgr','   sbgr_o_rgr_sbgr'/)
 
  
       call check_patch_c13(cpatch,ico,'leaf_root_resp_c13','iso_alloc.f90',patch_check_vals&
