@@ -45,7 +45,7 @@ BASE=$(ED_ROOT)/build/
 
 USE_HDF5=1
 
-HDF5_HOME=/usr
+#HDF5_HOME=/usr
 HDF5_INCS=-I${HDF5_HOME}/include
 HDF5C_INCS=-I${HDF5_HOME}/include
 HDF5_LIBS=${HDF5_HOME}/lib/libhdf5_fortran.a \
@@ -85,16 +85,33 @@ USE_MPIWTIME=1
 
 
 #----------------- gfortran on Linux (optimized build)-----------
-CMACH=PC_GFORTRAN
-F_COMP=mpif90
-F_OPTS=-g -ffree-line-length-none -fno-whole-file -O2 -fopenmp #-ffpe-trap=invalid,zero,overflow -fbounds-check  #-O2
-C_COMP=mpicc 
-C_OPTS=-g -O2 -fopenmp #-ffpe-trap=invalid,zero,overflow -fbounds-check #-O2
-LOADER=mpif90
-LOADER_OPTS=${F_OPTS}
-C_LOADER=mpicc
-LIBS=
-MOD_EXT=mod
+ifeq ($(KIND_COMP),E)
+   CMACH=PC_GFORTRAN
+   F_COMP=mpif90
+   F_OPTS=-g -ffree-line-length-none -fno-whole-file -O2 -fopenmp #-ffpe-trap=invalid,zero,overflow -fbounds-check  #-O2
+   C_COMP=mpicc 
+   C_OPTS=-g -O2 -fopenmp #-ffpe-trap=invalid,zero,overflow -fbounds-check #-O2
+   LOADER=mpif90
+   LOADER_OPTS=${F_OPTS}
+   C_LOADER=mpicc
+   LIBS=
+   MOD_EXT=mod
+endif
+
+ifeq ($(KIND_COMP),A)
+   #----------------- gfortran on Linux (optimized build)-----------
+   CMACH=PC_GFORTRAN
+   F_COMP=mpif90
+   F_OPTS=-gdwarf-3 -ffree-line-length-none -fno-whole-file -O0 -fopenmp -ffpe-trap=invalid,zero,overflow -fbounds-check #-std=f2003
+   C_COMP=mpicc -fopenmp
+   C_OPTS=-gdwarf-3 -O0 -ffpe-trap=invalid,zero,overflow -fbounds-check
+   LOADER=mpif90
+   LOADER_OPTS=${F_OPTS}
+   C_LOADER=mpicc
+   LIBS=
+   MOD_EXT=mod
+endif
+
 
 # Ancillary Compiler options
 #USE_INTERF=1

@@ -66,6 +66,7 @@ key="$1"
    shift # past argument or value
 done
 
+# Let the user know if defaults are being used
 if [ "${PLATFORM}" == "" ]
 then
    echo "No platform specified, defaulting to gfortran."
@@ -76,6 +77,27 @@ if [ "${KIND}" == "" ]
 then  
    echo "No optimization level specified, defaulting to E."
    KIND="E"
+fi
+
+#Check that HDF5_HOME is set:
+if [ "${HDF5_HOME}" == "" ]
+then
+   echo "Your HDF5_HOME variable is not set, looking for it."
+   HDF5_GUESS=`which h5dump`
+
+   if [ "${HDF5_GUESS}" == "" ]
+   then
+      echo "'which h5dump' could not be used to find HDF5_HOME. Please set this environment variable."
+      exit 1
+   else
+      # Strip '/bin/h5dump' from path
+      # Bash 4.2 and above:
+      #HDF5_HOME=${HDF5_GUESS::-11}
+
+      # Below Bash 4.2:
+      HDF5_HOME=`echo ${HDF5_GUESS} | rev | cut -c 11- | rev`
+      echo "HDF5_HOME set to '${HDF5_HOME}'"
+   fi
 fi
 
 # Set opt and bin
@@ -99,8 +121,10 @@ if [ ${GIT_EXIST} == "true" -a ${USE_GIT} ]
 then
    GIT_TAG=`git branch -v | awk '/\*/ {print "-" $2 "-" $3}'`
    GIT_TAG=`echo ${GIT_TAG} | tr -d '()/[]'`
+   echo " "
    echo "Git found, it will be used to tag things."
    echo "To disable revision tagging, use --gitoff or -g."
+   echo " "
 else
    GIT_TAG=''
 fi
@@ -122,7 +146,7 @@ ln -sf ../shell/* ./
 touch dependency.mk
 
 #----- Launch the compiler. ---------------------------------------------------------------#
-make OPT=${OPT} KIND_COMP=${KIND} ${CLEAN} GIT_TAG=${GIT_TAG}
+make OPT=${OPT} KIND_COMP=${KIND} ${CLEAN} GIT_TAG=${GIT_TAG} HDF5_HOME=${HDF5_HOME}
 make_exit_code=$?
 #------------------------------------------------------------------------------------------#
 

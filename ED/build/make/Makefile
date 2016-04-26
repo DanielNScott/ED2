@@ -20,10 +20,6 @@ ifeq ($(F_LOWO_OPTS),)
 endif
 #------------------------------------------------------------------------------------------#
 
-ifeq ($(OPT),"dbg")
-	INCLUDES = ""
-endif
-
 #----- Compiler commands. -----------------------------------------------------------------#
 INCLUDES         = $(PAR_INCS) -I$(ED_INCS) $(HDF5_INCS) $(MPI_INCS) 
 F90_COMMAND      = $(F_COMP) -c $(F_OPTS) $(INCLUDES) $(PAR_DEFS)
