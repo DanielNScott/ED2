@@ -23,6 +23,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
                              , wdns               & ! intent(in)
                              , umols_2_kgCyr      & ! intent(in)
                              , yr_day             & ! intent(in)
+                             , day_sec            & ! intent(in)
                              , lnexp_min          & ! intent(in)
                              , tiny_num           ! ! intent(in)
    use ed_misc_coms   , only : current_time       & ! intent(in)
@@ -109,6 +110,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
    real(kind=8)                            :: bleaf
    real(kind=8)                            :: bleaf_c13
    real(kind=8)                            :: leaf_h2tc
+   real                                    :: daysec_o_dtlsm
    !----- Locally saved variables. --------------------------------------------------------!
    real                          , save    :: dtlsm_o_frqsum
    logical                       , save    :: first_time = .true.
@@ -119,6 +121,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
    !if (first_time) then
    !   first_time     = .false.
       dtlsm_o_frqsum = dtlsm / frqsum
+      daysec_o_dtlsm = day_sec / dtlsm 
    !end if
    !---------------------------------------------------------------------------------------!
 
@@ -751,6 +754,7 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
          
       end if
       
+      daysec_o_dtlsm = day_sec / dtlsm
       !------------------------------------------------------------------------------------!
       !    Not really a part of the photosynthesis scheme, but this will do it.  We must   !
       ! integrate the "mean" of the remaining respiration terms, except for the root one.  !
@@ -762,16 +766,16 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
       !------------------------------------------------------------------------------------!
       cpatch%fmean_leaf_growth_resp (ico) = cpatch%fmean_leaf_growth_resp  (ico)           &
                                           + cpatch%leaf_growth_resp        (ico)           &
-                                          *  dtlsm_o_frqsum * yr_day
+                                          *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
       cpatch%fmean_root_growth_resp (ico) = cpatch%fmean_root_growth_resp  (ico)           &
                                           + cpatch%root_growth_resp        (ico)           &
-                                          *  dtlsm_o_frqsum * yr_day
+                                          *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
       cpatch%fmean_sapa_growth_resp (ico) = cpatch%fmean_sapa_growth_resp  (ico)           &
                                           + cpatch%sapa_growth_resp        (ico)           &
-                                          *  dtlsm_o_frqsum * yr_day
+                                          *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
       cpatch%fmean_sapb_growth_resp (ico) = cpatch%fmean_sapb_growth_resp  (ico)           &
                                           + cpatch%sapb_growth_resp        (ico)           &
-                                          *  dtlsm_o_frqsum * yr_day
+                                          *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
       cpatch%fmean_leaf_storage_resp(ico) = cpatch%fmean_leaf_storage_resp (ico)           &
                                           + cpatch%leaf_storage_resp(ico) * dtlsm_o_frqsum &
                                           * yr_day
@@ -787,20 +791,16 @@ subroutine canopy_photosynthesis(csite,cmet,mzg,ipa,lsl,ntext_soil              
       if (c13af > 0) then
          cpatch%fmean_leaf_growth_resp_c13(ico) = cpatch%fmean_leaf_growth_resp_c13 (ico)  &
                                                 + cpatch%leaf_growth_resp_c13(ico)         &
-                                                * dtlsm_o_frqsum                           &
-                                                * yr_day
+                                                *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
          cpatch%fmean_root_growth_resp_c13(ico) = cpatch%fmean_root_growth_resp_c13 (ico)  &
                                                 + cpatch%root_growth_resp_c13(ico)         &
-                                                * dtlsm_o_frqsum                           &
-                                                * yr_day
+                                                *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
          cpatch%fmean_sapa_growth_resp_c13(ico) = cpatch%fmean_sapa_growth_resp_c13 (ico)  &
                                                 + cpatch%sapa_growth_resp_c13(ico)         &
-                                                * dtlsm_o_frqsum                           &
-                                                * yr_day
+                                                *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
          cpatch%fmean_sapb_growth_resp_c13(ico) = cpatch%fmean_sapb_growth_resp_c13 (ico)  &
                                                 + cpatch%sapb_growth_resp_c13(ico)         &
-                                                * dtlsm_o_frqsum                           &
-                                                * yr_day
+                                                *  dtlsm_o_frqsum * yr_day * daysec_o_dtlsm
 
          cpatch%fmean_leaf_storage_resp_c13(ico) = cpatch%fmean_leaf_storage_resp_c13 (ico) &
                                                  + cpatch%leaf_storage_resp_c13(ico)        &

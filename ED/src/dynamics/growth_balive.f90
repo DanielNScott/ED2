@@ -598,15 +598,20 @@ module growth_balive
                   !  This stays in units kgC/m^2 (per dtlsm) because it's used every dtlsm.!
                   !------------------------------------------------------------------------!
                   cpatch%growth_resp         (ico) = max(0.0,cpatch%today_npp         (ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_pot     (ico) = max(0.0,cpatch%today_npp_pot     (ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_lightmax(ico) = max(0.0,cpatch%today_npp_lightmax(ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_moistmax(ico) = max(0.0,cpatch%today_npp_moistmax(ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   cpatch%growth_resp_mlmax   (ico) = max(0.0,cpatch%today_npp_mlmax   (ico)&
-                                                             * growth_resp_factor(ipft))
+                                                             * growth_resp_factor(ipft)    &
+                                                             * dtlsm_o_daysec)
                   !------------------------------------------------------------------------!
                   
                   !------------------------------------------------------------------------!
@@ -1845,6 +1850,7 @@ module growth_balive
 !      end if
       !------------------------------------------------------------------------------------!
 
+
       return
    end subroutine get_c_xfers
    !=======================================================================================!
@@ -2026,7 +2032,6 @@ module growth_balive
       tr_bsapwoodb_c13 = tr_bsapwoodb_c13 + addnl_bsapb_c13
       tr_bstorage_c13  = tr_bstorage_c13  + addnl_bstor_c13
       
-      !write (*,*) cpatch%bstorage(ico), cpatch%bstorage_c13(ico), tr_bstorage, tr_bstorage_c13
       return
    end subroutine get_c13_xfers
    !=======================================================================================!
