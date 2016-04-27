@@ -31,18 +31,11 @@ BASE=$(ED_ROOT)/build/
 #LIBNCARG=-L$(NCARG_DIR) -lncarg -lncarg_gks -lncarg_c -L/usr/X11R6/lib -lX11 -ldl
 #---------------------------------------------------------------
 
-# HDF libraries  -----------------------------------------------
-# HDF4 library: Instructions to install: www.cptec.inpe.br/brams
-# If you run "configure" script, you don't need to edit line bellow
-#HDF_LIBS=-L.hdf4_libs -lmfhdf -ldf -lz -ljpeg -lsz
-# --------------------------------------------------------------
+# This is no longer optional, you must use HDF5.
 
 # HDF 5  Libraries
-# ED2 HAS OPTIONAL HDF 5 I/O
-# If you wish to use this functionality specify USE_HDF5=1
-# and specify the location of the include directory
+# Specify the location of the include directory
 # library files. Make sure you include the zlib.a location too.
-
 USE_HDF5=1
 
 HDF5_INCS=-I${HDF5_HOME}
