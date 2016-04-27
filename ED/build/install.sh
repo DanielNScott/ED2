@@ -80,23 +80,42 @@ then
 fi
 
 #Check that HDF5_HOME is set:
-if [ "${HDF5_HOME}" == "" ]
+if [ "${HDF5_HOME}" == "" ] && [ "${CLEAN}" != "clean" ]
 then
-   echo "Your HDF5_HOME variable is not set, looking for it."
-   HDF5_GUESS=`which h5dump`
+   echo " "
+   echo "Your HDF5_HOME variable is not set, attempting to set it using 'find / -name hdf5.mod'."
+   HDF5_GUESS=`find / -name hdf5.mod 2>/dev/null`
 
    if [ "${HDF5_GUESS}" == "" ]
    then
-      echo "'which h5dump' could not be used to find HDF5_HOME. Please set this environment variable."
+      echo "Failed to set HDF5_HOME. Please set this environment variable. Are you sure HDF5 is installed correctly?"
       exit 1
    else
       # Strip '/bin/h5dump' from path
       # Bash 4.2 and above:
       #HDF5_HOME=${HDF5_GUESS::-11}
 
-      # Below Bash 4.2:
-      HDF5_HOME=`echo ${HDF5_GUESS} | rev | cut -c 11- | rev`
+      # Below Bash 4.2 compatible:
+      HDF5_HOME=`echo ${HDF5_GUESS} | rev | cut -c 9- | rev`
       echo "HDF5_HOME set to '${HDF5_HOME}'"
+   fi
+fi
+
+# Look for necessary hdf5 libraries:
+if [ "${HDF5_LIB_PATH}" == "" ] && [ "${CLEAN}" != "clean" ]
+then
+   echo " "
+   echo "Your HFD5_LIB_PATH variable is not set, attempting to set it using 'find / -name libhdf5_fortran.a'."
+   HDF5_LIB_GUESS=`find / -name libhdf5_fortran.a 2>/dev/null`
+   
+   if [ "${HDF5_LIB_GUESS}" == "" ]
+   then
+      echo "Failed to set HDF5_LIBS. Please set this environment variable. Are you sure HDF5 is installed correctly?"
+      exit 1
+   else
+      # Below Bash 4.2 compatible:
+      HDF5_LIB_PATH=`echo ${HDF5_LIB_GUESS} | rev | cut -c 18- | rev`
+      echo "HDF5_LIB_PATH set to '${HDF5_LIB_PATH}'"
    fi
 fi
 
@@ -146,7 +165,7 @@ ln -sf ../shell/* ./
 touch dependency.mk
 
 #----- Launch the compiler. ---------------------------------------------------------------#
-make OPT=${OPT} KIND_COMP=${KIND} ${CLEAN} GIT_TAG=${GIT_TAG} HDF5_HOME=${HDF5_HOME}
+make OPT=${OPT} KIND_COMP=${KIND} ${CLEAN} GIT_TAG=${GIT_TAG} HDF5_HOME=${HDF5_HOME} HDF5_LIB_PATH=${HDF5_LIB_PATH}
 make_exit_code=$?
 #------------------------------------------------------------------------------------------#
 
