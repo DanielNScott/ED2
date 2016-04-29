@@ -105,18 +105,24 @@ fi
 if [ "${HDF5_LIB_PATH}" == "" ] && [ "${CLEAN}" != "clean" ]
 then
    echo " "
-   echo "Your HFD5_LIB_PATH variable is not set, attempting to set it using 'find / -name libhdf5_fortran.a'."
-   HDF5_LIB_GUESS=`find / -name libhdf5_fortran.a 2>/dev/null`
+   echo "Your HFD5_LIB_PATH variable is not set, attempting to set it using 'find \${HDF5_HOME} -name libhdf5_fortran.a'..."
+   HDF5_LIB_GUESS=`find ${HDF5_HOME} -name libhdf5_fortran.a 2>/dev/null`
    
    if [ "${HDF5_LIB_GUESS}" == "" ]
    then
-      echo "Failed to set HDF5_LIBS. Please set this environment variable. Are you sure HDF5 is installed correctly?"
-      exit 1
-   else
-      # Below Bash 4.2 compatible:
-      HDF5_LIB_PATH=`echo ${HDF5_LIB_GUESS} | rev | cut -c 18- | rev`
-      echo "HDF5_LIB_PATH set to '${HDF5_LIB_PATH}'"
+      echo "... failed. Attempting broader search using 'find / -name libhdf5_fortran.a'. This may be infeasable on a cluster."
+      HDF5_LIB_GUESS=`find ${HDF5_HOME} -name libhdf5_fortran.a 2>/dev/null`
    fi
+
+   if [ "${HDF5_LIB_GUESS}" == "" ]
+   then
+      echo "Failed to set HDF5_LIB_PATH. Please set this environment variable. Are you sure HDF5 is installed correctly?"
+      echo " "
+      exit 1
+   fi
+   
+   HDF5_LIB_PATH=`echo ${HDF5_LIB_GUESS} | rev | cut -c 18- | rev`
+   echo "HDF5_LIB_PATH set to '${HDF5_LIB_PATH}'"
 fi
 
 # Set opt and bin
