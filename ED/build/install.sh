@@ -111,7 +111,7 @@ then
    if [ "${HDF5_LIB_GUESS}" == "" ]
    then
       echo "... failed. Attempting broader search using 'find / -name libhdf5_fortran.a'. This may be infeasable on a cluster."
-      HDF5_LIB_GUESS=`find ${HDF5_HOME} -name libhdf5_fortran.a 2>/dev/null`
+      HDF5_LIB_GUESS=`find / -name libhdf5_fortran.a 2>/dev/null`
    fi
 
    if [ "${HDF5_LIB_GUESS}" == "" ]
