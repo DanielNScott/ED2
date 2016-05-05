@@ -79,9 +79,9 @@ USE_MPIWTIME=1
 ifeq ($(KIND_COMP),E)
    CMACH=PC_GFORTRAN
    F_COMP=mpif90
-   F_OPTS=-g -ffree-line-length-none -fno-whole-file -O2 -fopenmp #-ffpe-trap=invalid,zero,overflow -fbounds-check  #-O2
+   F_OPTS=-g -ffree-line-length-none -fno-whole-file -O2 #-ffpe-trap=invalid,zero,overflow -fbounds-check  #-O2
    C_COMP=mpicc 
-   C_OPTS=-g -O2 -fopenmp #-ffpe-trap=invalid,zero,overflow -fbounds-check #-O2
+   C_OPTS=-g -O2 #-ffpe-trap=invalid,zero,overflow -fbounds-check #-O2
    LOADER=mpif90
    LOADER_OPTS=${F_OPTS}
    C_LOADER=mpicc
@@ -93,8 +93,8 @@ ifeq ($(KIND_COMP),A)
    #----------------- gfortran on Linux (optimized build)-----------
    CMACH=PC_GFORTRAN
    F_COMP=mpif90
-   F_OPTS=-gdwarf-3 -ffree-line-length-none -fno-whole-file -O0 -fopenmp -ffpe-trap=invalid,zero,overflow -fbounds-check #-std=f2003
-   C_COMP=mpicc -fopenmp
+   F_OPTS=-gdwarf-3 -ffree-line-length-none -fno-whole-file -O0 -ffpe-trap=invalid,zero,overflow -fbounds-check #-std=f2003
+   C_COMP=mpicc
    C_OPTS=-gdwarf-3 -O0 -ffpe-trap=invalid,zero,overflow -fbounds-check
    LOADER=mpif90
    LOADER_OPTS=${F_OPTS}
