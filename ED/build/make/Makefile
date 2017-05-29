@@ -20,8 +20,14 @@ ifeq ($(F_LOWO_OPTS),)
 endif
 #------------------------------------------------------------------------------------------#
 
-ifeq ($(OPT),"dbg")
-	INCLUDES = ""
+
+ifeq ($(OPT),dbg)
+   INCLUDE      =
+   RM_COMMAND_1 =
+   RM_COMMAND_2 =
+else
+   RM_COMMAND_1 = rm -f $(<F:.f90=.f90)
+   RM_COMMAND_2 = rm -f $(<F:.F90=.F90)
 endif
 
 #----- Compiler commands. -----------------------------------------------------------------#
@@ -68,7 +74,7 @@ $(MAINOBJ):  $(MAIN)
 	@echo ""
 	cp -f $< $(<F:.F90=.F90)
 	$(FPP_COMMAND) $(<F:.F90=.F90)
-	rm -f $(<F:.F90=.F90)
+	#rm -f $(<F:.F90=.F90)
 
 $(LIBMODEL): $(OBJ_MODEL)
 	$(ARCHIVE) $(LIBMODEL) $(OBJ_MODEL)
